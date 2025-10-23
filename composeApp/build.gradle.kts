@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+	kotlin("plugin.serialization") version "2.2.20"
 }
 
 kotlin {
@@ -16,7 +17,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -26,24 +27,26 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     jvm()
-    
+
     js {
         browser()
         binaries.executable()
     }
-    
+
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
         binaries.executable()
     }
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+			implementation("io.ktor:ktor-client-okhttp:3.3.1")
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -54,6 +57,10 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+			implementation(project.dependencies.platform("io.github.jan-tennert.supabase:bom:3.2.5"))
+			implementation("io.github.jan-tennert.supabase:postgrest-kt")
+			implementation("io.github.jan-tennert.supabase:auth-kt")
+			implementation("io.github.jan-tennert.supabase:realtime-kt")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -61,7 +68,18 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+			implementation("io.ktor:ktor-client-cio:3.3.1")
         }
+		jsMain {
+			dependencies {
+				implementation("io.ktor:ktor-client-js:3.3.1")
+			}
+		}
+		iosMain {
+			dependencies {
+				implementation("io.ktor:ktor-client-darwin:3.3.1")
+			}
+		}
     }
 }
 
