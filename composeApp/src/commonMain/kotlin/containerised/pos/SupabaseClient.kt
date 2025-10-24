@@ -4,7 +4,6 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
-import io.ktor.websocket.WebSocketDeflateExtension.Companion.install
 
 object SupabaseClientProvider {
 	val client = createSupabaseClient(
