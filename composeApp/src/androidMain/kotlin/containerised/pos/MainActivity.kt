@@ -16,8 +16,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 //            App()
-//			SupabaseUIBranchTest()
-			MenuUI()
+			AppNavHost()
         }
     }
 }

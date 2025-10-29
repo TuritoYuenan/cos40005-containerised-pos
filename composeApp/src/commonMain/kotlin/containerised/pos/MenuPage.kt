@@ -22,18 +22,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
 @Composable
 @Preview
-fun MenuUI() {
+fun MenuUI(navController: NavController) {
 	MaterialTheme {
 		Column {
 			MenuTopBar()
-			MenuList()
+			MenuList(navController)
 		}
 	}
 }
@@ -110,6 +112,7 @@ fun MenuItemCard(
 	onDelete: () -> Unit
 ) {
 	var expanded by remember { mutableStateOf(false) }
+	var showDeleteDialog by remember { mutableStateOf(false) }
 
 	Card(
 		modifier = Modifier
@@ -164,7 +167,7 @@ fun MenuItemCard(
 			) {
 				Text(
 					text = itemName,
-					style = MaterialTheme.typography.titleMedium.copy(
+					style = MaterialTheme.typography.titleSmall.copy(
 						fontWeight = FontWeight.Bold,
 						color = MaterialTheme.colorScheme.onSurface
 					)
@@ -202,16 +205,37 @@ fun MenuItemCard(
 						text = { Text("Delete") },
 						onClick = {
 							expanded = false
-							onDelete()
+							showDeleteDialog = true
 						}
 					)
 				}
+			}
+			if (showDeleteDialog) {
+				AlertDialog(
+					onDismissRequest = { showDeleteDialog = false },
+					title = { Text("Delete Item") },
+					text = { Text("Are you sure you want to delete this item?") },
+					confirmButton = {
+						TextButton(onClick = {
+							showDeleteDialog = false
+							onDelete()
+						}) {
+							Text("Yes")
+						}
+					},
+					dismissButton = {
+						TextButton(onClick = { showDeleteDialog = false }) {
+							Text("Cancel")
+						}
+					}
+				)
 			}
 		}
 	}
 }
 @Composable
-fun MenuList() {
+fun MenuList(navController: NavController) {
+	val scope = rememberCoroutineScope()
 	var menuitems by remember { mutableStateOf<List<MenuItem>?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
 	LaunchedEffect(Unit) {
@@ -238,6 +262,10 @@ fun MenuList() {
 			modifier = Modifier
 				.fillMaxWidth()
 				.padding(vertical = 4.dp, horizontal = 12.dp),
+			style = MaterialTheme.typography.titleMedium.copy(
+				fontWeight = FontWeight.Bold,
+				color = MaterialTheme.colorScheme.onSurface
+			),
 			textAlign = TextAlign.Start
 		)
 		menuitems?.forEach { item ->
@@ -245,8 +273,13 @@ fun MenuList() {
 				itemName = item.item_name,
 				price = item.price.toString(),
 				imageUrl = item.img_url,
-				onEdit = { println("Edit $item.item_name") },
-				onDelete = { println("Delete $item.item_name") }
+				onEdit = { navController.navigate("edit/${item.item_id}") },
+				onDelete = {
+					scope.launch {
+						deleteMenuItem(item.item_id)
+						menuitems = fetchMenuItem()
+					}
+				}
 			)
 		}
 	}
