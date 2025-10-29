@@ -1,35 +1,29 @@
 package containerised.pos
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
@@ -39,7 +33,7 @@ fun MenuUI() {
 	MaterialTheme {
 		Column {
 			MenuTopBar()
-
+			MenuList()
 		}
 	}
 }
@@ -102,6 +96,157 @@ fun MenuTopBar() {
 				imageVector = Icons.Default.Person,
 				contentDescription = "Profile",
 				tint = MaterialTheme.colorScheme.onPrimaryContainer
+			)
+		}
+	}
+}
+@Composable
+@Preview
+fun MenuItemCard(
+	itemName: String,
+	price: String,
+	imageUrl: String?,
+	onEdit: () -> Unit,
+	onDelete: () -> Unit
+) {
+	var expanded by remember { mutableStateOf(false) }
+
+	Card(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(vertical = 6.dp, horizontal = 12.dp),
+		shape = RoundedCornerShape(12.dp),
+		elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+	) {
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.background(MaterialTheme.colorScheme.surface)
+				.padding(12.dp),
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			// Left: Image
+			if (!imageUrl.isNullOrBlank()) {
+				KamelImage(
+					resource = asyncPainterResource(imageUrl),
+					contentDescription = itemName,
+					contentScale = ContentScale.Crop,
+					modifier = Modifier
+						.size(64.dp)
+						.clip(RoundedCornerShape(8.dp)),
+					onFailure = {
+						// fallback if the image fails to load
+						Box(
+							modifier = Modifier
+								.size(64.dp)
+								.clip(RoundedCornerShape(8.dp))
+								.background(Color(0xFF0358AD)),
+							contentAlignment = Alignment.Center
+						) {}
+					}
+				)
+			} else {
+				// Blue placeholder if no image
+				Box(
+					modifier = Modifier
+						.size(64.dp)
+						.clip(RoundedCornerShape(8.dp))
+						.background(Color(0xFF0358AD)),
+					contentAlignment = Alignment.Center
+				) {}
+			}
+
+			Spacer(modifier = Modifier.width(12.dp))
+
+			// Middle: Name and Price
+			Column(
+				modifier = Modifier.weight(1f)
+			) {
+				Text(
+					text = itemName,
+					style = MaterialTheme.typography.titleMedium.copy(
+						fontWeight = FontWeight.Bold,
+						color = MaterialTheme.colorScheme.onSurface
+					)
+				)
+				Spacer(modifier = Modifier.height(4.dp))
+				Text(
+					text = price,
+					style = MaterialTheme.typography.bodyMedium.copy(
+						fontSize = 14.sp
+					)
+				)
+			}
+
+			// Right: Dropdown Menu (⋮)
+			Box {
+				IconButton(onClick = { expanded = true }) {
+					Icon(
+						imageVector = Icons.Default.MoreVert,
+						contentDescription = "Options"
+					)
+				}
+
+				DropdownMenu(
+					expanded = expanded,
+					onDismissRequest = { expanded = false },
+				) {
+					DropdownMenuItem(
+						text = { Text("Edit") },
+						onClick = {
+							expanded = false
+							onEdit()
+						}
+					)
+					DropdownMenuItem(
+						text = { Text("Delete") },
+						onClick = {
+							expanded = false
+							onDelete()
+						}
+					)
+				}
+			}
+		}
+	}
+}
+@Composable
+fun MenuList() {
+	var menuitems by remember { mutableStateOf<List<MenuItem>?>(null) }
+	var error by remember { mutableStateOf<String?>(null) }
+	LaunchedEffect(Unit) {
+		try {
+			// Fetch all
+			menuitems = fetchMenuItem()
+			println("Fetched ${menuitems!!.size} menuitems:")
+			menuitems!!.forEach { menuitems ->
+				println(
+					"• ${menuitems.item_id}: ${menuitems.item_name} (${menuitems.price})"
+				)
+			}
+
+		} catch (e: Exception) {
+			error = e.message
+			println("Error: $error")
+		}
+	}
+	Column(
+		modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+	){
+		Text(
+			text="All items",
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(vertical = 4.dp, horizontal = 12.dp),
+			textAlign = TextAlign.Start
+		)
+		menuitems?.forEach { item ->
+			MenuItemCard(
+				itemName = item.item_name,
+				price = item.price.toString(),
+				imageUrl = item.img_url,
+				onEdit = { println("Edit $item.item_name") },
+				onDelete = { println("Delete $item.item_name") }
 			)
 		}
 	}

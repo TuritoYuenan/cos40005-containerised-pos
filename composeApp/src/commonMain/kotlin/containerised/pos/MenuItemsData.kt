@@ -5,16 +5,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class MenuItem(
-	val itemId: String,
-	val itemName: String,
-	val itemDesc: String,
+	val item_id: String,
+	val item_name: String,
+	val item_des: String?,
 	val price: Float,
-	val categoryId: String,
-	val isAvailable: Boolean,
-	val estPrepTime: Int,
-	val imgUrl: String?,
-	val branchId: String,
-	val specialNotes: String?
+	val category_id: String,
+	val is_available: Boolean,
+	val est_prep_time: Int?,
+	val img_url: String?,
+	val branch_id: String,
+	val special_notes: String?
 )
 
 // Add a new MenuItem
