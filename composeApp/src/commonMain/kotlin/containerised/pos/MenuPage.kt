@@ -2,6 +2,8 @@ package containerised.pos
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -254,35 +256,42 @@ fun MenuList(navController: NavController) {
 			println("Error: $error")
 		}
 	}
-	Column(
-		modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+	LazyColumn(
+		modifier = Modifier
+			.fillMaxSize()
+			.padding(horizontal = 8.dp, vertical = 6.dp)
 	){
-		Text(
-			text="All items",
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(vertical = 4.dp, horizontal = 12.dp),
-			style = MaterialTheme.typography.titleMedium.copy(
-				fontWeight = FontWeight.Bold,
-				color = MaterialTheme.colorScheme.onSurface
-			),
-			textAlign = TextAlign.Start
-		)
-		menuitems?.forEach { item ->
-			MenuItemCard(
-				itemName = item.item_name,
-				price = item.price.toString(),
-				imageUrl = item.img_url,
-				onEdit = {
-					navController.navigate("edit/${item.item_id}")
-					println("itemId passed to EditMenuUI = ${item.item_id}")},
-				onDelete = {
-					scope.launch {
-						deleteMenuItem(item.item_id)
-						menuitems = fetchMenuItem()
-					}
-				}
+		item {
+			Text(
+				text = "All items",
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(vertical = 4.dp, horizontal = 12.dp),
+				style = MaterialTheme.typography.titleMedium.copy(
+					fontWeight = FontWeight.Bold,
+					color = MaterialTheme.colorScheme.onSurface
+				),
+				textAlign = TextAlign.Start
 			)
+		}
+		menuitems?.let { list ->
+			items(list) { item ->
+				MenuItemCard(
+					itemName = item.item_name,
+					price = item.price.toString(),
+					imageUrl = item.img_url,
+					onEdit = {
+						navController.navigate("edit/${item.item_id}")
+						println("itemId passed to EditMenuUI = ${item.item_id}")
+					},
+					onDelete = {
+						scope.launch {
+							deleteMenuItem(item.item_id)
+							menuitems = fetchMenuItem()
+						}
+					}
+				)
+			}
 		}
 	}
 }
