@@ -1,5 +1,6 @@
-package containerised.pos
+package containerised.pos.models
 
+import containerised.pos.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.Serializable
 
@@ -23,4 +24,3 @@ suspend fun addBranch(branch: Branch) {
 suspend fun fetchBranches(): List<Branch> {
 	return SupabaseClientProvider.supabase.postgrest["branches"].select().decodeList<Branch>()
 }
-
