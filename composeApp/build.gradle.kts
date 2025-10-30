@@ -52,6 +52,7 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+			implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -61,6 +62,8 @@ kotlin {
 			implementation("io.github.jan-tennert.supabase:postgrest-kt")
 			implementation("io.github.jan-tennert.supabase:auth-kt")
 			implementation("io.github.jan-tennert.supabase:realtime-kt")
+			implementation("media.kamel:kamel-image-default:1.0.8")
+			implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
