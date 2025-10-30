@@ -1,21 +1,17 @@
 package containerised.pos
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import sun.security.util.Debug.println
 
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = "POS Application",
     ) {
-//        App()
-		SupabaseUIBranchTest()
-
+        App()
     }
 }
+
 //@Composable
 //fun SupabaseBranchTest() {
 //	LaunchedEffect(Unit) {
