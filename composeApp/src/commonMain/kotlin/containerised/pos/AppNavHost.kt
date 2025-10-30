@@ -18,9 +18,14 @@ fun AppNavHost() {
 		composable("menu_list") {
 			MenuUI(navController)
 		}
-		composable("edit/{itemId}") { backStackEntry ->
-			val route = backStackEntry.destination.route
-			val itemId = route?.substringAfter("edit/") ?: ""
+		composable(
+			"edit/{itemId}",
+			arguments = listOf(navArgument("itemId") { type = NavType.StringType })
+		) { backStackEntry ->
+			val itemId = backStackEntry.savedStateHandle.get<String>("itemId") ?: ""
+
+			println("Resolved itemId = $itemId")
+
 			EditMenuUI(navController = navController, itemId = itemId)
 		}
 	}

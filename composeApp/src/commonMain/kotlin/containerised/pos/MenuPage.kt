@@ -273,7 +273,9 @@ fun MenuList(navController: NavController) {
 				itemName = item.item_name,
 				price = item.price.toString(),
 				imageUrl = item.img_url,
-				onEdit = { navController.navigate("edit/${item.item_id}") },
+				onEdit = {
+					navController.navigate("edit/${item.item_id}")
+					println("itemId passed to EditMenuUI = ${item.item_id}")},
 				onDelete = {
 					scope.launch {
 						deleteMenuItem(item.item_id)
