@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.views
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,8 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +36,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import containerised.pos.models.MenuItem
+import containerised.pos.models.fetchMenuItemById
+import containerised.pos.models.updateMenuItem
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
@@ -42,7 +46,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
-fun EditMenuUI(navController: NavController, itemId: String) {
+fun EditMenuPage(navController: NavController, itemId: String) {
 	val scope = rememberCoroutineScope()
 	var item by remember { mutableStateOf<MenuItem?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
@@ -70,7 +74,7 @@ fun EditMenuUI(navController: NavController, itemId: String) {
 			// Left: Menu button
 			IconButton(onClick = { navController.navigate("menu_list") }) {
 				Icon(
-					imageVector = Icons.Default.ArrowBack,
+					imageVector = Icons.AutoMirrored.Filled.ArrowBack,
 					contentDescription = "Menu",
 					tint = MaterialTheme.colorScheme.onPrimaryContainer
 				)
@@ -133,7 +137,7 @@ fun EditMenuUI(navController: NavController, itemId: String) {
 					Button(
 						onClick = { /* TODO: Handle image upload */ },
 						shape = RoundedCornerShape(50),
-						colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+						colors = ButtonDefaults.buttonColors(
 							containerColor = Color(0xFF0358AD)
 						),
 						modifier = Modifier.height(40.dp)
@@ -191,7 +195,7 @@ fun EditMenuUI(navController: NavController, itemId: String) {
 					}
 				},
 				shape = RoundedCornerShape(12.dp),
-				colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+				colors = ButtonDefaults.buttonColors(
 					containerColor = Color(0xFF0358AD)
 				),
 				modifier = Modifier

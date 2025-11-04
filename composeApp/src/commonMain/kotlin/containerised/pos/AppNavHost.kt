@@ -6,6 +6,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import containerised.pos.views.EditMenuPage
+import containerised.pos.views.MenuPage
+import containerised.pos.views.OrderPage
 
 @Composable
 fun AppNavHost() {
@@ -15,8 +18,11 @@ fun AppNavHost() {
 		navController = navController,
 		startDestination = "menu_list"
 	) {
+		composable("order") {
+			OrderPage()
+		}
 		composable("menu_list") {
-			MenuUI(navController)
+			MenuPage(navController)
 		}
 		composable(
 			"edit/{itemId}",
@@ -26,7 +32,7 @@ fun AppNavHost() {
 
 			println("Resolved itemId = $itemId")
 
-			EditMenuUI(navController = navController, itemId = itemId)
+            EditMenuPage(navController = navController, itemId = itemId)
 		}
 	}
 }

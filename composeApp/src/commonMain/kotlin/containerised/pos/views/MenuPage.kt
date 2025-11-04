@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.views
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -25,6 +25,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import containerised.pos.models.MenuItem
+import containerised.pos.models.deleteMenuItem
+import containerised.pos.models.fetchMenuItem
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
@@ -33,7 +36,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
-fun MenuUI(navController: NavController) {
+fun MenuPage(navController: NavController) {
 	MaterialTheme {
 		Column {
 			MenuTopBar()
@@ -41,6 +44,7 @@ fun MenuUI(navController: NavController) {
 		}
 	}
 }
+
 @Composable
 fun MenuTopBar() {
 	var searchText by remember { mutableStateOf("") }
@@ -104,6 +108,7 @@ fun MenuTopBar() {
 		}
 	}
 }
+
 @Composable
 @Preview
 fun MenuItemCard(
@@ -235,17 +240,18 @@ fun MenuItemCard(
 		}
 	}
 }
+
 @Composable
 fun MenuList(navController: NavController) {
 	val scope = rememberCoroutineScope()
-	var menuitems by remember { mutableStateOf<List<MenuItem>?>(null) }
+	var menuItems by remember { mutableStateOf<List<MenuItem>?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
 	LaunchedEffect(Unit) {
 		try {
 			// Fetch all
-			menuitems = fetchMenuItem()
-			println("Fetched ${menuitems!!.size} menuitems:")
-			menuitems!!.forEach { menuitems ->
+			menuItems = fetchMenuItem()
+			println("Fetched ${menuItems!!.size} menuitems:")
+			menuItems!!.forEach { menuitems ->
 				println(
 					"• ${menuitems.item_id}: ${menuitems.item_name} (${menuitems.price})"
 				)
@@ -274,7 +280,7 @@ fun MenuList(navController: NavController) {
 				textAlign = TextAlign.Start
 			)
 		}
-		menuitems?.let { list ->
+		menuItems?.let { list ->
 			items(list) { item ->
 				MenuItemCard(
 					itemName = item.item_name,
@@ -287,7 +293,7 @@ fun MenuList(navController: NavController) {
 					onDelete = {
 						scope.launch {
 							deleteMenuItem(item.item_id)
-							menuitems = fetchMenuItem()
+							menuItems = fetchMenuItem()
 						}
 					}
 				)

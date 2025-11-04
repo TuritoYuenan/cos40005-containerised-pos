@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.views
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -10,7 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import containerised.pos.OrderPageMenuItem
 import containerised.pos.models.MenuItem
+import containerised.pos.models.fetchMenuItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.stringResource
@@ -29,11 +31,11 @@ val list2 = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun App() {
+fun OrderPage() {
 	var menuItems by remember { mutableStateOf<List<MenuItem>>(listOf()) }
 	LaunchedEffect(Unit) {
 		withContext(Dispatchers.Default) {
-			menuItems = MenuItem.fetch()
+			menuItems = fetchMenuItem()
 		}
 	}
 	MaterialTheme {
