@@ -1,0 +1,24 @@
+import kotlin.Boolean;
+
+CREATE TABLE MenuItem (
+	item_id TEXT NOT NULL PRIMARY KEY,
+	item_name TEXT NOT NULL,
+	item_des TEXT,
+	price REAL NOT NULL,
+	category_id TEXT NOT NULL,
+	is_available INTEGER AS Boolean DEFAULT 1,
+	est_prep_time TEXT,
+	img_url TEXT,
+	branch_id TEXT NOT NULL,
+	special_notes TEXT
+);
+
+insertMenuItem:
+INSERT INTO MenuItem(item_id, item_name, item_des, price, category_id, is_available, est_prep_time, img_url, branch_id, special_notes)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectAllMenuItems:
+SELECT MenuItem.* FROM MenuItem;
+
+removeAllMenuItems:
+DELETE FROM MenuItem;

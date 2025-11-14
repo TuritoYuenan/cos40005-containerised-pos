@@ -150,3 +150,11 @@ compose.desktop {
 		}
 	}
 }
+
+sqldelight {
+	databases {
+		create("AppDatabase") {
+			packageName.set("containerised.pos.database")
+		}
+	}
+}
