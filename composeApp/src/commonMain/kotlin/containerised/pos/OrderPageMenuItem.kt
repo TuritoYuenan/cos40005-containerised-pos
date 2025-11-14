@@ -30,7 +30,7 @@ fun OrderPageMenuItem(data: MenuItem) {
 			// Placeholder for image or icon
 		}
 		Text(
-			data.item_name,
+			data.name,
 			style = MaterialTheme.typography.titleLarge,
 			modifier = Modifier.fillMaxWidth(),
 			textAlign = TextAlign.Center,
@@ -48,16 +48,16 @@ fun OrderPageMenuItem(data: MenuItem) {
 @Composable
 private fun Preview() {
 	val sampleItem = MenuItem(
-		item_id = "1",
-		item_name = "Sample Item",
-		item_des = "This is a sample item description.",
+		id = "1",
+		name = "Sample Item",
+		description = "This is a sample item description.",
 		price = 9.99f,
-		category_id = "C1",
-		is_available = true,
-		est_prep_time = 5,
-		img_url = "",
-		branch_id = "B1",
-		special_notes = null
+		categoryID = "C1",
+		isAvailable = true,
+		estimatedPreparationTime = 5,
+		imageURL = "",
+		branchID = "B1",
+		specialNotes = null
 	)
 	OrderPageMenuItem(data = sampleItem)
 }

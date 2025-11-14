@@ -2,20 +2,40 @@ package containerised.pos.models
 
 import containerised.pos.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class MenuItem(
-	val item_id: String,
-	val item_name: String,
-	val item_des: String?,
+	@SerialName("item_id")
+	val id: String,
+
+	@SerialName("item_name")
+	val name: String,
+
+	@SerialName("item_des")
+	val description: String?,
+
+	@SerialName("price")
 	val price: Float,
-	val category_id: String,
-	val is_available: Boolean?,
-	val est_prep_time: Int?,
-	val img_url: String?,
-	val branch_id: String,
-	val special_notes: String?
+
+	@SerialName("category_id")
+	val categoryID: String,
+
+	@SerialName("is_available")
+	val isAvailable: Boolean?,
+
+	@SerialName("est_prep_time")
+	val estimatedPreparationTime: Int?,
+
+	@SerialName("img_url")
+	val imageURL: String?,
+
+	@SerialName("branch_id")
+	val branchID: String,
+
+	@SerialName("special_notes")
+	val specialNotes: String?
 )
 
 // Add a new MenuItem

@@ -101,10 +101,10 @@ fun EditMenuPage(navController: NavController, itemId: String) {
 					.padding(vertical = 4.dp, horizontal = 12.dp),
 				horizontalArrangement = Arrangement.spacedBy(30.dp)
 			) {
-				if (!item?.img_url.isNullOrBlank()) {
+				if (!item?.imageURL.isNullOrBlank()) {
 					KamelImage(
-						resource = asyncPainterResource(item!!.img_url!!),
-						contentDescription = item!!.item_name,
+						resource = asyncPainterResource(item!!.imageURL!!),
+						contentDescription = item!!.name,
 						contentScale = ContentScale.Crop,
 						modifier = Modifier
 							.size(64.dp)
@@ -159,7 +159,7 @@ fun EditMenuPage(navController: NavController, itemId: String) {
 				value = newName,
 				onValueChange = { newName = it },
 				label = { Text("Item Name") },
-				placeholder = { Text(item?.item_name ?: "Enter item name") },
+				placeholder = { Text(item?.name ?: "Enter item name") },
 				singleLine = true,
 				modifier = Modifier.fillMaxWidth()
 			)
@@ -177,16 +177,16 @@ fun EditMenuPage(navController: NavController, itemId: String) {
 			Button(
 				onClick = {
 					val price = (if (newPrice.isBlank()) item?.price?.toFloat() else newPrice.toFloatOrNull())
-					val name = if (newName.isBlank()) item?.item_name else newName
+					val name = if (newName.isBlank()) item?.name else newName
 
 					if (!name.isNullOrBlank() && price != null) {
 						val updatedItem = item?.copy(
-							item_name = name,
+							name = name,
 							price = price
 						)
 						if (updatedItem != null) {
 							scope.launch {
-								updateMenuItem(updatedItem.item_id, updatedItem)
+								updateMenuItem(updatedItem.id, updatedItem)
 								navController.navigate("menu_list")
 							}
 						}

@@ -2,17 +2,31 @@ package containerised.pos.models
 
 import containerised.pos.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Branch(
-	val branch_id: String? = null,
-	val branch_name: String,
+	@SerialName("branch_id")
+	val id: String? = null,
+
+	@SerialName("branch_name")
+	val name: String,
+
+	@SerialName("address")
 	val address: String? = null,
-	val phone_number: String? = null,
+
+	@SerialName("phone_number")
+	val phoneNumber: String? = null,
+
+	@SerialName("email")
 	val email: String? = null,
-	val is_active: Boolean = true,
-	val created_at: String? = null
+
+	@SerialName("is_active")
+	val isActive: Boolean = true,
+
+	@SerialName("created_at")
+	val createdAt: String? = null
 )
 
 // Add a new branch

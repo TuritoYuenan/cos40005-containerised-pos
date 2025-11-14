@@ -253,7 +253,7 @@ fun MenuList(navController: NavController) {
 			println("Fetched ${menuItems!!.size} menu items:")
 			menuItems!!.forEach { item ->
 				println(
-					"• ${item.item_id}: ${item.item_name} (${item.price})"
+					"• ${item.id}: ${item.name} (${item.price})"
 				)
 			}
 		} catch (e: Exception) {
@@ -282,16 +282,16 @@ fun MenuList(navController: NavController) {
 		menuItems?.let { list ->
 			items(list) { item ->
 				MenuItemCard(
-					itemName = item.item_name,
+					itemName = item.name,
 					price = item.price.toString(),
-					imageUrl = item.img_url,
+					imageUrl = item.imageURL,
 					onEdit = {
-						navController.navigate("edit/${item.item_id}")
-						println("itemId passed to EditMenuUI = ${item.item_id}")
+						navController.navigate("edit/${item.id}")
+						println("itemId passed to EditMenuUI = ${item.id}")
 					},
 					onDelete = {
 						scope.launch {
-							deleteMenuItem(item.item_id)
+							deleteMenuItem(item.id)
 							menuItems = fetchMenuItem()
 						}
 					}
