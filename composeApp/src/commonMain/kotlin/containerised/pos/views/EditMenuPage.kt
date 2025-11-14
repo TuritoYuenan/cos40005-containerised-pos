@@ -204,6 +204,6 @@ fun EditMenuPage(navController: NavController, itemId: String) {
 			) {
 				Text("Save", color = Color.White)
 			}
-			}
 		}
 	}
+}

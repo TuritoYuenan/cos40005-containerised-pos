@@ -250,13 +250,12 @@ fun MenuList(navController: NavController) {
 		try {
 			// Fetch all
 			menuItems = fetchMenuItem()
-			println("Fetched ${menuItems!!.size} menuitems:")
-			menuItems!!.forEach { menuitems ->
+			println("Fetched ${menuItems!!.size} menu items:")
+			menuItems!!.forEach { item ->
 				println(
-					"• ${menuitems.item_id}: ${menuitems.item_name} (${menuitems.price})"
+					"• ${item.item_id}: ${item.item_name} (${item.price})"
 				)
 			}
-
 		} catch (e: Exception) {
 			error = e.message
 			println("Error: $error")
