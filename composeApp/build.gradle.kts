@@ -4,11 +4,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
 	alias(libs.plugins.kotlinMultiplatform)
+	alias(libs.plugins.kotlinxSerialization)
+	alias(libs.plugins.sqldelight)
 	alias(libs.plugins.androidApplication)
 	alias(libs.plugins.composeMultiplatform)
 	alias(libs.plugins.composeCompiler)
 	alias(libs.plugins.composeHotReload)
-	kotlin("plugin.serialization") version "2.2.20"
 }
 
 kotlin {
@@ -42,10 +43,21 @@ kotlin {
 	}
 
 	sourceSets {
+		all {
+			languageSettings.optIn("kotlin.time.ExperimentalTime")
+		}
 		androidMain.dependencies {
 			implementation(compose.preview)
 			implementation(libs.androidx.activity.compose)
 			implementation(libs.ktor.client.okhttp)
+			implementation(libs.ktor.client.android)
+			implementation(libs.android.driver)
+		}
+		iosMain {
+			dependencies {
+				implementation(libs.ktor.client.darwin)
+				implementation(libs.native.driver)
+			}
 		}
 		commonMain.dependencies {
 //			Compose
@@ -70,6 +82,15 @@ kotlin {
 			implementation(libs.supabase.postgrest.kt)
 			implementation(libs.supabase.auth.kt)
 			implementation(libs.supabase.realtime.kt)
+
+//			SQLDelight
+			implementation(libs.kotlinx.coroutines.core)
+			implementation(libs.kotlinx.datetime)
+			implementation(libs.koin.core)
+			implementation(libs.ktor.client.core)
+			implementation(libs.ktor.client.content.negotiation)
+			implementation(libs.ktor.serialization.kotlinx.json)
+			implementation(libs.runtime)
 		}
 		commonTest.dependencies {
 			implementation(libs.kotlin.test)
@@ -82,11 +103,6 @@ kotlin {
 		jsMain {
 			dependencies {
 				implementation(libs.ktor.client.js)
-			}
-		}
-		iosMain {
-			dependencies {
-				implementation(libs.ktor.client.darwin)
 			}
 		}
 	}
