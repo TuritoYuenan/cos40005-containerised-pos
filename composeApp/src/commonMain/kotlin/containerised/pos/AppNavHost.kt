@@ -7,17 +7,23 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import containerised.pos.views.EditMenuPage
+import containerised.pos.views.LoginPage
 import containerised.pos.views.MenuPage
 import containerised.pos.views.OrderPage
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
+@Preview
 @Composable
 fun AppNavHost() {
 	val navController = rememberNavController()
 
 	NavHost(
 		navController = navController,
-		startDestination = "menu_list"
+		startDestination = "login"
 	) {
+		composable("login") {
+			LoginPage()
+		}
 		composable("order") {
 			OrderPage()
 		}
