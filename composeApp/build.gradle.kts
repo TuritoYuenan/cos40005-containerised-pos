@@ -48,6 +48,7 @@ kotlin {
 			implementation(libs.ktor.client.okhttp)
         }
         commonMain.dependencies {
+//			Compose
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -55,14 +56,20 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+
+//			AndroidX
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+			implementation(libs.androidx.navigation.compose)
+
+//			Image Loading
+			implementation(libs.kamel.image.default)
+
+//			Supabase
 			implementation(project.dependencies.platform("io.github.jan-tennert.supabase:bom:3.2.5"))
-			implementation(libs.postgrest.kt)
-			implementation(libs.auth.kt)
-			implementation(libs.realtime.kt)
-			implementation("media.kamel:kamel-image-default:1.0.8")
-			implementation("org.jetbrains.androidx.navigation:navigation-compose:2.9.1")
+			implementation(libs.supabase.postgrest.kt)
+			implementation(libs.supabase.auth.kt)
+			implementation(libs.supabase.realtime.kt)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
