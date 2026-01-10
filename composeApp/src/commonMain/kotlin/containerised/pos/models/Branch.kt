@@ -1,6 +1,6 @@
 package containerised.pos.models
 
-import containerised.pos.SupabaseClientProvider
+import containerised.pos.database.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

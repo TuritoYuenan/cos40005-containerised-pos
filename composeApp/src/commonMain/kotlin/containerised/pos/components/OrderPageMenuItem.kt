@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

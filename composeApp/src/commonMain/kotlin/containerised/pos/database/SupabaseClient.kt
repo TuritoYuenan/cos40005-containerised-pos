@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.database
 
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient

@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import containerised.pos.OrderPageMenuItem
+import containerised.pos.components.OrderPageMenuItem
 import containerised.pos.models.MenuItem
 import containerised.pos.models.fetchMenuItem
 import kotlinx.coroutines.Dispatchers
