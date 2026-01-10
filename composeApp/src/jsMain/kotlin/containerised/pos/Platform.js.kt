@@ -5,3 +5,4 @@ class JsPlatform: Platform {
 }
 
 actual fun getPlatform(): Platform = JsPlatform()
+actual val isWeb: Boolean = true
