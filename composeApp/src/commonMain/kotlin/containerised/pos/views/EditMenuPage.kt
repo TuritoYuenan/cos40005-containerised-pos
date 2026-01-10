@@ -176,8 +176,8 @@ fun EditMenuPage(navController: NavController, itemId: String) {
 			// --- Save Button ---
 			Button(
 				onClick = {
-					val price = (if (newPrice.isBlank()) item?.price?.toFloat() else newPrice.toFloatOrNull())
-					val name = if (newName.isBlank()) item?.name else newName
+					val price = (if (newPrice.isBlank()) item?.price else newPrice.toFloatOrNull())
+					val name = newName.ifBlank { item?.name }
 
 					if (!name.isNullOrBlank() && price != null) {
 						val updatedItem = item?.copy(
