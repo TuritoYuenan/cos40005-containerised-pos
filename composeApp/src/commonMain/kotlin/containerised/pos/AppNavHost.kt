@@ -9,6 +9,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import containerised.pos.database.Database
+import containerised.pos.views.CustomerOrderPage
 import containerised.pos.views.EditMenuPage
 import containerised.pos.views.LoginPage
 import containerised.pos.views.MenuPage
@@ -33,6 +35,17 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import posapplication.composeapp.generated.resources.Res
 import posapplication.composeapp.generated.resources.app_name
 import posapplication.composeapp.generated.resources.baseline_menu_24
+import posapplication.composeapp.generated.resources.compose_multiplatform
+
+data class NavigationItem(val label: String, val route: String)
+
+val navItems = listOf(
+	NavigationItem("Order", "order"),
+	NavigationItem("Menu", "menu_list"),
+	NavigationItem("Kitchen", "kitchen"),
+	NavigationItem("Sales", "sales"),
+	NavigationItem("Inventory", "inventory")
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
@@ -46,7 +59,7 @@ fun AppNavHost() {
 	MaterialTheme {
 		Scaffold(
 			topBar = {
-				CenterAlignedTopAppBar(
+				if (!isWeb) CenterAlignedTopAppBar(
 					title = { Text(stringResource(Res.string.app_name)) },
 					navigationIcon = {
 						IconButton(onClick = {}) {
@@ -60,13 +73,25 @@ fun AppNavHost() {
 					},
 					actions = {
 						IconButton(onClick = {}) {
-							//							Icon(imageVector = vectorResource(Res.drawable.compose_multiplatform))
+//							Icon(imageVector = vectorResource(Res.drawable.compose_multiplatform))
 						}
 					},
 				)
 			},
 			bottomBar = {
-				NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) { }
+				if (!isWeb) NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
+					for (item in navItems) {
+						NavigationBarItem(
+							selected = selectedDestination == item.route,
+							label = { Text(item.label) },
+							icon = {},
+							onClick = {
+								navController.navigate(item.route)
+								selectedDestination = item.route
+							},
+						)
+					}
+				}
 			}
 		) { paddingValues ->
 			NavHost(
@@ -89,7 +114,7 @@ fun AppNavHost() {
 				}
 
 				if (isWeb) {
-					composable("order") { Text("aaaaa") }
+					composable("order") { CustomerOrderPage(navController) }
 				}
 			}
 		}
