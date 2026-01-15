@@ -1,7 +1,6 @@
 package containerised.pos.views
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.rememberPagerState
@@ -9,6 +8,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -26,10 +28,7 @@ import androidx.navigation.NavController
 import containerised.pos.models.MenuItem
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import org.jetbrains.compose.resources.vectorResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import posapplication.composeapp.generated.resources.Res
-import posapplication.composeapp.generated.resources.baseline_menu_24
 
 val mockItems = listOf(
 	MenuItem(
@@ -78,50 +77,52 @@ fun CustomerOrderPage(navController: NavController?) {
 	val textFieldState = remember { TextFieldState() }
 	var searchResults by remember { mutableStateOf(listOf<String>()) }
 
-	Column(
-		modifier = Modifier
-			.fillMaxSize()
-			.padding(padding)
-			.verticalScroll(rememberScrollState())
-	) {
-		SimpleSearchBar(
-			textFieldState = textFieldState,
-			onSearch = { query ->
-				// Simulate search logic
-				searchResults = if (query.isNotEmpty()) {
-					List(10) { "Result for \"$query\" #$it" }
-				} else {
-					emptyList()
+	Scaffold(
+		topBar = {
+			SimpleSearchBar(
+				textFieldState = textFieldState,
+				searchResults = searchResults,
+				onSearch = { query ->
+					// Simulate search logic
+					searchResults = if (query.isNotEmpty()) {
+						List(10) { "Result for \"$query\" #$it" }
+					} else {
+						emptyList()
+					}
+				},
+			)
+		},
+		floatingActionButton = { CartFAB(navController) }
+	) { paddingValues ->
+		Column(
+			verticalArrangement = Arrangement.spacedBy(padding),
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues)
+				.verticalScroll(rememberScrollState())
+		) {
+			ImageSlider(Modifier.padding(8.dp))
+
+			Text("Popular Food", Modifier.padding(8.dp, 0.dp), style = MaterialTheme.typography.headlineMedium)
+
+			LazyRow(
+				Modifier.padding(8.dp, 0.dp),
+				horizontalArrangement = Arrangement.spacedBy(padding),
+			) {
+				items(mockItems.size) { index ->
+					ItemCard(menuItem = mockItems[index])
 				}
-			},
-			searchResults = searchResults,
-		)
-
-		Spacer(Modifier.size(padding))
-
-		ImageSlider()
-
-		Spacer(Modifier.size(padding))
-
-		Text("Popular Food", style = MaterialTheme.typography.headlineMedium)
-
-		Spacer(Modifier.size(padding))
-
-		LazyRow {
-			items(mockItems.size) { index ->
-				ItemCard(menuItem = mockItems[index])
-				Spacer(Modifier.size(padding))
 			}
-		}
 
-		Spacer(Modifier.size(padding))
+			Text("Your search", Modifier.padding(8.dp, 0.dp), style = MaterialTheme.typography.headlineMedium)
 
-		Text("Your search", style = MaterialTheme.typography.headlineMedium)
-
-		LazyRow {
-			items(mockItems.size) {
-				InputChip(label = { Text("Tag") }, selected = false, onClick = { /*TODO*/ })
-				Spacer(Modifier.size(padding))
+			LazyRow(
+				Modifier.padding(8.dp, 0.dp),
+				horizontalArrangement = Arrangement.spacedBy(8.dp),
+			) {
+				items(mockItems.size) {
+					InputChip(label = { Text("Tag") }, selected = false, onClick = { /*TODO*/ })
+				}
 			}
 		}
 	}
@@ -140,7 +141,11 @@ fun SimpleSearchBar(
 
 	Box(modifier.semantics { isTraversalGroup = true }) {
 		SearchBar(
-			modifier = Modifier.semantics { traversalIndex = 0f },
+			modifier = Modifier
+				.fillMaxWidth()
+				.widthIn(32.dp, 512.dp)
+				.padding(8.dp)
+				.semantics { traversalIndex = 0f },
 			inputField = {
 				SearchBarDefaults.InputField(
 					query = textFieldState.text.toString(),
@@ -154,7 +159,7 @@ fun SimpleSearchBar(
 					placeholder = { Text("Search") },
 					leadingIcon = {
 						Icon(
-							imageVector = vectorResource(Res.drawable.baseline_menu_24),
+							imageVector = Icons.Filled.Search,
 							contentDescription = "Search Icon"
 						)
 					}
@@ -167,10 +172,22 @@ fun SimpleSearchBar(
 }
 
 @Composable
-fun ImageSlider() {
+fun ImageSlider(modifier: Modifier) {
 	val pagerState = rememberPagerState(pageCount = { 5 })
 
-	Card(Modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)) { }
+	Card(modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)) { }
+}
+
+@Preview
+@Composable
+fun CartFAB(navController: NavController?) {
+	ExtendedFloatingActionButton(
+		text = { Text("View Cart") },
+		icon = { Icon(Icons.Filled.ShoppingCart, contentDescription = "Cart") },
+		onClick = { navController?.navigate("checkout") },
+		containerColor = MaterialTheme.colorScheme.primary,
+		contentColor = MaterialTheme.colorScheme.onPrimary,
+	)
 }
 
 @Composable

@@ -12,7 +12,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import containerised.pos.components.CartFAB
 import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
 import containerised.pos.views.*
@@ -53,17 +52,12 @@ fun AppNavHost() {
 
 //		Customer-facing application, available on web only
 		if (isWeb) {
-			Scaffold(
-				floatingActionButton = { CartFAB(navController) }
-			) { paddingValues ->
-				NavHost(
-					navController = navController,
-					startDestination = "order",
-					modifier = Modifier.padding(paddingValues)
-				) {
-					composable("order") { CustomerOrderPage(navController) }
-					composable("checkout") { CheckOutWebPage(navController) }
-				}
+			NavHost(
+				navController = navController,
+				startDestination = "order",
+			) {
+				composable("order") { CustomerOrderPage(navController) }
+				composable("checkout") { CheckOutWebPage(navController) }
 			}
 		}
 	}

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Discount
 import androidx.compose.material.icons.filled.RoomService
 import androidx.compose.material3.*
@@ -20,65 +21,23 @@ import containerised.pos.components.CheckoutMenuItem
 import containerised.pos.models.MenuItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-val mockCheckoutItems = listOf(
-	MenuItem(
-		id = "1",
-		name = "Margherita Pizza",
-		description = "Classic pizza with tomato sauce, mozzarella, and basil.",
-		price = 8.99f,
-		categoryID = "cat1",
-		isAvailable = true,
-		estimatedPreparationTime = 15,
-		imageURL = null,
-		branchID = "branch1",
-		specialNotes = null,
-	),
-	MenuItem(
-		id = "2",
-		name = "Caesar Salad",
-		description = "Crisp romaine lettuce with Caesar dressing, croutons, and Parmesan cheese.",
-		price = 6.49f,
-		categoryID = "cat2",
-		isAvailable = true,
-		estimatedPreparationTime = 10,
-		imageURL = null,
-		branchID = "branch1",
-		specialNotes = null,
-	),
-	MenuItem(
-		id = "3",
-		name = "Spaghetti Carbonara",
-		description = "Spaghetti pasta with creamy sauce, pancetta, and Parmesan cheese.",
-		price = 10.99f,
-		categoryID = "cat1",
-		isAvailable = false,
-		estimatedPreparationTime = 20,
-		imageURL = null,
-		branchID = "branch1",
-		specialNotes = null,
-	),
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun CheckOutWebPage(navController: NavController?) {
-	LazyColumn(
-		modifier = Modifier
-			.background(MaterialTheme.colorScheme.surface)
-	) {
+	LazyColumn {
 		item {
-			Box(
-				modifier = Modifier
-					.fillMaxWidth()
-					.height(40.dp)
-					.background(MaterialTheme.colorScheme.surface),
-				contentAlignment = Alignment.Center
-			) {
-				Text(
-					text = "My Cart",
-					style = MaterialTheme.typography.titleMedium,
-					color = Color.Black
-				)
-			}
+			CenterAlignedTopAppBar(
+				navigationIcon = {
+					IconButton(onClick = { navController?.popBackStack() }) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+							contentDescription = "Back"
+						)
+					}
+				},
+				title = { Text("My Cart") }
+			)
 			Card(
 				modifier = Modifier
 					.fillMaxWidth()
@@ -109,7 +68,13 @@ fun CheckOutWebPage(navController: NavController?) {
 							.padding(vertical = 3.dp, horizontal = 12.dp),
 						verticalArrangement = Arrangement.spacedBy(6.dp)
 					) {
-						mockCheckoutItems.forEach { item -> CheckoutMenuItem(item) }
+						CheckoutMenuItem("Lorem ipsum", 100f)
+						CheckoutMenuItem("Lorem ipsum", 100f)
+						CheckoutMenuItem("Lorem ipsum", 100f)
+						CheckoutMenuItem("Lorem ipsum", 100f)
+						CheckoutMenuItem("Lorem ipsum", 100f)
+						CheckoutMenuItem("Lorem ipsum", 100f)
+						CheckoutMenuItem("Lorem ipsum", 100f)
 					}
 				}
 			}
