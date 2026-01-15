@@ -25,7 +25,7 @@ fun CheckoutDiscountItem() {
 		Row(
 			modifier = Modifier
 				.clip(RoundedCornerShape(8.dp))
-				.background(Color(0xFF878787))
+				.background(MaterialTheme.colorScheme.outlineVariant)
 				.fillMaxWidth(),
 			horizontalArrangement = Arrangement.spacedBy(6.dp),
 		) {
@@ -33,7 +33,7 @@ fun CheckoutDiscountItem() {
 				modifier = Modifier
 					.size(52.dp)
 					.clip(RoundedCornerShape(8.dp))
-					.background(Color(0xFF6F6E6E)),
+					.background(Color(0xFFACACAC)),
 				contentAlignment = Alignment.Center
 			) {}
 			Column(

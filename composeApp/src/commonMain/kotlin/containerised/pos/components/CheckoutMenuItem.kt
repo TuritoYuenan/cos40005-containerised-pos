@@ -13,12 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import containerised.pos.models.MenuItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Preview
 @Composable
-fun CheckoutMenuItem(name: String, price: Float) {
+fun CheckoutMenuItem(menuItem: MenuItem) {
 	var value by remember { mutableStateOf(1) }
 	Box {
 		Row(
@@ -30,7 +32,7 @@ fun CheckoutMenuItem(name: String, price: Float) {
 				modifier = Modifier
 					.size(76.dp)
 					.clip(RoundedCornerShape(8.dp))
-					.background(Color(0xFF636262)),
+					.background(Color(0xFFACACAC)),
 				contentAlignment = Alignment.Center
 			) {}
 			Column(
@@ -40,16 +42,20 @@ fun CheckoutMenuItem(name: String, price: Float) {
 				verticalArrangement = Arrangement.SpaceEvenly
 			) {
 				Text(
-					text = name,
+					modifier = Modifier
+						.width(82.dp),
+					maxLines = 1,
+					overflow = TextOverflow.Ellipsis,
+					text = menuItem.name,
 					style = MaterialTheme.typography.titleSmall
 				)
 				Text(
-					text = "$$price",
+					text = menuItem.price.toString(),
 					style = MaterialTheme.typography.bodySmall
 				)
 				Row {
 					Text(
-						text = "Total: $" + value*price,
+						text = "Total: $" + value*menuItem.price,
 					)
 				}
 			}
@@ -63,7 +69,7 @@ fun CheckoutMenuItem(name: String, price: Float) {
 					modifier = Modifier.size(32.dp),
 					onClick = { value-- },
 					colors = ButtonDefaults.buttonColors(
-						containerColor = Color(0xFF2196F3),
+						containerColor = MaterialTheme.colorScheme.primaryContainer,
 						contentColor = Color.Black
 					),
 					shape = RoundedCornerShape(4.dp),
@@ -82,7 +88,7 @@ fun CheckoutMenuItem(name: String, price: Float) {
 						.size(32.dp),
 					onClick = { value++ },
 					colors = ButtonDefaults.buttonColors(
-						containerColor = Color(0xFF2196F3),
+						containerColor = MaterialTheme.colorScheme.primaryContainer,
 						contentColor = Color.Black
 					),
 					shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),

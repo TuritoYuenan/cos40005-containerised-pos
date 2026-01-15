@@ -17,21 +17,60 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.components.CheckoutDiscountItem
 import containerised.pos.components.CheckoutMenuItem
+import containerised.pos.models.MenuItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+val mockCheckoutItems = listOf(
+	MenuItem(
+		id = "1",
+		name = "Margherita Pizza",
+		description = "Classic pizza with tomato sauce, mozzarella, and basil.",
+		price = 8.99f,
+		categoryID = "cat1",
+		isAvailable = true,
+		estimatedPreparationTime = 15,
+		imageURL = null,
+		branchID = "branch1",
+		specialNotes = null,
+	),
+	MenuItem(
+		id = "2",
+		name = "Caesar Salad",
+		description = "Crisp romaine lettuce with Caesar dressing, croutons, and Parmesan cheese.",
+		price = 6.49f,
+		categoryID = "cat2",
+		isAvailable = true,
+		estimatedPreparationTime = 10,
+		imageURL = null,
+		branchID = "branch1",
+		specialNotes = null,
+	),
+	MenuItem(
+		id = "3",
+		name = "Spaghetti Carbonara",
+		description = "Spaghetti pasta with creamy sauce, pancetta, and Parmesan cheese.",
+		price = 10.99f,
+		categoryID = "cat1",
+		isAvailable = false,
+		estimatedPreparationTime = 20,
+		imageURL = null,
+		branchID = "branch1",
+		specialNotes = null,
+	),
+)
 @Composable
 @Preview
 fun CheckOutWebPage(navController: NavController?) {
 	LazyColumn(
 		modifier = Modifier
-			.background(Color.White)
+			.background(MaterialTheme.colorScheme.surface)
 	) {
 		item {
 			Box(
 				modifier = Modifier
 					.fillMaxWidth()
 					.height(40.dp)
-					.background(Color.White),
+					.background(MaterialTheme.colorScheme.surface),
 				contentAlignment = Alignment.Center
 			) {
 				Text(
@@ -47,7 +86,10 @@ fun CheckOutWebPage(navController: NavController?) {
 				shape = RoundedCornerShape(12.dp),
 				elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
 			) {
-				Column {
+				Column(
+					modifier = Modifier
+						.background(Color.White)
+				) {
 					Row(
 						modifier = Modifier
 							.padding(vertical = 6.dp),
@@ -67,13 +109,7 @@ fun CheckOutWebPage(navController: NavController?) {
 							.padding(vertical = 3.dp, horizontal = 12.dp),
 						verticalArrangement = Arrangement.spacedBy(6.dp)
 					) {
-						CheckoutMenuItem("Lorem isum", 100f)
-						CheckoutMenuItem("Lorem isum", 100f)
-						CheckoutMenuItem("Lorem isum", 100f)
-						CheckoutMenuItem("Lorem isum", 100f)
-						CheckoutMenuItem("Lorem isum", 100f)
-						CheckoutMenuItem("Lorem isum", 100f)
-						CheckoutMenuItem("Lorem isum", 100f)
+						mockCheckoutItems.forEach { item -> CheckoutMenuItem(item) }
 					}
 				}
 			}
@@ -84,7 +120,10 @@ fun CheckOutWebPage(navController: NavController?) {
 				shape = RoundedCornerShape(12.dp),
 				elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
 			) {
-				Column {
+				Column(
+					modifier = Modifier
+						.background(Color.White)
+				) {
 					Row(
 						modifier = Modifier
 							.padding(vertical = 6.dp),
@@ -108,12 +147,20 @@ fun CheckOutWebPage(navController: NavController?) {
 						CheckoutDiscountItem()
 					}
 				}
-				Card {
+			}
+			Box {
+				Card(
+					modifier = Modifier
+						.fillMaxWidth()
+						.background(MaterialTheme.colorScheme.surface)
+						.padding(vertical = 6.dp, horizontal = 6.dp)
+						.align(Alignment.BottomCenter),
+				) {
 					Row(
 						modifier = Modifier
 							.fillMaxWidth()
 							.clip(RoundedCornerShape(2.dp))
-							.background(Color(0xFF2196F3))
+							.background(MaterialTheme.colorScheme.primaryContainer)
 							.padding(vertical = 6.dp, horizontal = 6.dp),
 
 						horizontalArrangement = Arrangement.SpaceBetween,
