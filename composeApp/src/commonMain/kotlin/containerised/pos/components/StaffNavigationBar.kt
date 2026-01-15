@@ -1,29 +1,28 @@
 package containerised.pos.components
 
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Comment
+import androidx.compose.material.icons.automirrored.filled.MenuOpen
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.Tab
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.vectorResource
-import posapplication.composeapp.generated.resources.Res
-import posapplication.composeapp.generated.resources.baseline_menu_24
 
-data class NavigationItem(val label: String, val route: String, val icon: DrawableResource)
+data class NavigationItem(val label: String, val route: String, val icon: ImageVector)
 
 val navItems = listOf(
-	NavigationItem("Order", "order", Res.drawable.baseline_menu_24),
-	NavigationItem("Menu", "menu_list", Res.drawable.baseline_menu_24),
-	NavigationItem("Kitchen", "kitchen", Res.drawable.baseline_menu_24),
-	NavigationItem("Sales", "sales", Res.drawable.baseline_menu_24),
-	NavigationItem("Inventory", "inventory", Res.drawable.baseline_menu_24)
+	NavigationItem("Order", "order", Icons.AutoMirrored.Filled.Comment),
+	NavigationItem("Menu", "menu_list", Icons.AutoMirrored.Filled.MenuOpen),
+	NavigationItem("Kitchen", "kitchen", Icons.Filled.Tab),
+	NavigationItem("Sales", "sales", Icons.Filled.Inbox),
+	NavigationItem("Inventory", "inventory", Icons.Filled.Folder)
 )
 
 @Composable
@@ -37,7 +36,7 @@ fun StaffNavigationBar(navController: NavController) {
 				label = { Text(item.label) },
 				icon = {
 					Icon(
-						imageVector = vectorResource(item.icon),
+						imageVector = item.icon,
 						contentDescription = item.label
 					)
 				},
