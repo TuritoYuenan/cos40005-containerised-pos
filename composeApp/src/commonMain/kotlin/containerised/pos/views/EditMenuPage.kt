@@ -103,7 +103,7 @@ fun EditMenuPage(navController: NavController, itemId: String) {
 			) {
 				if (!item?.imageURL.isNullOrBlank()) {
 					KamelImage(
-						resource = asyncPainterResource(item!!.imageURL!!),
+						resource = { asyncPainterResource(item!!.imageURL!!) },
 						contentDescription = item!!.name,
 						contentScale = ContentScale.Crop,
 						modifier = Modifier

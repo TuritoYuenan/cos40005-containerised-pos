@@ -119,12 +119,8 @@ fun CheckOutWebPage(navController: NavController?) {
 						horizontalArrangement = Arrangement.SpaceBetween,
 						verticalAlignment = Alignment.CenterVertically
 					) {
-						Text(
-							text = "Order:"
-						)
-						Text(
-							text = "$300"
-						)
+						Text("Order:")
+						Text("$300")
 					}
 				}
 			}

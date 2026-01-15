@@ -78,7 +78,12 @@ fun CustomerOrderPage(navController: NavController?) {
 	val textFieldState = remember { TextFieldState() }
 	var searchResults by remember { mutableStateOf(listOf<String>()) }
 
-	Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+	Column(
+		modifier = Modifier
+			.fillMaxSize()
+			.padding(padding)
+			.verticalScroll(rememberScrollState())
+	) {
 		SimpleSearchBar(
 			textFieldState = textFieldState,
 			onSearch = { query ->
@@ -90,7 +95,6 @@ fun CustomerOrderPage(navController: NavController?) {
 				}
 			},
 			searchResults = searchResults,
-			modifier = Modifier.fillMaxWidth()
 		)
 
 		Spacer(Modifier.size(padding))
@@ -115,7 +119,7 @@ fun CustomerOrderPage(navController: NavController?) {
 		Text("Your search", style = MaterialTheme.typography.headlineMedium)
 
 		LazyRow {
-			items(mockItems.size) { index ->
+			items(mockItems.size) {
 				InputChip(label = { Text("Tag") }, selected = false, onClick = { /*TODO*/ })
 				Spacer(Modifier.size(padding))
 			}
@@ -136,9 +140,7 @@ fun SimpleSearchBar(
 
 	Box(modifier.semantics { isTraversalGroup = true }) {
 		SearchBar(
-			modifier = Modifier
-				.align(Alignment.TopCenter)
-				.semantics { traversalIndex = 0f },
+			modifier = Modifier.semantics { traversalIndex = 0f },
 			inputField = {
 				SearchBarDefaults.InputField(
 					query = textFieldState.text.toString(),
@@ -160,22 +162,7 @@ fun SimpleSearchBar(
 			},
 			expanded = expanded,
 			onExpandedChange = { expanded = it },
-		) {
-			// Display search results in a scrollable column
-			Column(Modifier.verticalScroll(rememberScrollState())) {
-				searchResults.forEach { result ->
-					ListItem(
-						headlineContent = { Text(result) },
-						modifier = Modifier
-							.clickable {
-								textFieldState.edit { replace(0, length, result) }
-								expanded = false
-							}
-							.fillMaxWidth()
-					)
-				}
-			}
-		}
+		) {}
 	}
 }
 
@@ -183,7 +170,7 @@ fun SimpleSearchBar(
 fun ImageSlider() {
 	val pagerState = rememberPagerState(pageCount = { 5 })
 
-	Card(Modifier.fillMaxWidth().aspectRatio(2f)) {  }
+	Card(Modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)) { }
 }
 
 @Composable
