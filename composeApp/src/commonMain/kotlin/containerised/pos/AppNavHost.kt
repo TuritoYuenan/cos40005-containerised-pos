@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import containerised.pos.database.Database
+import containerised.pos.views.CheckOutWebPage
 import containerised.pos.views.CustomerOrderPage
 import containerised.pos.views.EditMenuPage
 import containerised.pos.views.LoginPage
@@ -44,7 +45,8 @@ val navItems = listOf(
 	NavigationItem("Menu", "menu_list"),
 	NavigationItem("Kitchen", "kitchen"),
 	NavigationItem("Sales", "sales"),
-	NavigationItem("Inventory", "inventory")
+	NavigationItem("Inventory", "inventory"),
+	NavigationItem("Checkout", "checkout")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,7 +55,7 @@ val navItems = listOf(
 fun AppNavHost() {
 //	val cacheDatabase = Database(DatabaseDriverFactory())
 	val navController = rememberNavController()
-	val startDestination = if (isWeb) "order" else "login"
+	val startDestination = if (isWeb) "checkout" else "login"
 	var selectedDestination by rememberSaveable { mutableStateOf("login") }
 
 	MaterialTheme {
@@ -114,9 +116,10 @@ fun AppNavHost() {
 				}
 
 				if (isWeb) {
-					composable("order") { CustomerOrderPage(navController) }
+					composable("order") { CustomerOrderPage(navController)}
+					composable("checkout") { CheckOutWebPage(navController) }
+					}
 				}
 			}
 		}
 	}
-}

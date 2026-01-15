@@ -14,13 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import containerised.pos.components.CheckoutDiscountItem
 import containerised.pos.components.CheckoutMenuItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
-fun CheckOutWebPage() {
+fun CheckOutWebPage(navController: NavController?) {
 	LazyColumn(
 		modifier = Modifier
 			.background(Color.White)
@@ -66,6 +67,10 @@ fun CheckOutWebPage() {
 							.padding(vertical = 3.dp, horizontal = 12.dp),
 						verticalArrangement = Arrangement.spacedBy(6.dp)
 					) {
+						CheckoutMenuItem("Lorem isum", 100f)
+						CheckoutMenuItem("Lorem isum", 100f)
+						CheckoutMenuItem("Lorem isum", 100f)
+						CheckoutMenuItem("Lorem isum", 100f)
 						CheckoutMenuItem("Lorem isum", 100f)
 						CheckoutMenuItem("Lorem isum", 100f)
 						CheckoutMenuItem("Lorem isum", 100f)
