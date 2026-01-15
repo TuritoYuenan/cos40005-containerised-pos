@@ -2,6 +2,7 @@ package containerised.pos.views
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -9,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
@@ -110,7 +112,7 @@ fun CustomerOrderPage(navController: NavController?) {
 				horizontalArrangement = Arrangement.spacedBy(padding),
 			) {
 				items(mockItems.size) { index ->
-					ItemCard(menuItem = mockItems[index])
+					TallItemCard(menuItem = mockItems[index])
 				}
 			}
 
@@ -191,30 +193,35 @@ fun CartFAB(navController: NavController?) {
 }
 
 @Composable
-fun ItemCard(menuItem: MenuItem) {
+fun TallItemCard(menuItem: MenuItem, onAddToCart: () -> Unit = {}) {
 	val cardWidth = 128.dp
 
 	OutlinedCard(modifier = Modifier.size(cardWidth, 256.dp)) {
 		Column {
-			KamelImage(
-				resource = { asyncPainterResource("https://placehold.co/256x256") },
-				contentDescription = menuItem.name,
-				contentScale = ContentScale.Crop,
-				modifier = Modifier
-					.size(cardWidth)
-					.aspectRatio(1f)
-					.clip(RoundedCornerShape(8.dp)),
-				onFailure = {
-					Box(
-						modifier = Modifier
-							.size(cardWidth)
-							.aspectRatio(1f)
-							.clip(RoundedCornerShape(8.dp))
-							.background(Color(0xFF0358AD)),
-						contentAlignment = Alignment.Center
-					) {}
-				}
-			)
+			Box {
+				KamelImage(
+					resource = { asyncPainterResource("https://placehold.co/256x256") },
+					contentDescription = menuItem.name,
+					contentScale = ContentScale.Crop,
+					modifier = Modifier
+						.size(cardWidth)
+						.aspectRatio(1f)
+						.clip(RoundedCornerShape(8.dp)),
+					onFailure = {
+						Box(
+							contentAlignment = Alignment.Center,
+							modifier = Modifier
+								.size(cardWidth)
+								.aspectRatio(1f)
+								.clip(RoundedCornerShape(8.dp))
+								.background(Color(0xFF0358AD)),
+						) {}
+					}
+				)
+
+				// Add to cart button positioned at top-right
+				AddToCartButton(onAddToCart, modifier = Modifier.align(Alignment.TopEnd))
+			}
 			Column(modifier = Modifier.padding(8.dp)) {
 				Text(
 					menuItem.name,
@@ -236,9 +243,65 @@ fun ItemCard(menuItem: MenuItem) {
 	}
 }
 
+@Composable
+fun WideItemCard(menuItem: MenuItem, onAddToCart: () -> Unit = {}) {
+	OutlinedCard(modifier = Modifier.fillMaxWidth().height(120.dp)) {
+		Box {
+			Row {
+				KamelImage(
+					resource = { asyncPainterResource("https://placehold.co/256x256") },
+					contentDescription = menuItem.name,
+					contentScale = ContentScale.Crop,
+					modifier = Modifier
+						.size(120.dp)
+						.clip(RoundedCornerShape(8.dp)),
+					onFailure = {
+						Box(
+							contentAlignment = Alignment.Center,
+							modifier = Modifier
+								.size(120.dp)
+								.clip(RoundedCornerShape(8.dp))
+								.background(Color(0xFF0358AD)),
+						) {}
+					}
+				)
+				Column(
+					modifier = Modifier.padding(8.dp),
+					verticalArrangement = Arrangement.SpaceBetween
+				) {
+					Text(
+						menuItem.name,
+						maxLines = 2,
+						overflow = TextOverflow.Ellipsis,
+						style = MaterialTheme.typography.titleMedium
+					)
+					Text("$${menuItem.price}", style = MaterialTheme.typography.bodyLarge)
+				}
+			}
+
+			// Add to cart button positioned at top-right
+			AddToCartButton(onAddToCart, modifier = Modifier.align(Alignment.TopEnd))
+		}
+	}
+}
+
+@Composable
+fun AddToCartButton(onAddToCart: () -> Unit, modifier: Modifier = Modifier) {
+	FilledTonalIconButton(
+		onClick = onAddToCart,
+		modifier = modifier.padding(8.dp).size(32.dp),
+	) {
+		Icon(
+			imageVector = Icons.Filled.Add,
+			contentDescription = "Add to cart",
+			modifier = Modifier.size(18.dp)
+		)
+	}
+}
+
 @Preview
 @Composable
-fun PreviewItemCard() {
+fun PreviewTallItemCard() {
 	val sampleItem = MenuItem(
 		id = "1",
 		name = "Sample Dish",
@@ -252,5 +315,24 @@ fun PreviewItemCard() {
 		specialNotes = null,
 	)
 
-	ItemCard(menuItem = sampleItem)
+	TallItemCard(menuItem = sampleItem)
+}
+
+@Preview
+@Composable
+fun PreviewWideItemCard() {
+	val sampleItem = MenuItem(
+		id = "1",
+		name = "Sample Dish",
+		description = "A delicious sample dish to try out.",
+		price = 9.99f,
+		categoryID = "cat1",
+		isAvailable = true,
+		estimatedPreparationTime = 15,
+		imageURL = null,
+		branchID = "branch1",
+		specialNotes = null,
+	)
+
+	WideItemCard(menuItem = sampleItem)
 }
