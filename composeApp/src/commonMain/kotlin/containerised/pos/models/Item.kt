@@ -6,49 +6,34 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MenuItem(
+data class Item(
 	@SerialName("item_id")
-	val id: String,
+	val itemId: String,
 
 	@SerialName("item_name")
-	val name: String,
+	val itemName: String,
 
 	@SerialName("item_des")
-	val description: String?,
+	val itemDes: String? = null,
 
-	@SerialName("price")
-	val price: Float,
+	@SerialName("default_price")
+	val defaultPrice: Float,
 
-	@SerialName("category_id")
-	val categoryID: String,
-
-	@SerialName("is_available")
-	val isAvailable: Boolean?,
-
-	@SerialName("est_prep_time")
-	val estimatedPreparationTime: Int?,
-
-	@SerialName("img_url")
-	val imageURL: String?,
-
-	@SerialName("branch_id")
-	val branchID: String,
-
-	@SerialName("special_notes")
-	val specialNotes: String?
+	@SerialName("default_estimated_prep")
+	val defaultEstimatedPrep: String
 )
 
 // Add a new MenuItem
-suspend fun addMenuItem(item: MenuItem) {
+suspend fun addMenuItem(item: Item) {
 	SupabaseClientProvider.supabase.postgrest["menu_items"].insert(item)
 }
 
 // Fetch all MenuItem
-suspend fun fetchMenuItem(): List<MenuItem> {
-	return SupabaseClientProvider.supabase.postgrest["menu_items"].select().decodeList<MenuItem>()
+suspend fun fetchMenuItem(): List<Item> {
+	return SupabaseClientProvider.supabase.postgrest["menu_items"].select().decodeList<Item>()
 }
 // Fetch a MenuItem by ID
-suspend fun fetchMenuItemById(itemId: String): MenuItem? {
+suspend fun fetchMenuItemById(itemId: String): Item? {
 	val result = SupabaseClientProvider.supabase.postgrest["menu_items"]
 		.select {
 			filter {
@@ -56,11 +41,11 @@ suspend fun fetchMenuItemById(itemId: String): MenuItem? {
 			}
 			limit(1)
 		}
-		.decodeList<MenuItem>()
+		.decodeList<Item>()
 	return result.firstOrNull()
 }
 // Edit  MenuItem by ID
-suspend fun updateMenuItem(itemId: String, updatedData: MenuItem) {
+suspend fun updateMenuItem(itemId: String, updatedData: Item) {
 	SupabaseClientProvider.supabase.postgrest["menu_items"]
 		.update(updatedData) {
 			filter {
