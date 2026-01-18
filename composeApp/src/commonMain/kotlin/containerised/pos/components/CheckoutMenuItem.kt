@@ -15,18 +15,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import containerised.pos.models.MenuItem
+import containerised.pos.models.Item
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Preview
 @Composable
-fun CheckoutMenuItem(menuItem: MenuItem) {
+fun CheckoutMenuItem(Item: Item) {
 	var value by remember { mutableStateOf(1) }
 	Box {
 		Row(
 			modifier = Modifier
 				.fillMaxWidth(),
-			horizontalArrangement = Arrangement.spacedBy(24.dp, alignment = Alignment.CenterHorizontally),
+			horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
 		) {
 			Box(
 				modifier = Modifier
@@ -46,16 +46,16 @@ fun CheckoutMenuItem(menuItem: MenuItem) {
 						.width(82.dp),
 					maxLines = 1,
 					overflow = TextOverflow.Ellipsis,
-					text = menuItem.name,
+					text = Item.itemName,
 					style = MaterialTheme.typography.titleSmall
 				)
 				Text(
-					text = menuItem.price.toString(),
+					text = "$" + Item.defaultPrice.toString(),
 					style = MaterialTheme.typography.bodySmall
 				)
 				Row {
 					Text(
-						text = "Total: $" + value*menuItem.price,
+						text = "Total: $" + value*Item.defaultPrice,
 					)
 				}
 			}

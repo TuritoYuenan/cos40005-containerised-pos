@@ -1,5 +1,7 @@
 package containerised.pos.models
 
+import containerised.pos.database.SupabaseClientProvider
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -23,3 +25,8 @@ data class BranchItem(
 	@SerialName("is_available")
 	val isAvailable: Boolean = false
 )
+
+// Fetch all MenuItem
+suspend fun fetchBranchItem(): List<BranchItem> {
+	return SupabaseClientProvider.supabase.postgrest["branch_items"].select().decodeList<BranchItem>()
+}

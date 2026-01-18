@@ -25,16 +25,16 @@ data class Item(
 
 // Add a new MenuItem
 suspend fun addMenuItem(item: Item) {
-	SupabaseClientProvider.supabase.postgrest["menu_items"].insert(item)
+	SupabaseClientProvider.supabase.postgrest["items"].insert(item)
 }
 
 // Fetch all MenuItem
-suspend fun fetchMenuItem(): List<Item> {
-	return SupabaseClientProvider.supabase.postgrest["menu_items"].select().decodeList<Item>()
+suspend fun fetchItem(): List<Item> {
+	return SupabaseClientProvider.supabase.postgrest["items"].select().decodeList<Item>()
 }
 // Fetch a MenuItem by ID
-suspend fun fetchMenuItemById(itemId: String): Item? {
-	val result = SupabaseClientProvider.supabase.postgrest["menu_items"]
+suspend fun fetchItemById(itemId: String): Item? {
+	val result = SupabaseClientProvider.supabase.postgrest["items"]
 		.select {
 			filter {
 				eq("item_id", itemId)
@@ -46,7 +46,7 @@ suspend fun fetchMenuItemById(itemId: String): Item? {
 }
 // Edit  MenuItem by ID
 suspend fun updateMenuItem(itemId: String, updatedData: Item) {
-	SupabaseClientProvider.supabase.postgrest["menu_items"]
+	SupabaseClientProvider.supabase.postgrest["items"]
 		.update(updatedData) {
 			filter {
 				eq("item_id", itemId)
@@ -55,8 +55,8 @@ suspend fun updateMenuItem(itemId: String, updatedData: Item) {
 }
 
 // Delete MenuItem by ID
-suspend fun deleteMenuItem(itemId: String) {
-	SupabaseClientProvider.supabase.postgrest["menu_items"]
+suspend fun deleteItem(itemId: String) {
+	SupabaseClientProvider.supabase.postgrest["items"]
 		.delete {
 			filter {
 				eq("item_id", itemId)
