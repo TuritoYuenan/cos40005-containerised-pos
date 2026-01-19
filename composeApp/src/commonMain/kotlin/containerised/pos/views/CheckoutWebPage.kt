@@ -16,12 +16,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import containerised.pos.CheckoutItemStorage
 import containerised.pos.components.CheckoutDiscountItem
 import containerised.pos.components.CheckoutMenuItem
-import containerised.pos.isWeb
 import containerised.pos.models.Item
 import containerised.pos.models.fetchItem
-import kotlinx.serialization.json.Json
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,6 +29,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun CheckOutWebPage(navController: NavController?) {
 	var menuItems by remember { mutableStateOf<List<Item>?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
+	var checkoutItemFromStorage by remember { mutableStateOf<List<Item>?>(null) }
 	LaunchedEffect(Unit) {
 		try {
 			// Fetch all
@@ -40,6 +40,11 @@ fun CheckOutWebPage(navController: NavController?) {
 					"• ${item.itemId}: ${item.itemName} (${item.defaultPrice})"
 				)
 			}
+			CheckoutItemStorage.clear()
+			CheckoutItemStorage.saveItems(menuItems!!)
+
+			checkoutItemFromStorage = CheckoutItemStorage.loadItems()
+			println(checkoutItemFromStorage ?: "No stored items")
 		} catch (e: Exception) {
 			error = e.message
 			println("Error: $error")
@@ -88,7 +93,7 @@ fun CheckOutWebPage(navController: NavController?) {
 							.padding(vertical = 3.dp, horizontal = 12.dp),
 						verticalArrangement = Arrangement.spacedBy(6.dp)
 					) {
-						menuItems?.forEach { item -> CheckoutMenuItem(item) }
+						checkoutItemFromStorage?.forEach { item -> CheckoutMenuItem(item) }
 					}
 				}
 			}
