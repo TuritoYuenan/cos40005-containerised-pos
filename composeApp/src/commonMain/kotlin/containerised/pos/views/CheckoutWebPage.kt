@@ -139,6 +139,11 @@ fun CheckOutWebPage(navController: NavController?) {
 						.background(MaterialTheme.colorScheme.surface)
 						.padding(vertical = 6.dp, horizontal = 6.dp)
 						.align(Alignment.BottomCenter),
+					onClick = {
+						checkoutItemFromStorage?.forEach { item -> println(item) }
+						CheckoutItemStorage.clear()
+						navController?.popBackStack()
+					}
 				) {
 					Row(
 						modifier = Modifier
