@@ -5,10 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Visibility
@@ -37,6 +41,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 @Preview
 fun LoginPage() {
+	val padding = 16.dp
 	val emailAddress = rememberTextFieldState("")
 	var password by remember { mutableStateOf("") }
 	var passwordVisible by remember { mutableStateOf(false) }
@@ -44,6 +49,10 @@ fun LoginPage() {
 	Column(
 		verticalArrangement = Arrangement.spacedBy(16.dp),
 		horizontalAlignment = Alignment.CenterHorizontally,
+		modifier = Modifier
+			.fillMaxSize()
+			.padding(padding)
+			.verticalScroll(rememberScrollState()),
 	) {
 		Box(
 			modifier = Modifier
@@ -65,9 +74,7 @@ fun LoginPage() {
 			visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
 			keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
 			trailingIcon = {
-				val image = if (passwordVisible)
-					Icons.Filled.Visibility
-				else Icons.Filled.VisibilityOff
+				val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
 
 				// Localized description for accessibility services
 				val description = if (passwordVisible) "Hide password" else "Show password"
