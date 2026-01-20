@@ -30,3 +30,14 @@ data class BranchItem(
 suspend fun fetchBranchItem(): List<BranchItem> {
 	return SupabaseClientProvider.supabase.postgrest["branch_items"].select().decodeList<BranchItem>()
 }
+
+suspend fun fetchBranchItemByBranch(branchId: String): List<BranchItem>? {
+	val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
+		.select {
+			filter {
+				eq("branch_id", branchId)
+			}
+		}
+		.decodeList<BranchItem>()
+	return result
+}
