@@ -31,7 +31,7 @@ suspend fun fetchBranchItem(): List<BranchItem> {
 	return SupabaseClientProvider.supabase.postgrest["branch_items"].select().decodeList<BranchItem>()
 }
 
-suspend fun fetchBranchItemByBranch(branchId: String): List<BranchItem>? {
+suspend fun fetchBranchItemByBranch(branchId: String): List<BranchItem> {
 	val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
 		.select {
 			filter {

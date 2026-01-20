@@ -32,7 +32,7 @@ suspend fun addItem(item: Item) {
 suspend fun fetchItem(): List<Item> {
 	return SupabaseClientProvider.supabase.postgrest["items"].select().decodeList<Item>()
 }
-// Fetch a Item by ID
+// Fetch an Item by ID
 suspend fun fetchItemById(itemId: String): Item? {
 	val result = SupabaseClientProvider.supabase.postgrest["items"]
 		.select {
@@ -43,6 +43,16 @@ suspend fun fetchItemById(itemId: String): Item? {
 		}
 		.decodeList<Item>()
 	return result.firstOrNull()
+}
+suspend fun fetchItemByBranch(branchId: String): List<Item>{
+	var branchItem = fetchBranchItemByBranch(branchId)
+	branchItem!!.forEach { item ->
+		println(
+			"• ${item.branchId}: ${item.itemId}"
+		)
+	}
+	var item = branchItem.mapNotNull { branchItem -> fetchItemById(branchItem.itemId) }
+	return item
 }
 // Edit  Item by ID
 suspend fun updateItem(itemId: String, updatedData: Item) {

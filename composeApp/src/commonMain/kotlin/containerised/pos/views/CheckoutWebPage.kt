@@ -23,8 +23,10 @@ import containerised.pos.models.BranchItem
 import containerised.pos.models.Item
 import containerised.pos.models.fetchBranchItemByBranch
 import containerised.pos.models.fetchItem
+import containerised.pos.models.fetchItemByBranch
 import containerised.pos.models.fetchItemById
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.collections.forEach
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,11 +37,10 @@ fun CheckOutWebPage(navController: NavController?) {
 	var error by remember { mutableStateOf<String?>(null) }
 	var checkoutItemFromStorage by remember { mutableStateOf<List<Item>?>(null) }
 
-	val branchId = "BRA26011700"
+	val sampleBranchId = "BRA26011700"
 	LaunchedEffect(Unit) {
 		try {
-			branchItems = fetchBranchItemByBranch(branchId)
-			branchItems?.forEach { item -> menuItems = fetchItemById(branchItems.branchId) }
+			menuItems = fetchItemByBranch(sampleBranchId)
 			println("Fetched ${menuItems!!.size} menu items:")
 			menuItems!!.forEach { item ->
 				println(
