@@ -1,0 +1,9 @@
+.github
+.gradle
+.idea
+.kotlin
+build
+docs
+local.properties
+README.md
+.gitignore
