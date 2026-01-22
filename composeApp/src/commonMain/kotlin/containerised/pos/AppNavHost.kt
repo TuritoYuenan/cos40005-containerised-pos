@@ -14,6 +14,7 @@ import containerised.pos.components.StaffTopBar
 import containerised.pos.views.CheckOutWebPage
 import containerised.pos.views.CustomerOrderPage
 import containerised.pos.views.LoginPage
+import containerised.pos.views.MenuEditPage
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,10 +32,12 @@ fun AppNavHost() {
 			) { paddingValues ->
 				NavHost(
 					navController = navController,
-					startDestination = "login",
+                    //Change back to "login" before merging
+					startDestination = "menu-edit",
 					modifier = Modifier.padding(paddingValues)
 				) {
 					composable("login") { LoginPage() }
+                    composable("menu-edit") { MenuEditPage() }
 				}
 			}
 		}
