@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.models.Item
 import containerised.pos.models.Tag
+import containerised.pos.models.fetchFeaturedItem
 import containerised.pos.models.fetchItem
 import containerised.pos.models.fetchTags
 import io.kamel.image.KamelImage
@@ -38,113 +39,122 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 @Preview(showBackground = true)
 fun CustomerOrderPage(navController: NavController?) {
-    val padding = 16.dp
-    val textFieldState = remember { TextFieldState() }
-    var searchResults by remember { mutableStateOf(listOf<String>()) }
+	val padding = 16.dp
+	val textFieldState = remember { TextFieldState() }
+	var searchResults by remember { mutableStateOf(listOf<String>()) }
 
-    // State for items and tags
-    var items by remember { mutableStateOf<List<Item>>(emptyList()) }
-    var tags by remember { mutableStateOf<List<Tag>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    val scope = rememberCoroutineScope()
+	// State for items and tags
+	var featuredItems by remember { mutableStateOf<List<Item>>(emptyList()) }
+	var allItems by remember { mutableStateOf<List<Item>>(emptyList()) }
+	var tags by remember { mutableStateOf<List<Tag>>(emptyList()) }
+	var isLoading by remember { mutableStateOf(true) }
+	val scope = rememberCoroutineScope()
 
-    // Fetch data on startup
-    LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                items = fetchItem()
-                tags = fetchTags()
-            } catch (e: Exception) {
-                // Handle error - you might want to show an error message
-                println("Error fetching data: ${e.message}")
-            } finally {
-                isLoading = false
-            }
-        }
-    }
+	// Fetch data on startup
+	LaunchedEffect(Unit) {
+		scope.launch {
+			try {
+				featuredItems = fetchFeaturedItem()
+				allItems = fetchItem()
+				tags = fetchTags()
+			} catch (e: Exception) {
+				// Handle error - you might want to show an error message
+				println("Error fetching data: ${e.message}")
+			} finally {
+				isLoading = false
+			}
+		}
+	}
 
-    Scaffold(
-        topBar = {
-            SimpleSearchBar(
-                textFieldState = textFieldState,
-                searchResults = searchResults,
-                onSearch = { query ->
-                    // Simulate search logic
-                    searchResults = if (query.isNotEmpty()) {
-                        List(10) { "Result for \"$query\" #$it" }
-                    } else {
-                        emptyList()
-                    }
-                },
-            )
-        },
-        floatingActionButton = { CartFAB(navController) }
-    ) { paddingValues ->
-        if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.padding(paddingValues),
-                verticalArrangement = Arrangement.spacedBy(padding)
-            ) {
-                // Image Slider
-                item {
-                    ImageSlider(Modifier.padding(8.dp))
-                }
+	Scaffold(
+		topBar = {
+			SimpleSearchBar(
+				textFieldState = textFieldState,
+				searchResults = searchResults,
+				onSearch = { query ->
+					// Simulate search logic
+					searchResults = if (query.isNotEmpty()) {
+						List(10) { "Result for \"$query\" #$it" }
+					} else {
+						emptyList()
+					}
+				},
+			)
+		},
+		bottomBar = {
+			BottomAppBar(
+				actions = {
+					Text("Total: $0.00", Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
+				},
+				floatingActionButton = { CartFAB(navController) }
+			)
+		}
+	) { paddingValues ->
+		if (isLoading) {
+			Box(
+				modifier = Modifier
+					.fillMaxSize()
+					.padding(paddingValues),
+				contentAlignment = Alignment.Center
+			) {
+				CircularProgressIndicator()
+			}
+		} else {
+			LazyColumn(
+				modifier = Modifier.padding(paddingValues),
+				verticalArrangement = Arrangement.spacedBy(padding)
+			) {
+				// Image Slider
+				item {
+					ImageSlider(Modifier.padding(8.dp))
+				}
 
-                // Popular Food Section
-                item {
-                    Text("Popular Food", Modifier.padding(8.dp, 0.dp), style = MaterialTheme.typography.headlineMedium)
-                }
+				// Featured Section
+				item {
+					Text("Featured", Modifier.padding(8.dp, 0.dp), style = MaterialTheme.typography.headlineMedium)
+				}
 
-                item {
-                    LazyRow(
-                        Modifier.padding(8.dp, 0.dp),
-                        horizontalArrangement = Arrangement.spacedBy(padding),
-                    ) {
-                        items(items.size) { index ->
-                            TallItemCard(item = items[index])
-                        }
-                    }
-                }
+				item {
+					LazyRow(
+						Modifier.padding(8.dp, 0.dp),
+						horizontalArrangement = Arrangement.spacedBy(padding),
+					) {
+						items(featuredItems.size) { index ->
+							TallItemCard(item = featuredItems[index])
+						}
+					}
+				}
 
-                // Your search Section
-                item {
-                    Text("Your search", Modifier.padding(8.dp, 0.dp), style = MaterialTheme.typography.headlineMedium)
-                }
+				// Your search Section
+				item {
+					Text("Your search", Modifier.padding(8.dp, 0.dp), style = MaterialTheme.typography.headlineMedium)
+				}
 
-                item {
-                    LazyRow(
-                        Modifier.padding(8.dp, 0.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        items(tags.size) { index ->
-                            InputChip(
-                                label = { Text(tags[index].tagName) },
-                                selected = false,
-                                onClick = { /*TODO: Implement tag filtering*/ }
-                            )
-                        }
-                    }
-                }
+				item {
+					LazyRow(
+						Modifier.padding(8.dp, 0.dp),
+						horizontalArrangement = Arrangement.spacedBy(8.dp),
+					) {
+						items(tags.size) { index ->
+							InputChip(
+								label = { Text(tags[index].tagName) },
+								selected = false,
+								onClick = { /*TODO: Implement tag filtering*/ }
+							)
+						}
+					}
+				}
 
-                // Search results items
-                items(items.size) { index ->
-                    WideItemCard(
-                        item = items[index],
-                        modifier = Modifier.padding(8.dp, 0.dp)
-                    )
-                }
-            }
-        }
-    }
+				// Search results items
+				items(allItems.size) { index ->
+					WideItemCard(
+						item = allItems[index],
+						modifier = Modifier.padding(8.dp, 0.dp)
+					)
+				}
+			}
+		}
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -211,95 +221,95 @@ fun CartFAB(navController: NavController?) {
 
 @Composable
 fun TallItemCard(item: Item, onAddToCart: () -> Unit = {}) {
-    val cardWidth = 128.dp
+	val cardWidth = 128.dp
 
-    OutlinedCard(modifier = Modifier.size(cardWidth, 256.dp)) {
-        Column {
-            Box {
-                KamelImage(
-                    resource = { asyncPainterResource("https://placehold.co/256x256") },
-                    contentDescription = item.itemName,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(cardWidth)
-                        .aspectRatio(1f)
-                        .clip(RoundedCornerShape(8.dp)),
-                    onFailure = {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(cardWidth)
-                                .aspectRatio(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF0358AD)),
-                        ) {}
-                    }
-                )
+	OutlinedCard(modifier = Modifier.size(cardWidth, 256.dp)) {
+		Column {
+			Box {
+				KamelImage(
+					resource = { asyncPainterResource("https://placehold.co/256x256") },
+					contentDescription = item.itemName,
+					contentScale = ContentScale.Crop,
+					modifier = Modifier
+						.size(cardWidth)
+						.aspectRatio(1f)
+						.clip(RoundedCornerShape(8.dp)),
+					onFailure = {
+						Box(
+							contentAlignment = Alignment.Center,
+							modifier = Modifier
+								.size(cardWidth)
+								.aspectRatio(1f)
+								.clip(RoundedCornerShape(8.dp))
+								.background(Color(0xFF0358AD)),
+						) {}
+					}
+				)
 
-                // Add to cart button positioned at top-right
-                AddToCartButton(onAddToCart, modifier = Modifier.align(Alignment.TopEnd))
-            }
-            Column(modifier = Modifier.padding(8.dp)) {
-                Text(
-                    item.itemName,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                item.itemDes?.let {
-                    Text(
-                        it,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                Text("$${item.defaultPrice}", style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-    }
+				// Add to cart button positioned at top-right
+				AddToCartButton(onAddToCart, modifier = Modifier.align(Alignment.TopEnd))
+			}
+			Column(modifier = Modifier.padding(8.dp)) {
+				Text(
+					item.itemName,
+					maxLines = 2,
+					overflow = TextOverflow.Ellipsis,
+					style = MaterialTheme.typography.titleMedium
+				)
+				item.itemDes?.let {
+					Text(
+						it,
+						maxLines = 2,
+						overflow = TextOverflow.Ellipsis,
+						style = MaterialTheme.typography.bodyMedium
+					)
+				}
+				Text("$${item.defaultPrice}", style = MaterialTheme.typography.bodyLarge)
+			}
+		}
+	}
 }
 
 @Composable
 fun WideItemCard(item: Item, modifier: Modifier = Modifier, onAddToCart: () -> Unit = {}) {
-    OutlinedCard(modifier = modifier.fillMaxWidth().height(120.dp)) {
-        Box {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                KamelImage(
-                    resource = { asyncPainterResource("https://placehold.co/256x256") },
-                    contentDescription = item.itemName,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    onFailure = {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF0358AD)),
-                        ) {}
-                    }
-                )
-                Column(
-                    modifier = Modifier.padding(8.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        item.itemName,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text("$${item.defaultPrice}", style = MaterialTheme.typography.bodyLarge)
-                }
-            }
+	OutlinedCard(modifier = modifier.fillMaxWidth().height(120.dp)) {
+		Box {
+			Row(modifier = Modifier.fillMaxWidth()) {
+				KamelImage(
+					resource = { asyncPainterResource("https://placehold.co/256x256") },
+					contentDescription = item.itemName,
+					contentScale = ContentScale.Crop,
+					modifier = Modifier
+						.size(120.dp)
+						.clip(RoundedCornerShape(8.dp)),
+					onFailure = {
+						Box(
+							contentAlignment = Alignment.Center,
+							modifier = Modifier
+								.size(120.dp)
+								.clip(RoundedCornerShape(8.dp))
+								.background(Color(0xFF0358AD)),
+						) {}
+					}
+				)
+				Column(
+					modifier = Modifier.padding(8.dp),
+					verticalArrangement = Arrangement.SpaceBetween
+				) {
+					Text(
+						item.itemName,
+						maxLines = 2,
+						overflow = TextOverflow.Ellipsis,
+						style = MaterialTheme.typography.titleMedium
+					)
+					Text("$${item.defaultPrice}", style = MaterialTheme.typography.bodyLarge)
+				}
+			}
 
-            // Add to cart button positioned at top-right
-            AddToCartButton(onAddToCart, modifier = Modifier.align(Alignment.TopEnd))
-        }
-    }
+			// Add to cart button positioned at top-right
+			AddToCartButton(onAddToCart, modifier = Modifier.align(Alignment.TopEnd))
+		}
+	}
 }
 
 @Composable

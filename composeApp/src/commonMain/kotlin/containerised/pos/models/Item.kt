@@ -23,16 +23,23 @@ data class Item(
 	val defaultEstimatedPrep: String
 )
 
-// Add a new Item
+/**
+ * Add a new Item
+ */
 suspend fun addItem(item: Item) {
 	SupabaseClientProvider.supabase.postgrest["items"].insert(item)
 }
 
-// Fetch all Item
+/**
+ * Fetch all Items
+ */
 suspend fun fetchItem(): List<Item> {
 	return SupabaseClientProvider.supabase.postgrest["items"].select().decodeList<Item>()
 }
-// Fetch an Item by ID
+
+/**
+ * Fetch Item by ID
+ */
 suspend fun fetchItemById(itemId: String): Item? {
 	val result = SupabaseClientProvider.supabase.postgrest["items"]
 		.select {
@@ -44,32 +51,37 @@ suspend fun fetchItemById(itemId: String): Item? {
 		.decodeList<Item>()
 	return result.firstOrNull()
 }
+
+/**
+ * Fetch Items by Branch ID
+ */
 suspend fun fetchItemByBranch(branchId: String): List<Item>{
-	var branchItem = fetchBranchItemByBranch(branchId)
-	branchItem!!.forEach { item ->
-		println(
-			"• ${item.branchId}: ${item.itemId}"
-		)
-	}
-	var item = branchItem.mapNotNull { branchItem -> fetchItemById(branchItem.itemId) }
+	val branchItem = fetchBranchItemByBranch(branchId)
+	val item = branchItem.mapNotNull { branchItem -> fetchItemById(branchItem.itemId) }
 	return item
 }
-// Edit  Item by ID
-suspend fun updateItem(itemId: String, updatedData: Item) {
-	SupabaseClientProvider.supabase.postgrest["items"]
-		.update(updatedData) {
-			filter {
-				eq("item_id", itemId)
-			}
-		}
+
+/**
+ * Fetch Featured Items
+ */
+suspend fun fetchFeaturedItem(): List<Item> {
+	return SupabaseClientProvider.supabase.postgrest["items"]
+		.select { filter { eq("is_featured", true) } }
+		.decodeList<Item>()
 }
 
-// Delete Item by ID
+/**
+ * Update Item by ID
+ */
+suspend fun updateItem(itemId: String, updatedData: Item) {
+	SupabaseClientProvider.supabase.postgrest["items"]
+		.update(updatedData) { filter { eq("item_id", itemId) } }
+}
+
+/**
+ * Delete Item by ID
+ */
 suspend fun deleteItem(itemId: String) {
 	SupabaseClientProvider.supabase.postgrest["items"]
-		.delete {
-			filter {
-				eq("item_id", itemId)
-			}
-		}
+		.delete { filter { eq("item_id", itemId) } }
 }
