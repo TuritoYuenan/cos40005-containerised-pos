@@ -13,6 +13,7 @@ import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
 import containerised.pos.views.CheckOutWebPage
 import containerised.pos.views.CustomerOrderPage
+import containerised.pos.views.CustomerPaymentPage
 import containerised.pos.views.LoginPage
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -47,6 +48,7 @@ fun AppNavHost() {
 			) {
 				composable("order") { CustomerOrderPage(navController) }
 				composable("checkout") { CheckOutWebPage(navController) }
+				composable("payment") { CustomerPaymentPage(navController) }
 			}
 		}
 	}
