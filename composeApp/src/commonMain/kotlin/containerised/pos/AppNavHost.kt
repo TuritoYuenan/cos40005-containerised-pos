@@ -9,8 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
+import containerised.pos.models.CustomerPayment
 import containerised.pos.views.CheckOutWebPage
 import containerised.pos.views.CustomerOrderPage
 import containerised.pos.views.CustomerPaymentPage
@@ -48,7 +50,10 @@ fun AppNavHost() {
 			) {
 				composable("order") { CustomerOrderPage(navController) }
 				composable("checkout") { CheckOutWebPage(navController) }
-				composable("payment") { CustomerPaymentPage(navController) }
+				composable<CustomerPayment> { backStackEntry ->
+					val customerPayment = backStackEntry.toRoute<CustomerPayment>()
+					CustomerPaymentPage(navController, customerPayment)
+				}
 			}
 		}
 	}

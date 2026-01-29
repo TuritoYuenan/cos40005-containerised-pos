@@ -17,14 +17,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.CheckoutItemStorage
+import containerised.pos.models.CustomerPayment
 import containerised.pos.components.CheckoutDiscountItem
 import containerised.pos.components.CheckoutMenuItem
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Item
-import containerised.pos.models.fetchBranchItemByBranch
-import containerised.pos.models.fetchItem
+import containerised.pos.models.PaymentCodeBuilder
 import containerised.pos.models.fetchItemByBranch
-import containerised.pos.models.fetchItemById
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.collections.forEach
 
@@ -140,6 +139,9 @@ fun CheckOutWebPage(navController: NavController?) {
 				}
 			}
 			Box {
+				val totalAmount = checkoutItemFromStorage?.sumOf { it.defaultPrice.toDouble() } ?: 0.0
+				val currency = PaymentCodeBuilder.Currency.VND
+
 				Card(
 					modifier = Modifier
 						.fillMaxWidth()
@@ -147,9 +149,7 @@ fun CheckOutWebPage(navController: NavController?) {
 						.padding(vertical = 6.dp, horizontal = 6.dp)
 						.align(Alignment.BottomCenter),
 					onClick = {
-						checkoutItemFromStorage?.forEach { item -> println(item) }
-						CheckoutItemStorage.clear()
-						navController?.popBackStack()
+						navController?.navigate(CustomerPayment(amount = totalAmount, currency = currency.code))
 					}
 				) {
 					Row(
@@ -163,7 +163,7 @@ fun CheckOutWebPage(navController: NavController?) {
 						verticalAlignment = Alignment.CenterVertically
 					) {
 						Text("Order:")
-						Text("$300")
+						Text("$totalAmount $currency")
 					}
 				}
 			}

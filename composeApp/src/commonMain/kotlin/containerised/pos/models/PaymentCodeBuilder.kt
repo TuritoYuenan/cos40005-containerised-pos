@@ -44,6 +44,12 @@ class PaymentCodeBuilder {
 		return this
 	}
 
+	fun setTransaction(amount: String, currency: String): PaymentCodeBuilder {
+		paymentCode.transactionAmount = amount
+		paymentCode.transactionCurrency = currency
+		return this
+	}
+
 	fun setCountryCode(countryCode: String = "VN"): PaymentCodeBuilder {
 		paymentCode.countryCode = countryCode
 		return this
