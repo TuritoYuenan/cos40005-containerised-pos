@@ -2,6 +2,8 @@ package containerised.pos.models
 
 import containerised.pos.database.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.realtime.Column
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -13,12 +15,12 @@ data class BranchItem(
 	@SerialName("item_id")
 	val itemId: String,
 
-    val item: Item,
+    val item: Item? = null,
 
 	@SerialName("category_id")
 	val categoryId: String? = null,
 
-    val category: Category,
+    val category: Category? = null,
 
 	@SerialName("price")
 	val price: Float,
@@ -43,5 +45,39 @@ suspend fun fetchBranchItemByBranch(branchId: String): List<BranchItem> {
             }
         }
         .decodeList<BranchItem>()
+    return result
+}
+
+suspend fun fetchAndJoinBranchItemByBranch(branchId: String): List<BranchItem> {
+    val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
+        .select(
+            columns = Columns.raw(
+                """
+                branch_id,
+                item_id,
+                category_id,
+                price,
+                estimated_prep,
+                is_available,
+                item:items (
+                    item_id,
+                    item_name,
+                    item_desc,
+                    default_price,
+                    default_estimated_prep
+                ),
+                category:categories (
+                    category_id,
+                    category_name,
+                    display_order
+                )
+                """
+            )
+        ) {
+            filter {
+                eq("branch_id", branchId)
+            }
+        }.decodeList<BranchItem>()
+
     return result
 }

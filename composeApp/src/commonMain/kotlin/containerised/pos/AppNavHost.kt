@@ -36,7 +36,7 @@ fun AppNavHost() {
 				NavHost(
 					navController = navController,
                     //Change back to "login" before merging
-					startDestination = "edit-item",
+					startDestination = "menu-edit",
 					modifier = Modifier.padding(paddingValues)
 				) {
 					composable("login") { LoginPage() }

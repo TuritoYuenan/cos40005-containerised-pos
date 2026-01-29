@@ -20,11 +20,14 @@ import containerised.pos.models.BranchItem
 import containerised.pos.models.Category
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import containerised.pos.models.Item
+import containerised.pos.models.fetchAndJoinBranchItemByBranch
 import containerised.pos.models.fetchBranchItemByBranch
 import containerised.pos.models.fetchCategoryById
 import containerised.pos.models.fetchItem
 import containerised.pos.models.fetchItemById
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+
 @Preview
 @Composable
 fun MenuEditPage() {
@@ -37,7 +40,7 @@ fun MenuEditPage() {
 
     LaunchedEffect(Unit) {
         try {
-            items = fetchBranchItemByBranch("BRA26011700")
+            items = fetchAndJoinBranchItemByBranch("BRA26011700")
         } catch (e: Exception) {
             println("Error fetching data: ${e.message}")
         } finally {
@@ -45,7 +48,7 @@ fun MenuEditPage() {
         }
     }
 
-    val groupedItems = items.groupBy { it.categoryId ?: "Uncategorized" }
+    val groupedItems = items.groupBy { it.category }
 
     Column(modifier = Modifier.padding(16.dp)) {
 
@@ -58,81 +61,21 @@ fun MenuEditPage() {
 
             // Category title
             Text(
-                text = category,
+                text = category?.categoryName ?: "Uncategorized",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            // Item IDs under category
-            branchItems.forEach { item ->
+            // Items under category
+            branchItems.forEach { branchItem ->
                 Text(
-                    text = "• ${item.itemId}",
+                    text = "• ${branchItem.item?.itemName ?: "Unknown item"}",
                     modifier = Modifier.padding(start = 12.dp)
                 )
             }
         }
     }
-    Scaffold(
-        floatingActionButton = {
-            Box {
-                FloatingActionButton(
-                    onClick = { fabMenuExpanded = true }
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
-                }
 
-                DropdownMenu(
-                    expanded = fabMenuExpanded,
-                    onDismissRequest = { fabMenuExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Add Item") },
-                        onClick = {
-                            fabMenuExpanded = false
-                        }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text("Add Tag") },
-                        onClick = {
-                            fabMenuExpanded = false
-                        }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text("Add Promotion") },
-                        onClick = {
-                            fabMenuExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
-            // Tabs
-            SecondaryTabRow(selectedTabIndex = selectedTabIndex) {
-                listOf("Promotions", "Tags", "Items").forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
-                    )
-                }
-            }
-
-            // Content
-            when (selectedTabIndex) {
-                0 -> PromotionsTab()
-                1 -> TagsTab()
-                2 -> ItemsTab(items = items)
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -367,11 +310,6 @@ fun ItemsTab(
 fun GroupedItemsContent(
     groupedItems: Map<String, List<BranchItem>>
 ) {
-    val categories by produceState<Map<String, Category>>(emptyMap()) {
-        val ids = groupedItems.keys.toList()
-        value = fetchCategoryById(ids)
-    }
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
