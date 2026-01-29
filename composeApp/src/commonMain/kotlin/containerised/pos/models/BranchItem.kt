@@ -11,10 +11,14 @@ data class BranchItem(
 	val branchId: String,
 
 	@SerialName("item_id")
-	val itemId: Item,
+	val itemId: String,
+
+    val item: Item,
 
 	@SerialName("category_id")
-	val categoryId: Category,
+	val categoryId: String? = null,
+
+    val category: Category,
 
 	@SerialName("price")
 	val price: Float,
