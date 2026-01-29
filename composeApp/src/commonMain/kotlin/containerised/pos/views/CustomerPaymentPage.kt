@@ -11,19 +11,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import containerised.pos.models.Bank
+import containerised.pos.models.Currency
 import containerised.pos.models.CustomerPayment
 import containerised.pos.models.PaymentCodeBuilder
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomerPaymentPage(navController: NavController, customerPayment: CustomerPayment) {
+fun CustomerPaymentPage(navController: NavController, args: CustomerPayment) {
+	val currencyNumericCode = Currency.fromCode(args.currency) ?: Currency.VND
+
 	val paymentCode = PaymentCodeBuilder()
 		.set(PaymentCodeBuilder.PIMethod.DYNAMIC)
 		.set(PaymentCodeBuilder.ServiceCode.TRANSFER_TO_ACCOUNT)
-		.setAccount(acquirerID = "970415", merchantID = "106877386224")
+		.setAccount(Bank.HDBank, "002704070021976")
 		.setCountryCode()
-		.setTransaction(customerPayment.amount.toString(), customerPayment.currency)
+		.setTransaction(args.amount, currencyNumericCode)
 		.build()
 
 	val paymentQRCode = rememberQrCodePainter(paymentCode)
@@ -67,7 +71,7 @@ fun CustomerPaymentPage(navController: NavController, customerPayment: CustomerP
 						style = MaterialTheme.typography.titleMedium
 					)
 					Text(
-						text = "${customerPayment.amount} ${customerPayment.currency}",
+						text = "${args.amount} ${args.currency}",
 						style = MaterialTheme.typography.displaySmall,
 						color = MaterialTheme.colorScheme.primary,
 						fontWeight = FontWeight.Bold,

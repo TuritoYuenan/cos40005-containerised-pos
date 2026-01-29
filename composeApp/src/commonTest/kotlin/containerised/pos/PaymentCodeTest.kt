@@ -1,5 +1,7 @@
 package containerised.pos
 
+import containerised.pos.models.Bank
+import containerised.pos.models.Currency
 import containerised.pos.models.PaymentCodeBuilder
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,8 +16,8 @@ class PaymentCodeTest {
 		val builder = PaymentCodeBuilder()
 			.set(PaymentCodeBuilder.PIMethod.DYNAMIC)
 			.set(PaymentCodeBuilder.ServiceCode.TRANSFER_TO_ACCOUNT)
-			.setAccount(acquirerID = "970415", merchantID = "106877386224")
-			.setTransaction("145000", PaymentCodeBuilder.Currency.VND)
+			.setAccount(Bank.VietInBank, "106877386224")
+			.setTransaction(145000, Currency.VND)
 			.setCountryCode("VN")
 			.setPurpose("Dokki Vincom Dong Khoi")
 

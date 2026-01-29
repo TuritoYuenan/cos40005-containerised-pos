@@ -17,15 +17,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.CheckoutItemStorage
-import containerised.pos.models.CustomerPayment
 import containerised.pos.components.CheckoutDiscountItem
 import containerised.pos.components.CheckoutMenuItem
 import containerised.pos.models.BranchItem
+import containerised.pos.models.Currency
+import containerised.pos.models.CustomerPayment
 import containerised.pos.models.Item
-import containerised.pos.models.PaymentCodeBuilder
 import containerised.pos.models.fetchItemByBranch
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import kotlin.collections.forEach
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,7 +139,7 @@ fun CheckOutWebPage(navController: NavController?) {
 			}
 			Box {
 				val totalAmount = checkoutItemFromStorage?.sumOf { it.defaultPrice.toDouble() } ?: 0.0
-				val currency = PaymentCodeBuilder.Currency.VND
+				val currency = Currency.VND.code
 
 				Card(
 					modifier = Modifier
@@ -149,7 +148,7 @@ fun CheckOutWebPage(navController: NavController?) {
 						.padding(vertical = 6.dp, horizontal = 6.dp)
 						.align(Alignment.BottomCenter),
 					onClick = {
-						navController?.navigate(CustomerPayment(amount = totalAmount, currency = currency.code))
+						navController?.navigate(CustomerPayment(amount = totalAmount, currency = currency))
 					}
 				) {
 					Row(

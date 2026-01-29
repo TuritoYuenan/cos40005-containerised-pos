@@ -14,13 +14,7 @@ class PaymentCodeBuilder {
 		TRANSFER_TO_CARD("QRIBFTTC")
 	}
 
-	enum class Currency(val code: String) {
-		VND("704"),
-		USD("840"),
-		EUR("978")
-	}
-
-	val paymentCode = PaymentCode()
+	private val paymentCode = PaymentCode()
 
 	fun set(pim: PIMethod): PaymentCodeBuilder {
 		paymentCode.poIM = pim.code
@@ -32,21 +26,24 @@ class PaymentCodeBuilder {
 		return this
 	}
 
-	fun setAccount(acquirerID: String, merchantID: String): PaymentCodeBuilder {
-		paymentCode.acquirerID = acquirerID
-		paymentCode.merchantID = merchantID
+	fun setAccount(bank: Bank, account: String): PaymentCodeBuilder {
+		paymentCode.acquirerID = bank.bin.toString()
+		paymentCode.merchantID = account
 		return this
 	}
 
-	fun setTransaction(amount: String, currency: Currency = Currency.VND): PaymentCodeBuilder {
-		paymentCode.transactionAmount = amount
-		paymentCode.transactionCurrency = currency.code
+	/**
+	 * Sets the transaction amount and currency code.
+	 */
+	fun setTransaction(amount: Double, currency: Currency): PaymentCodeBuilder {
+		paymentCode.transactionAmount = amount.toString()
+		paymentCode.transactionCurrency = currency.numericCode
 		return this
 	}
 
-	fun setTransaction(amount: String, currency: String): PaymentCodeBuilder {
-		paymentCode.transactionAmount = amount
-		paymentCode.transactionCurrency = currency
+	fun setTransaction(amount: Int, currency: Currency): PaymentCodeBuilder {
+		paymentCode.transactionAmount = amount.toString()
+		paymentCode.transactionCurrency = currency.numericCode
 		return this
 	}
 
