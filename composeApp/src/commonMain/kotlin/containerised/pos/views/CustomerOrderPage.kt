@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.models.Item
 import containerised.pos.models.Tag
-import containerised.pos.models.fetchFeaturedItem
 import containerised.pos.models.fetchItem
 import containerised.pos.models.fetchTags
 import io.kamel.image.KamelImage
@@ -54,7 +53,7 @@ fun CustomerOrderPage(navController: NavController?) {
 	LaunchedEffect(Unit) {
 		scope.launch {
 			try {
-				featuredItems = fetchFeaturedItem()
+				featuredItems = fetchItem()
 				allItems = fetchItem()
 				tags = fetchTags()
 			} catch (e: Exception) {

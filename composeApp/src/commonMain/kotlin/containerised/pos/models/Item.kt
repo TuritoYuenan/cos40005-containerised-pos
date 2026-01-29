@@ -62,15 +62,6 @@ suspend fun fetchItemByBranch(branchId: String): List<Item>{
 }
 
 /**
- * Fetch Featured Items
- */
-suspend fun fetchFeaturedItem(): List<Item> {
-	return SupabaseClientProvider.supabase.postgrest["items"]
-		.select { filter { eq("is_featured", true) } }
-		.decodeList<Item>()
-}
-
-/**
  * Update Item by ID
  */
 suspend fun updateItem(itemId: String, updatedData: Item) {
