@@ -16,55 +16,62 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import containerised.pos.models.BranchItem
+import containerised.pos.models.Category
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import containerised.pos.models.Item
+import containerised.pos.models.fetchBranchItemByBranch
+import containerised.pos.models.fetchCategoryById
 import containerised.pos.models.fetchItem
-
+import containerised.pos.models.fetchItemById
+import kotlinx.coroutines.launch
 @Preview
 @Composable
 fun MenuEditPage() {
     var selectedTabIndex by remember { mutableStateOf(0) }
     var fabMenuExpanded by remember { mutableStateOf(false) }
-    val mockItems = listOf(
-        Item(
-            itemId = "ITEM001",
-            itemName = "Classic Cheeseburger",
-            itemDes = "Beef patty, cheddar cheese, lettuce, tomato",
-            defaultPrice = 8.99f,
-            defaultEstimatedPrep = "10 min"
-        ),
-        Item(
-            itemId = "ITEM002",
-            itemName = "Grilled Chicken Sandwich",
-            itemDes = "Grilled chicken breast with garlic mayo",
-            defaultPrice = 7.49f,
-            defaultEstimatedPrep = "12 min"
-        ),
-        Item(
-            itemId = "ITEM003",
-            itemName = "Vegan Salad Bowl",
-            itemDes = "Mixed greens, quinoa, avocado, tahini sauce",
-            defaultPrice = 6.50f,
-            defaultEstimatedPrep = "8 min"
-        ),
-        Item(
-            itemId = "ITEM004",
-            itemName = "French Fries",
-            itemDes = null, // optional field works fine
-            defaultPrice = 3.00f,
-            defaultEstimatedPrep = "5 min"
-        ),
-        Item(
-            itemId = "ITEM005",
-            itemName = "Iced Latte",
-            itemDes = "Espresso with milk and ice",
-            defaultPrice = 4.25f,
-            defaultEstimatedPrep = "3 min"
-        )
-    )
 
-    val items = remember {mockItems}
+    var items by remember {mutableStateOf<List<BranchItem>>(emptyList())}
+    var isLoading by remember { mutableStateOf(true) }
+    val scope = rememberCoroutineScope()
 
+    LaunchedEffect(Unit) {
+        try {
+            items = fetchBranchItemByBranch("BRA26011700")
+        } catch (e: Exception) {
+            println("Error fetching data: ${e.message}")
+        } finally {
+            isLoading = false
+        }
+    }
+
+    val groupedItems = items.groupBy { it.categoryId ?: "Uncategorized" }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+
+        if (isLoading) {
+            Text("Loading...")
+            return@Column
+        }
+
+        groupedItems.forEach { (category, branchItems) ->
+
+            // Category title
+            Text(
+                text = category,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            // Item IDs under category
+            branchItems.forEach { item ->
+                Text(
+                    text = "• ${item.itemId}",
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+            }
+        }
+    }
     Scaffold(
         floatingActionButton = {
             Box {
@@ -345,106 +352,125 @@ fun TagCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemsTab(
-    items: List<Item>
+    items: List<BranchItem>
 ) {
-    var searchResults by remember { mutableStateOf<List<Item>>(items) }
-
+    val groupedItems = remember(items) {
+        items.groupBy { it.categoryId ?: "Uncategorized" }
+    }
     Column(modifier = Modifier.fillMaxSize()) {
-
         SearchBarSection("Search for Items")
-
-        ItemsContent(searchResults)
+        GroupedItemsContent(groupedItems)
     }
 }
 
 @Composable
-fun ItemsContent(items: List<Item>) {
+fun GroupedItemsContent(
+    groupedItems: Map<String, List<BranchItem>>
+) {
+    val categories by produceState<Map<String, Category>>(emptyMap()) {
+        val ids = groupedItems.keys.toList()
+        value = fetchCategoryById(ids)
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
-
-        item {
-            Text(
-                "Items",
-                style = MaterialTheme.typography.headlineMedium
-            )
-        }
-
-        items(items, key = { it.itemId }) { item ->
-            ItemEditCard(
-                item = item,
-                modifier = Modifier.fillMaxWidth()
-            )
+        groupedItems.forEach { (categoryid, branchItems) ->
+            item {
+                Text(
+                    text = categoryid,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            // Items under category
+            items(
+                items = branchItems,
+                key = { it.itemId }
+            ) { branchItem ->
+                ItemEditCard(
+                    branchItem = branchItem,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
 
 @Composable
 fun ItemEditCard(
-    item: Item,
+    branchItem: BranchItem,
     modifier: Modifier = Modifier,
     onEditClick: () -> Unit = {}
 ) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+    val item by produceState<Item?>(initialValue = null, branchItem.itemId) {
+        value = fetchItemById(branchItem.itemId)
+    }
 
-            // Image placeholder
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surface),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🖼")
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Item details
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = item.itemName,
-                    style = MaterialTheme.typography.titleSmall
+    when (val currentItem = item) {
+        null -> {
+            CircularProgressIndicator()
+        }
+        else -> {
+            Card(
+                modifier = modifier,
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
-                item.itemDes?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surface),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("🖼")
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = currentItem.itemName,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+
+                        currentItem.itemDes?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "$${currentItem.defaultPrice}",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+
+                    IconButton(onClick = onEditClick) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Item"
+                        )
+                    }
                 }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "$${item.defaultPrice}",
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-
-            // ✅ Edit button
-            IconButton(onClick = onEditClick) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit Item"
-                )
             }
         }
     }

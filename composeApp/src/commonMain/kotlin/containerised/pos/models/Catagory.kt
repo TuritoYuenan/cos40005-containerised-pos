@@ -1,5 +1,7 @@
 package containerised.pos.models
 
+import containerised.pos.database.SupabaseClientProvider
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,3 +16,15 @@ data class Category(
 	@SerialName("display_order")
 	val displayOrder: Int = 1
 )
+
+suspend fun fetchCategoryById(categoryId: String): Item? {
+    val result = SupabaseClientProvider.supabase.postgrest["items"]
+        .select {
+            filter {
+                eq("category_id", categoryId)
+            }
+            limit(1)
+        }
+        .decodeList<Item>()
+    return result.firstOrNull()
+}
