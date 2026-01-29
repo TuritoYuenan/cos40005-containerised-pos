@@ -33,6 +33,6 @@ suspend fun uploadImage(
 	path: String,
 	imageBytes: ByteArray,
 ) {
-	val bucket = supabase.storage.from("menu-images")
+	val bucket = supabase.storage.from("images")
 	bucket.upload(path, imageBytes)
 }

@@ -226,7 +226,7 @@ fun EditItemPage(navController: NavController?) {
 								return@launch
 							} else {
 								val name = List(10) { ('a'..'z').random() }.joinToString("")
-								uploadImage("$name.png", imageBytes!!)
+								uploadImage("menu-images/$name.png", imageBytes!!)
 							}
 						}
 					},
