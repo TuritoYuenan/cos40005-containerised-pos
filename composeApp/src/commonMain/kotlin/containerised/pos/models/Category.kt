@@ -17,14 +17,18 @@ data class Category(
 	val displayOrder: Int = 1
 )
 
-suspend fun fetchCategoryById(categoryId: String): Item? {
-    val result = SupabaseClientProvider.supabase.postgrest["items"]
+suspend fun fetchCategoryById(categoryId: String): Category? {
+    val result = SupabaseClientProvider.supabase.postgrest["categories"]
         .select {
             filter {
                 eq("category_id", categoryId)
             }
             limit(1)
         }
-        .decodeList<Item>()
+        .decodeList<Category>()
     return result.firstOrNull()
+}
+
+suspend fun fetchCategory(): List<Category> {
+	return SupabaseClientProvider.supabase.postgrest["categories"].select().decodeList<Category>()
 }

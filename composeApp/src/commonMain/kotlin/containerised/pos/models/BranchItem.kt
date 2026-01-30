@@ -29,7 +29,13 @@ data class BranchItem(
 	val estimatedPrep: String,
 
 	@SerialName("is_available")
-	val isAvailable: Boolean = false
+	val isAvailable: Boolean = false,
+
+	@SerialName("is_featured")
+	val isFeatured: Boolean = false,
+
+	@SerialName("url_img")
+	val urlImg: String? = null,
 )
 
 // Fetch all MenuItem
@@ -46,6 +52,18 @@ suspend fun fetchBranchItemByBranch(branchId: String): List<BranchItem> {
         }
         .decodeList<BranchItem>()
     return result
+}
+
+suspend fun fetchBranchItemById(itemId: String): BranchItem? {
+	val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
+		.select {
+			filter {
+				eq("item_id", itemId)
+			}
+			limit(1)
+		}
+		.decodeList<BranchItem>()
+	return result.firstOrNull()
 }
 
 suspend fun fetchAndJoinBranchItemByBranch(branchId: String): List<BranchItem> {
@@ -80,4 +98,47 @@ suspend fun fetchAndJoinBranchItemByBranch(branchId: String): List<BranchItem> {
         }.decodeList<BranchItem>()
 
     return result
+}
+suspend fun fetchAndJoinBranchItemById(itemId: String): BranchItem? {
+	val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
+		.select(
+			columns = Columns.raw(
+				"""
+                branch_id,
+                item_id,
+                category_id,
+                price,
+                estimated_prep,
+                is_available,
+                item:items (
+                    item_id,
+                    item_name,
+                    item_desc,
+                    default_price,
+                    default_estimated_prep
+                ),
+                category:categories (
+                    category_id,
+                    category_name,
+                    display_order
+                )
+                """
+			)
+		) {
+			filter {
+				eq("item_id", itemId)
+			}
+			limit(1)
+		}.decodeList<BranchItem>()
+
+	return result.firstOrNull()
+}
+
+suspend fun updateBranchItem(itemId: String, updatedData: BranchItem) {
+	SupabaseClientProvider.supabase.postgrest["branch_items"]
+		.update(updatedData) {
+			filter {
+				eq("item_id", itemId)
+			}
+		}
 }
