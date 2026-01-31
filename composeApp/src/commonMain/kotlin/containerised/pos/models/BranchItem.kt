@@ -2,7 +2,6 @@ package containerised.pos.models
 
 import containerised.pos.database.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.realtime.Column
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -103,6 +102,7 @@ suspend fun fetchAndJoinBranchItemByBranch(branchId: String): List<BranchItem> {
 
     return result
 }
+
 suspend fun fetchAndJoinBranchItemById(itemId: String): BranchItem? {
 	val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
 		.select(

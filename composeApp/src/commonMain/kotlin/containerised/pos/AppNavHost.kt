@@ -9,13 +9,16 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
+import containerised.pos.models.CustomerPayment
 import containerised.pos.views.CheckOutWebPage
 import containerised.pos.views.CustomerOrderPage
 import containerised.pos.views.EditItemPage
 import containerised.pos.views.EditPromotionPage
 import containerised.pos.views.EditTagPage
+import containerised.pos.views.CustomerPaymentPage
 import containerised.pos.views.LoginPage
 import containerised.pos.views.MenuEditPage
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -35,12 +38,12 @@ fun AppNavHost() {
 			) { paddingValues ->
 				NavHost(
 					navController = navController,
-                    //Change back to "login" before merging
+					//Change back to "login" before merging
 					startDestination = "menu-edit",
 					modifier = Modifier.padding(paddingValues)
 				) {
 					composable("login") { LoginPage() }
-                    composable("menu-edit") { MenuEditPage() }
+					composable("menu-edit") { MenuEditPage() }
 					composable("edit-item") { EditItemPage(navController) }
 					composable("edit-tag") { EditTagPage(navController) }
 					composable("edit-promotion") { EditPromotionPage(navController) }
@@ -56,6 +59,10 @@ fun AppNavHost() {
 			) {
 				composable("order") { CustomerOrderPage(navController) }
 				composable("checkout") { CheckOutWebPage(navController) }
+				composable<CustomerPayment> { backStackEntry ->
+					val customerPayment = backStackEntry.toRoute<CustomerPayment>()
+					CustomerPaymentPage(navController, customerPayment)
+				}
 			}
 		}
 	}

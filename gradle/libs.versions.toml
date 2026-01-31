@@ -5,6 +5,7 @@ kamelImageDefault = "1.0.8"
 kotlin = "2.3.0"
 koin = "4.1.1"
 material3 = "1.4.0"
+qrose = "1.1.0"
 sqlDelight = "2.2.1"
 android-compileSdk = "36"
 android-minSdk = "24"
@@ -29,6 +30,7 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 supabase-storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt" }
 supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt" }
 supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }

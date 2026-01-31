@@ -20,7 +20,9 @@ import containerised.pos.CheckoutItemStorage
 import containerised.pos.components.CheckoutDiscountItem
 import containerised.pos.components.CheckoutMenuItem
 import containerised.pos.models.BranchItem
-import containerised.pos.models.fetchBranchItem
+import containerised.pos.models.Currency
+import containerised.pos.models.CustomerPayment
+import containerised.pos.models.fetchBranchItemByBranch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,10 +32,11 @@ fun CheckOutWebPage(navController: NavController?) {
 	var menuItems by remember { mutableStateOf<List<BranchItem>?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
 	var checkoutItemFromStorage by remember { mutableStateOf<List<BranchItem>?>(null) }
+
+	val sampleBranchId = "BRA26011700"
 	LaunchedEffect(Unit) {
 		try {
-			// Fetch all
-			menuItems = fetchBranchItem()
+			menuItems = fetchBranchItemByBranch(sampleBranchId)
 			println("Fetched ${menuItems!!.size} menu items:")
 			menuItems!!.forEach { item ->
 				println(
@@ -133,6 +136,9 @@ fun CheckOutWebPage(navController: NavController?) {
 				}
 			}
 			Box {
+				val totalAmount = checkoutItemFromStorage?.sumOf { it.price.toDouble() } ?: 0.0
+				val currency = Currency.VND.code
+
 				Card(
 					modifier = Modifier
 						.fillMaxWidth()
@@ -140,9 +146,7 @@ fun CheckOutWebPage(navController: NavController?) {
 						.padding(vertical = 6.dp, horizontal = 6.dp)
 						.align(Alignment.BottomCenter),
 					onClick = {
-						checkoutItemFromStorage?.forEach { item -> println(item) }
-						CheckoutItemStorage.clear()
-						navController?.popBackStack()
+						navController?.navigate(CustomerPayment(amount = totalAmount, currency = currency))
 					}
 				) {
 					Row(
@@ -156,7 +160,7 @@ fun CheckOutWebPage(navController: NavController?) {
 						verticalAlignment = Alignment.CenterVertically
 					) {
 						Text("Order:")
-						Text("$300")
+						Text("$totalAmount $currency")
 					}
 				}
 			}
