@@ -28,7 +28,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
-fun CheckOutWebPage(navController: NavController?) {
+fun CustomerCheckoutPage(navController: NavController?) {
 	var menuItems by remember { mutableStateOf<List<BranchItem>?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
 	var checkoutItemFromStorage by remember { mutableStateOf<List<BranchItem>?>(null) }

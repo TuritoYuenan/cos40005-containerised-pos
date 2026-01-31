@@ -13,7 +13,7 @@ import androidx.navigation.toRoute
 import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
 import containerised.pos.models.CustomerPayment
-import containerised.pos.views.CheckOutWebPage
+import containerised.pos.views.CustomerCheckoutPage
 import containerised.pos.views.CustomerOrderPage
 import containerised.pos.views.EditItemPage
 import containerised.pos.views.EditPromotionPage
@@ -58,7 +58,7 @@ fun AppNavHost() {
 				startDestination = "order",
 			) {
 				composable("order") { CustomerOrderPage(navController) }
-				composable("checkout") { CheckOutWebPage(navController) }
+				composable("checkout") { CustomerCheckoutPage(navController) }
 				composable<CustomerPayment> { backStackEntry ->
 					val customerPayment = backStackEntry.toRoute<CustomerPayment>()
 					CustomerPaymentPage(navController, customerPayment)
