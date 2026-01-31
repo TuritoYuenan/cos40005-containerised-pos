@@ -19,25 +19,25 @@ import androidx.navigation.NavController
 import containerised.pos.CheckoutItemStorage
 import containerised.pos.components.CheckoutDiscountItem
 import containerised.pos.components.CheckoutMenuItem
-import containerised.pos.models.Item
-import containerised.pos.models.fetchItem
+import containerised.pos.models.BranchItem
+import containerised.pos.models.fetchBranchItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun CheckOutWebPage(navController: NavController?) {
-	var menuItems by remember { mutableStateOf<List<Item>?>(null) }
+	var menuItems by remember { mutableStateOf<List<BranchItem>?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
-	var checkoutItemFromStorage by remember { mutableStateOf<List<Item>?>(null) }
+	var checkoutItemFromStorage by remember { mutableStateOf<List<BranchItem>?>(null) }
 	LaunchedEffect(Unit) {
 		try {
 			// Fetch all
-			menuItems = fetchItem()
+			menuItems = fetchBranchItem()
 			println("Fetched ${menuItems!!.size} menu items:")
 			menuItems!!.forEach { item ->
 				println(
-					"• ${item.itemId}: ${item.itemName} (${item.defaultPrice})"
+					"• ${item.itemId}: ${item.itemName} (${item.price})"
 				)
 			}
 			CheckoutItemStorage.clear()

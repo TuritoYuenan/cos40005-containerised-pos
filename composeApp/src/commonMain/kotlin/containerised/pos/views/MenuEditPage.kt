@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -14,19 +13,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import containerised.pos.models.BranchItem
-import containerised.pos.models.Category
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import containerised.pos.models.Item
 import containerised.pos.models.fetchAndJoinBranchItemByBranch
-import containerised.pos.models.fetchBranchItemByBranch
-import containerised.pos.models.fetchCategoryById
-import containerised.pos.models.fetchItem
-import containerised.pos.models.fetchItemById
-import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
+import containerised.pos.models.fetchBranchItemById
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Preview
 @Composable
@@ -69,7 +60,7 @@ fun MenuEditPage() {
             // Items under category
             branchItems.forEach { branchItem ->
                 Text(
-                    text = "• ${branchItem.item?.itemName ?: "Unknown item"}",
+                    text = "• ${branchItem.itemName ?: "Unknown item"}",
                     modifier = Modifier.padding(start = 12.dp)
                 )
             }
@@ -343,8 +334,8 @@ fun ItemEditCard(
     modifier: Modifier = Modifier,
     onEditClick: () -> Unit = {}
 ) {
-    val item by produceState<Item?>(initialValue = null, branchItem.itemId) {
-        value = fetchItemById(branchItem.itemId)
+    val item by produceState<BranchItem?>(initialValue = null, branchItem.itemId) {
+        value = fetchBranchItemById(branchItem.itemId)
     }
 
     when (val currentItem = item) {
@@ -397,7 +388,7 @@ fun ItemEditCard(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "$${currentItem.defaultPrice}",
+                            text = "$${currentItem.price}",
                             style = MaterialTheme.typography.labelMedium
                         )
                     }

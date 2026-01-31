@@ -25,9 +25,9 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.models.Item
+import containerised.pos.models.BranchItem
 import containerised.pos.models.Tag
-import containerised.pos.models.fetchItem
+import containerised.pos.models.fetchBranchItem
 import containerised.pos.models.fetchTags
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
@@ -43,7 +43,7 @@ fun CustomerOrderPage(navController: NavController?) {
     var searchResults by remember { mutableStateOf(listOf<String>()) }
 
     // State for items and tags
-    var items by remember { mutableStateOf<List<Item>>(emptyList()) }
+    var items by remember { mutableStateOf<List<BranchItem>>(emptyList()) }
     var tags by remember { mutableStateOf<List<Tag>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
@@ -52,7 +52,7 @@ fun CustomerOrderPage(navController: NavController?) {
     LaunchedEffect(Unit) {
         scope.launch {
             try {
-                items = fetchItem()
+                items = fetchBranchItem()
                 tags = fetchTags()
             } catch (e: Exception) {
                 // Handle error - you might want to show an error message
@@ -210,7 +210,7 @@ fun CartFAB(navController: NavController?) {
 }
 
 @Composable
-fun TallItemCard(item: Item, onAddToCart: () -> Unit = {}) {
+fun TallItemCard(item: BranchItem, onAddToCart: () -> Unit = {}) {
     val cardWidth = 128.dp
 
     OutlinedCard(modifier = Modifier.size(cardWidth, 256.dp)) {
@@ -254,14 +254,14 @@ fun TallItemCard(item: Item, onAddToCart: () -> Unit = {}) {
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                Text("$${item.defaultPrice}", style = MaterialTheme.typography.bodyLarge)
+                Text("$${item.price}", style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
 }
 
 @Composable
-fun WideItemCard(item: Item, modifier: Modifier = Modifier, onAddToCart: () -> Unit = {}) {
+fun WideItemCard(item: BranchItem, modifier: Modifier = Modifier, onAddToCart: () -> Unit = {}) {
     OutlinedCard(modifier = modifier.fillMaxWidth().height(120.dp)) {
         Box {
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -292,7 +292,7 @@ fun WideItemCard(item: Item, modifier: Modifier = Modifier, onAddToCart: () -> U
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.titleMedium
                     )
-                    Text("$${item.defaultPrice}", style = MaterialTheme.typography.bodyLarge)
+                    Text("$${item.price}", style = MaterialTheme.typography.bodyLarge)
                 }
             }
 

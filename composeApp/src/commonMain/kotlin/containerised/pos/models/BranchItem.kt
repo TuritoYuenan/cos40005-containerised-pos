@@ -15,12 +15,16 @@ data class BranchItem(
 	@SerialName("item_id")
 	val itemId: String,
 
-    val item: Item? = null,
-
 	@SerialName("category_id")
 	val categoryId: String? = null,
 
     val category: Category? = null,
+
+	@SerialName("item_name")
+	val itemName: String,
+
+	@SerialName("item_des")
+	val itemDes: String? = null,
 
 	@SerialName("price")
 	val price: Float,

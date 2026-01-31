@@ -15,12 +15,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import containerised.pos.models.Item
+import containerised.pos.models.BranchItem
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Preview
 @Composable
-fun CheckoutMenuItem(Item: Item) {
+fun CheckoutMenuItem(Item: BranchItem) {
 	var value by remember { mutableStateOf(1) }
 	Box {
 		Row(
@@ -50,12 +50,12 @@ fun CheckoutMenuItem(Item: Item) {
 					style = MaterialTheme.typography.titleSmall
 				)
 				Text(
-					text = "$" + Item.defaultPrice.toString(),
+					text = "$" + Item.price.toString(),
 					style = MaterialTheme.typography.bodySmall
 				)
 				Row {
 					Text(
-						text = "Total: $" + value*Item.defaultPrice,
+						text = "Total: $" + value*Item.price,
 					)
 				}
 			}

@@ -1,9 +1,9 @@
 package containerised.pos
 
-import containerised.pos.models.Item
+import containerised.pos.models.BranchItem
 
 expect object CheckoutItemStorage{
-	fun saveItems(items: List<Item>)
-	fun loadItems(): List<Item>?
+	fun saveItems(items: List<BranchItem>)
+	fun loadItems(): List<BranchItem>?
 	fun clear()
 }
