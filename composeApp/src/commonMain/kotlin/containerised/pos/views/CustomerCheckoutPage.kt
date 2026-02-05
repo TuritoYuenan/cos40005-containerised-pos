@@ -28,9 +28,12 @@ import kotlin.math.round
 @Composable
 @Preview
 fun CustomerCheckoutPage(navController: NavController?) {
+	var expanded by remember { mutableStateOf(false) }
+	var selected by remember { mutableStateOf<String>("Cash") }
 	var menuItems by remember { mutableStateOf<List<BranchItem>?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
 	var checkoutItemFromStorage by remember { mutableStateOf<List<BranchItem>?>(null) }
+	val tableNumber = 1
 
 
 	val sampleBranchId = "BRA26011700"
@@ -91,7 +94,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 							contentDescription = "RoomService"
 						)
 						Text(
-							text = "Table 1's order",
+							text = "Table $tableNumber's order",
 							style = MaterialTheme.typography.titleMedium,
 						)
 					}
@@ -121,11 +124,85 @@ fun CustomerCheckoutPage(navController: NavController?) {
 							.padding(vertical = 6.dp),
 					) {
 						Icon(
-							Icons.Filled.Discount,
-							contentDescription = "Decrease"
+							Icons.Filled.Payments,
+							contentDescription = "Payments"
 						)
 						Text(
-							text = "Table 1's discount",
+							text = "Table $tableNumber's payment option",
+							style = MaterialTheme.typography.titleMedium,
+						)
+					}
+					Row(
+						modifier = Modifier
+							.fillMaxWidth()
+							.padding(vertical = 3.dp, horizontal = 12.dp),
+						verticalAlignment = Alignment.CenterVertically,
+					) {
+						Text(
+							text = "Payment method:",
+							style = MaterialTheme.typography.titleMedium,
+							modifier = Modifier.weight(1f),
+						)
+						ExposedDropdownMenuBox(
+							expanded = expanded,
+							onExpandedChange = { expanded = !expanded }
+						) {
+							TextField(
+								value = selected,
+								onValueChange = {},
+								readOnly = true,
+								modifier = Modifier
+									.menuAnchor()
+									.width(480.dp),
+								trailingIcon = {
+									ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+								}
+
+							)
+							ExposedDropdownMenu(
+								expanded = expanded,
+								onDismissRequest = { expanded = false }
+							) {
+								DropdownMenuItem(
+									text = { Text("Cash") },
+									onClick = {
+										selected = "Cash"
+										expanded = false
+									}
+								)
+								DropdownMenuItem(
+									text = { Text("Bank transfer") },
+									onClick = {
+										selected = "Bank transfer"
+										expanded = false
+									}
+								)
+							}
+						}
+					}
+				}
+			}
+			Card(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(vertical = 6.dp, horizontal = 12.dp),
+				shape = RoundedCornerShape(12.dp),
+				elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+			) {
+				Column(
+					modifier = Modifier
+						.background(Color.White)
+				) {
+					Row(
+						modifier = Modifier
+							.padding(vertical = 6.dp),
+					) {
+						Icon(
+							Icons.Filled.Discount,
+							contentDescription = "Discount"
+						)
+						Text(
+							text = "Table $tableNumber's discount",
 							style = MaterialTheme.typography.titleMedium,
 						)
 					}
@@ -135,14 +212,8 @@ fun CustomerCheckoutPage(navController: NavController?) {
 							.padding(vertical = 3.dp, horizontal = 12.dp),
 						verticalArrangement = Arrangement.spacedBy(6.dp)
 					) {
-						Column(
-							modifier = Modifier
-								.fillMaxWidth(),
-							horizontalAlignment = Alignment.CenterHorizontally
-						) {
-							CheckoutDiscountItem()
-							CheckoutDiscountItem()
-						}
+						CheckoutDiscountItem()
+						CheckoutDiscountItem()
 					}
 				}
 			}
@@ -156,7 +227,10 @@ fun CustomerCheckoutPage(navController: NavController?) {
 						.padding(vertical = 6.dp, horizontal = 6.dp)
 						.align(Alignment.BottomCenter),
 					onClick = {
-						navController?.navigate(CustomerPayment(amount = total, currency = currency))
+						if (selected == "Bank transfer")
+							navController?.navigate(CustomerPayment(amount = total, currency = currency))
+						else
+							navController?.popBackStack()
 					}
 				) {
 					Row(
@@ -257,7 +331,7 @@ fun CheckoutMenuItem(item: BranchItem, sum: Double, onValueChange: (Double) -> U
 					shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
 					contentPadding = PaddingValues(0.dp)
 				){
-					Icon(Icons.Filled.Add, contentDescription = "Decrease")
+					Icon(Icons.Filled.Add, contentDescription = "Increase")
 				}
 			}
 			Button(
