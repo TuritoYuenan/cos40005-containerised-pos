@@ -1,5 +1,7 @@
 package containerised.pos.models
 
+import containerised.pos.database.SupabaseClientProvider
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -21,13 +23,19 @@ data class OrderItem(
 	val specialNotes: String? = null,
 
 	@SerialName("item_status")
-	val itemStatus: OrderItemStatus? = null
+	val itemStatus: OrderStatus? = null
 )
-@Serializable
-enum class OrderItemStatus {
-	@SerialName("Preparing")
-	PREPARING,
 
-	@SerialName("Finished")
-	FINISHED
+suspend fun fetchOrderItem(): List<OrderItem> {
+	return SupabaseClientProvider.supabase.postgrest["order_items"].select().decodeList<OrderItem>()
+}
+suspend fun fetchOrderItemByOrder(orderId: String): List<OrderItem> {
+	val result = SupabaseClientProvider.supabase.postgrest["order_items"]
+		.select {
+			filter {
+				eq("order_id", orderId)
+			}
+		}
+		.decodeList<OrderItem>()
+	return result
 }

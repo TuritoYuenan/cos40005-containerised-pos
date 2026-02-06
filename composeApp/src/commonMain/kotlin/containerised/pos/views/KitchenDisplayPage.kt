@@ -22,11 +22,23 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import containerised.pos.CheckoutItemStorage
+import containerised.pos.models.BranchItem
+import containerised.pos.models.Order
+import containerised.pos.models.OrderItem
+import containerised.pos.models.fetchBranchItemByBranch
+import containerised.pos.models.fetchBranchItemById
+import containerised.pos.models.fetchOrderItemByOrder
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,7 +53,29 @@ fun KitchenDisplayPage() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview(showBackground = true)
-fun KitchenDisplayOrderItem(){
+fun KitchenDisplayOrderItem(order: Order){
+	var orderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
+	var menuItems by remember { mutableStateOf<List<BranchItem?>>(emptyList()) }
+	var itemMap by remember { mutableStateOf<Map<String, List<BranchItem?>>>(emptyMap()) }
+	var error by remember { mutableStateOf<String?>(null) }
+
+	LaunchedEffect(Unit) {
+		try {
+			orderItems = fetchOrderItemByOrder(order.orderId)
+			println("Fetched ${orderItems.size} order items:")
+			orderItems.forEach { item ->
+				println(
+					"• ${item.itemId}: ${item.quantity} (${item.subtotal})"
+				)
+				menuItems = menuItems + fetchBranchItemById(item.itemId)
+			}
+			itemMap = menuItems.groupBy { (it?.categoryId ?: "catid") }
+
+		} catch (e: Exception) {
+			error = e.message
+			println("Error: $error")
+		}
+	}
 	Card(
 		modifier = Modifier
 			.fillMaxWidth()
