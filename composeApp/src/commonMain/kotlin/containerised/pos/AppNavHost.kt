@@ -19,6 +19,7 @@ import containerised.pos.views.EditItemPage
 import containerised.pos.views.EditPromotionPage
 import containerised.pos.views.EditTagPage
 import containerised.pos.views.CustomerPaymentPage
+import containerised.pos.views.KitchenDisplayPage
 import containerised.pos.views.LoginPage
 import containerised.pos.views.MenuEditPage
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -39,7 +40,7 @@ fun AppNavHost() {
 				NavHost(
 					navController = navController,
 					//Change back to "login" before merging
-					startDestination = "menu-edit",
+					startDestination = "KDS",
 					modifier = Modifier.padding(paddingValues)
 				) {
 					composable("login") { LoginPage() }
@@ -47,6 +48,7 @@ fun AppNavHost() {
 					composable("edit-item") { EditItemPage(navController) }
 					composable("edit-tag") { EditTagPage(navController) }
 					composable("edit-promotion") { EditPromotionPage(navController) }
+					composable("KDS"){ KitchenDisplayPage(navController) }
 				}
 			}
 		}

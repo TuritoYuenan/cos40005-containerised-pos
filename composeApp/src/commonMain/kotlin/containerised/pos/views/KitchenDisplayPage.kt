@@ -32,21 +32,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import containerised.pos.CheckoutItemStorage
 import containerised.pos.models.BranchItem
+import containerised.pos.models.Category
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
 import containerised.pos.models.fetchBranchItemByBranch
 import containerised.pos.models.fetchBranchItemById
+import containerised.pos.models.fetchCategory
+import containerised.pos.models.fetchOrder
 import containerised.pos.models.fetchOrderItemByOrder
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.collections.plus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview(showBackground = true)
-fun KitchenDisplayPage() {
-	Column{
+fun KitchenDisplayPage(navController: NavController) {
+	var orders by remember { mutableStateOf<List<Order>>(emptyList()) }
+	var error by remember { mutableStateOf<String?>(null) }
+	LaunchedEffect(Unit) {
+		try {
+			orders = fetchOrder()
+			println("Fetched ${orders.size} orders:")
 
+		} catch (e: Exception) {
+			error = e.message
+			println("Error: $error")
+		}
+	}
+
+	Column{
+		for (order in orders) {
+			KitchenDisplayOrderItem(order)
+		}
 	}
 }
 
@@ -57,10 +77,14 @@ fun KitchenDisplayOrderItem(order: Order){
 	var orderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
 	var menuItems by remember { mutableStateOf<List<BranchItem?>>(emptyList()) }
 	var itemMap by remember { mutableStateOf<Map<String, List<BranchItem?>>>(emptyMap()) }
+	var categories by remember { mutableStateOf<List<Category?>>(emptyList()) }
+	var categoryMap by remember { mutableStateOf<Map<String, Category?>>(emptyMap()) }
 	var error by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		try {
+			categories = fetchCategory()
+			categoryMap = categories.associateBy { it?.categoryId ?: "catid" }
 			orderItems = fetchOrderItemByOrder(order.orderId)
 			println("Fetched ${orderItems.size} order items:")
 			orderItems.forEach { item ->
@@ -68,8 +92,10 @@ fun KitchenDisplayOrderItem(order: Order){
 					"• ${item.itemId}: ${item.quantity} (${item.subtotal})"
 				)
 				menuItems = menuItems + fetchBranchItemById(item.itemId)
+				menuItems.forEach { item -> println(item) }
 			}
 			itemMap = menuItems.groupBy { (it?.categoryId ?: "catid") }
+			println(itemMap)
 
 		} catch (e: Exception) {
 			error = e.message
@@ -90,24 +116,29 @@ fun KitchenDisplayOrderItem(order: Order){
 				Box{}
 				Column {
 					Text(
-						text = "Order #57",
+						text = "Order #${order.orderNumber}",
 						style = MaterialTheme.typography.titleMedium,
 						color = Color.White,
 					)
 					Text(
-						text = "Table No. 07",
+						text = "Table No. ${order.tableNumber}",
 						color = Color.White,
 					)
 				}
 			}
-			Column {
-				Text(
-					text = "Category",
-					style = MaterialTheme.typography.titleMedium,
-				)
-				Text(
-					text = "1 x Item"
-				)
+			itemMap.forEach { (category, itemsOfCategory)->
+				Column{
+					Text(
+						text = categoryMap[category]?.categoryName ?: "Catid",
+						style = MaterialTheme.typography.titleMedium,
+					)
+					itemsOfCategory.forEach { item ->
+						Text(
+							text = "1 x ${item?.itemName}"
+						)
+					}
+
+				}
 			}
 			Row(
 				horizontalArrangement = Arrangement.spacedBy(
