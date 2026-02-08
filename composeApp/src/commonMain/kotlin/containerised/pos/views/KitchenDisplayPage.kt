@@ -38,6 +38,7 @@ import containerised.pos.models.BranchItem
 import containerised.pos.models.Category
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
+import containerised.pos.models.fetchAndJoinOrderItemByOrder
 import containerised.pos.models.fetchBranchItemByBranch
 import containerised.pos.models.fetchBranchItemById
 import containerised.pos.models.fetchCategory
@@ -75,26 +76,19 @@ fun KitchenDisplayPage(navController: NavController) {
 @Preview(showBackground = true)
 fun KitchenDisplayOrderItem(order: Order){
 	var orderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
-	var menuItems by remember { mutableStateOf<List<BranchItem?>>(emptyList()) }
-	var itemMap by remember { mutableStateOf<Map<String, List<BranchItem?>>>(emptyMap()) }
-	var categories by remember { mutableStateOf<List<Category?>>(emptyList()) }
-	var categoryMap by remember { mutableStateOf<Map<String, Category?>>(emptyMap()) }
+	var itemMap by remember { mutableStateOf<Map<String, List<OrderItem?>>>(emptyMap()) }
 	var error by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		try {
-			categories = fetchCategory()
-			categoryMap = categories.associateBy { it?.categoryId ?: "catid" }
-			orderItems = fetchOrderItemByOrder(order.orderId)
+			orderItems = fetchAndJoinOrderItemByOrder(order.orderId)
 			println("Fetched ${orderItems.size} order items:")
 			orderItems.forEach { item ->
 				println(
 					"• ${item.itemId}: ${item.quantity} (${item.subtotal})"
 				)
-				menuItems = menuItems + fetchBranchItemById(item.itemId)
-				menuItems.forEach { item -> println(item) }
 			}
-			itemMap = menuItems.groupBy { (it?.categoryId ?: "catid") }
+			itemMap = orderItems.groupBy { (it.branchItem.category?.categoryName ?: "catid") }
 			println(itemMap)
 
 		} catch (e: Exception) {
@@ -106,6 +100,7 @@ fun KitchenDisplayOrderItem(order: Order){
 		modifier = Modifier
 			.fillMaxWidth()
 			.clip(RoundedCornerShape(8.dp))
+			.padding(vertical = 6.dp, horizontal = 12.dp),
 	){
 		Column {
 			Row(
@@ -114,7 +109,11 @@ fun KitchenDisplayOrderItem(order: Order){
 					.background(MaterialTheme.colorScheme.primary)
 			) {
 				Box{}
-				Column {
+				Column(
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(vertical = 6.dp, horizontal = 12.dp),
+				) {
 					Text(
 						text = "Order #${order.orderNumber}",
 						style = MaterialTheme.typography.titleMedium,
@@ -127,14 +126,18 @@ fun KitchenDisplayOrderItem(order: Order){
 				}
 			}
 			itemMap.forEach { (category, itemsOfCategory)->
-				Column{
+				Column(
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(vertical = 6.dp, horizontal = 12.dp),
+				){
 					Text(
-						text = categoryMap[category]?.categoryName ?: "Catid",
+						text = category,
 						style = MaterialTheme.typography.titleMedium,
 					)
 					itemsOfCategory.forEach { item ->
 						Text(
-							text = "1 x ${item?.itemName}"
+							text = "${item?.quantity} x ${item?.branchItem?.itemName}"
 						)
 					}
 

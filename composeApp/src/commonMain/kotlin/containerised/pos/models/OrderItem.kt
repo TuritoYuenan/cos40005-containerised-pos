@@ -2,6 +2,7 @@ package containerised.pos.models
 
 import containerised.pos.database.SupabaseClientProvider
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -12,6 +13,8 @@ data class OrderItem(
 
 	@SerialName("item_id")
 	val itemId: String,
+
+	val branchItem: BranchItem,
 
 	@SerialName("quantity")
 	val quantity: Int,
@@ -32,6 +35,41 @@ suspend fun fetchOrderItem(): List<OrderItem> {
 suspend fun fetchOrderItemByOrder(orderId: String): List<OrderItem> {
 	val result = SupabaseClientProvider.supabase.postgrest["order_items"]
 		.select {
+			filter {
+				eq("order_id", orderId)
+			}
+		}
+		.decodeList<OrderItem>()
+	return result
+}
+
+suspend fun fetchAndJoinOrderItemByOrder(orderId: String): List<OrderItem> {
+	val result = SupabaseClientProvider.supabase.postgrest["order_items"]
+		.select(
+			columns = Columns.raw(
+				"""
+					order_id,
+					item_id,
+					branchItem:branch_items (
+						branch_id,
+						item_id,
+						category_id,
+						category:categories (
+							category_id,
+							category_name
+						),
+						item_name,
+						item_desc,
+						price,
+						estimated_prep
+					),
+					quantity,
+					subtotal,
+					special_notes,
+					item_status
+				""".trimIndent()
+			)
+		) {
 			filter {
 				eq("order_id", orderId)
 			}
