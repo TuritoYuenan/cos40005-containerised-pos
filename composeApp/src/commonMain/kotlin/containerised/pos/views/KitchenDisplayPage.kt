@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -20,6 +21,8 @@ import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
 import containerised.pos.models.fetchAndJoinOrderItemByOrder
 import containerised.pos.models.fetchPreparingOrders
+import containerised.pos.models.markOrderAsFinished
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,11 +42,9 @@ fun KitchenDisplayPage(navController: NavController) {
 		}
 	}
 
-	LazyColumn{
-		item {
-			for (order in orders) {
-				KitchenDisplayOrderItem(order)
-			}
+	LazyColumn {
+		items(items = orders) { order ->
+			KitchenDisplayOrderItem(order, onDone = {orders = orders.filterNot { it.orderId == order.orderId }})
 		}
 	}
 }
@@ -51,7 +52,8 @@ fun KitchenDisplayPage(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview(showBackground = true)
-fun KitchenDisplayOrderItem(order: Order){
+fun KitchenDisplayOrderItem(order: Order, onDone: () -> Unit){
+	val scope = rememberCoroutineScope()
 	var orderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
 	var itemMap by remember { mutableStateOf<Map<String, List<OrderItem?>>>(emptyMap()) }
 	var expandedItemId by remember { mutableStateOf<String?>(null) }
@@ -66,7 +68,7 @@ fun KitchenDisplayOrderItem(order: Order){
 					"• ${item.itemId}: ${item.quantity} (${item.subtotal})"
 				)
 			}
-			itemMap = orderItems.groupBy { (it.branchItem.category?.categoryName ?: "catid") }
+			itemMap = orderItems.groupBy { it.branchItem.category.categoryName }
 			println(itemMap)
 
 		} catch (e: Exception) {
@@ -163,7 +165,12 @@ fun KitchenDisplayOrderItem(order: Order){
 					Text("Cancel", color = Color.Black)
 				}
 				Button(
-					onClick = { },
+					onClick = {
+						scope.launch {
+							markOrderAsFinished(order.orderId)
+							onDone()
+						}
+					},
 					shape = RoundedCornerShape(16.dp),
 					colors = ButtonDefaults.buttonColors(
 						containerColor = MaterialTheme.colorScheme.primary,
