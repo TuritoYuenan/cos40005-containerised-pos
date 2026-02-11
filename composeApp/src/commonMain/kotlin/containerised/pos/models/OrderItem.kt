@@ -14,7 +14,7 @@ data class OrderItem(
 	@SerialName("item_id")
 	val itemId: String,
 
-	val branchItem: BranchItem,
+	val branchItem: BranchItemWithCatAndIng,
 
 	@SerialName("quantity")
 	val quantity: Int,
@@ -57,6 +57,18 @@ suspend fun fetchAndJoinOrderItemByOrder(orderId: String): List<OrderItem> {
 						category:categories (
 							category_id,
 							category_name
+						),
+						itemIngredients:item_ingredients(
+							ingredient_id,
+							ingredient: ingredients(
+								ingredient_id,
+								ingredient_name,
+								unit,
+								current_stock
+							),
+							item_id,
+							quantity,
+							unit
 						),
 						item_name,
 						item_desc,

@@ -50,3 +50,13 @@ data class Order(
 suspend fun fetchOrder(): List<Order> {
 	return SupabaseClientProvider.supabase.postgrest["orders"].select().decodeList<Order>()
 }
+
+suspend fun fetchPreparingOrders(): List<Order> {
+	return SupabaseClientProvider.supabase.postgrest["orders"]
+		.select {
+			filter {
+				eq("status", "Preparing")
+			}
+		}
+		.decodeList<Order>()
+}
