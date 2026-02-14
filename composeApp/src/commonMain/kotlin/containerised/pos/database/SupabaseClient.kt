@@ -8,8 +8,9 @@ import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
 
-val supabaseUrl = "https://qkpsqjlkjyvvoqcyrszw.supabase.co"
-val supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrcHNxamxranl2dm9xY3lyc3p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4NDkwNzUsImV4cCI6MjA3NjQyNTA3NX0.QCy8IeJlvalMbtO1NTpeukEFgGgsdLg034MurFwPYqA"
+const val supabaseUrl = "https://qkpsqjlkjyvvoqcyrszw.supabase.co"
+const val supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrcHNxamxranl2dm9xY3lyc3p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4NDkwNzUsImV4cCI6MjA3NjQyNTA3NX0.QCy8IeJlvalMbtO1NTpeukEFgGgsdLg034MurFwPYqA"
+
 object SupabaseClientProvider {
 	val supabase = createSupabaseClient(
 		supabaseUrl = supabaseUrl,
@@ -21,10 +22,7 @@ object SupabaseClientProvider {
 		install(Realtime)
 	}
 }
-suspend fun uploadImage(
-	path: String,
-	imageBytes: ByteArray,
-) {
-	val bucket = supabase.storage.from("images")
-	bucket.upload(path, imageBytes)
+
+suspend fun uploadImage(path: String, imageBytes: ByteArray) {
+	supabase.storage.from("images").upload(path, imageBytes)
 }
