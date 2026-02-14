@@ -21,6 +21,7 @@ import containerised.pos.components.CheckoutDiscountItem
 import containerised.pos.components.CheckoutMenuItem
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
+import containerised.pos.routes.CustomerRoutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -142,7 +143,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 						.padding(vertical = 6.dp, horizontal = 6.dp)
 						.align(Alignment.BottomCenter),
 					onClick = {
-						navController?.navigate(CustomerPayment(amount = totalAmount, currency = currency))
+						navController?.navigate(CustomerRoutes.Payment(amount = totalAmount, currency = currency))
 					}
 				) {
 					Row(

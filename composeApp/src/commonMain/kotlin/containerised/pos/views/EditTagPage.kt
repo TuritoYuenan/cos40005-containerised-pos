@@ -45,7 +45,6 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
 fun EditTagPage(navController: NavController?) {
 	var expanded by remember { mutableStateOf(false) }
 	Column{

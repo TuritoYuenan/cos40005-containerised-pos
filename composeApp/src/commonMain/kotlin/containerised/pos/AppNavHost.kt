@@ -12,7 +12,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
-import containerised.pos.models.CustomerPayment
+import containerised.pos.routes.CustomerRoutes
+import containerised.pos.routes.StaffRoutes
 import containerised.pos.views.CustomerCheckoutPage
 import containerised.pos.views.CustomerOrderPage
 import containerised.pos.views.EditItemPage
@@ -29,24 +30,26 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun AppNavHost() {
 	val navController = rememberNavController()
 
+//	Must change "order" to "login" when auth is implemented
+	val startDestination = if (isWeb) CustomerRoutes.Order else StaffRoutes.MenuEdit
+
 	MaterialTheme {
 //		Staff-facing application, available on mobile and desktop
 		if (!isWeb) {
 			Scaffold(
 				topBar = { StaffTopBar() },
-				bottomBar = { StaffNavigationBar(navController) }
+				bottomBar = { StaffNavigationBar(navController, startDestination) }
 			) { paddingValues ->
 				NavHost(
 					navController = navController,
-					//Change back to "login" before merging
-					startDestination = "menu-edit",
+					startDestination = startDestination,
 					modifier = Modifier.padding(paddingValues)
 				) {
-					composable("login") { LoginPage() }
-					composable("menu-edit") { MenuEditPage() }
-					composable("edit-item") { EditItemPage(navController) }
-					composable("edit-tag") { EditTagPage(navController) }
-					composable("edit-promotion") { EditPromotionPage(navController) }
+					composable<StaffRoutes.Login> { LoginPage() }
+					composable<StaffRoutes.MenuEdit> { MenuEditPage() }
+					composable<StaffRoutes.EditItem> { EditItemPage(navController) }
+					composable<StaffRoutes.EditTag> { EditTagPage(navController) }
+					composable<StaffRoutes.EditPromotion> { EditPromotionPage(navController) }
 				}
 			}
 		}
@@ -55,13 +58,13 @@ fun AppNavHost() {
 		if (isWeb) {
 			NavHost(
 				navController = navController,
-				startDestination = "order",
+				startDestination = startDestination,
 			) {
-				composable("order") { CustomerOrderPage(navController) }
-				composable("checkout") { CustomerCheckoutPage(navController) }
-				composable<CustomerPayment> { backStackEntry ->
-					val customerPayment = backStackEntry.toRoute<CustomerPayment>()
-					CustomerPaymentPage(navController, customerPayment)
+				composable<CustomerRoutes.Order> { CustomerOrderPage(navController) }
+				composable<CustomerRoutes.Checkout> { CustomerCheckoutPage(navController) }
+				composable<CustomerRoutes.Payment> { backStackEntry ->
+					val args = backStackEntry.toRoute<CustomerRoutes.Payment>()
+					CustomerPaymentPage(navController, args)
 				}
 			}
 		}
