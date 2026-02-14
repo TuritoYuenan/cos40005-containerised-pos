@@ -5,7 +5,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -27,7 +29,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun AppNavHost() {
+fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 	val navController = rememberNavController()
 
 //	Must change "order" to "login" when auth is implemented
@@ -69,4 +71,6 @@ fun AppNavHost() {
 			}
 		}
 	}
+
+	LaunchedEffect(navController) { onNavHostReady(navController) }
 }
