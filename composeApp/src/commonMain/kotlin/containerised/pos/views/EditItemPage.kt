@@ -23,23 +23,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import containerised.pos.database.SupabaseClientProvider.supabase
 import containerised.pos.database.uploadImage
-import containerised.pos.models.BranchItem
-import containerised.pos.models.Category
-import containerised.pos.models.fetchBranchItemById
-import containerised.pos.models.fetchCategory
-import containerised.pos.models.fetchCategoryById
-import containerised.pos.models.updateBranchItem
+import containerised.pos.models.*
 import containerised.pos.rememberImagePickerBytes
 import containerised.pos.rememberImagePickerUri
 import io.github.jan.supabase.storage.storage
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
 fun EditItemPage(navController: NavController?) {
 	val scope = rememberCoroutineScope()
 	var uri by remember { mutableStateOf<Any?>(null) }
@@ -60,11 +53,11 @@ fun EditItemPage(navController: NavController?) {
 	var expanded by remember { mutableStateOf(false) }
 	LaunchedEffect(Unit) {
 		try {
-			branchItem = fetchBranchItemById(itemId)	//Editing a predefined item
-			category = fetchCategory()
+			branchItem = BranchItem.fetchById(itemId)	//Editing a predefined item
+			category = Category.fetchAll()
 			val value: String? = branchItem?.categoryId
 			if (value != null) {
-				selected = fetchCategoryById(value)?.categoryName.toString()
+				selected = Category.fetchById(value)?.categoryName.toString()
 			}
 		}
 		catch (e: Exception) {
@@ -205,12 +198,11 @@ fun EditItemPage(navController: NavController?) {
 							onValueChange = {},
 							readOnly = true,
 							modifier = Modifier
-								.menuAnchor()
+								.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
 								.fillMaxWidth(),
 							trailingIcon = {
 								ExposedDropdownMenuDefaults.TrailingIcon(expanded)
 							}
-
 						)
 						ExposedDropdownMenu(
 							expanded = expanded,
@@ -303,7 +295,7 @@ fun EditItemPage(navController: NavController?) {
 
 							)
 							if (updatedBranchItem != null) {
-								updateBranchItem(itemId, updatedBranchItem)
+								BranchItem.update(itemId, updatedBranchItem)
 								println(updatedBranchItem)
 							}
 						}

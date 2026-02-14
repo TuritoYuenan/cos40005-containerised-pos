@@ -15,20 +15,22 @@ data class Category(
 
 	@SerialName("display_order")
 	val displayOrder: Int = 1
-)
+) {
+	companion object {
+		suspend fun fetchAll(): List<Category> {
+			return SupabaseClientProvider.supabase.postgrest["categories"].select().decodeList<Category>()
+		}
 
-suspend fun fetchCategoryById(categoryId: String): Category? {
-    val result = SupabaseClientProvider.supabase.postgrest["categories"]
-        .select {
-            filter {
-                eq("category_id", categoryId)
-            }
-            limit(1)
-        }
-        .decodeList<Category>()
-    return result.firstOrNull()
-}
-
-suspend fun fetchCategory(): List<Category> {
-	return SupabaseClientProvider.supabase.postgrest["categories"].select().decodeList<Category>()
+		suspend fun fetchById(categoryId: String): Category? {
+			return SupabaseClientProvider.supabase.postgrest["categories"]
+				.select {
+					filter {
+						eq("category_id", categoryId)
+					}
+					limit(1)
+				}
+				.decodeList<Category>()
+				.firstOrNull()
+		}
+	}
 }

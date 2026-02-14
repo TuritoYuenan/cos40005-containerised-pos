@@ -15,9 +15,10 @@ data class Tag(
 
 	@SerialName("tag_desc")
 	val tagDes: String? = null
-)
-
-// Fetch all tags
-suspend fun fetchTags(): List<Tag> {
-    return SupabaseClientProvider.supabase.postgrest["tags"].select().decodeList<Tag>()
+) {
+	companion object {
+		suspend fun fetchAll(): List<Tag> {
+			return SupabaseClientProvider.supabase.postgrest["tags"].select().decodeList<Tag>()
+		}
+	}
 }

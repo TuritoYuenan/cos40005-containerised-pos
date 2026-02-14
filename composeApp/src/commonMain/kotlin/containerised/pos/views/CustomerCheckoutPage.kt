@@ -21,13 +21,9 @@ import containerised.pos.components.CheckoutDiscountItem
 import containerised.pos.components.CheckoutMenuItem
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
-import containerised.pos.models.CustomerPayment
-import containerised.pos.models.fetchBranchItemByBranch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
 fun CustomerCheckoutPage(navController: NavController?) {
 	var menuItems by remember { mutableStateOf<List<BranchItem>?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
@@ -36,7 +32,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 	val sampleBranchId = "BRA26011700"
 	LaunchedEffect(Unit) {
 		try {
-			menuItems = fetchBranchItemByBranch(sampleBranchId)
+			menuItems = BranchItem.fetchByBranch(sampleBranchId)
 			println("Fetched ${menuItems!!.size} menu items:")
 			menuItems!!.forEach { item ->
 				println(
