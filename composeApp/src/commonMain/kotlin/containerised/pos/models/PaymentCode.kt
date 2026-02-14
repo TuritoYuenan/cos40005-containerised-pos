@@ -1,5 +1,6 @@
 package containerised.pos.models
 
+import containerised.pos.services.CRCService
 import io.ktor.utils.io.core.toByteArray
 
 class PaymentCode {
@@ -73,7 +74,7 @@ class PaymentCode {
 		// Calculate CRC
 		payload.append("63").append("04")
 		val crcInput = payload.toString().toByteArray()
-		val crc = crc16(crcInput)
+		val crc = CRCService.crc16(crcInput)
 		payload.append(crc.toString(16).uppercase().padStart(4, '0'))
 
 		return payload.toString()
