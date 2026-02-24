@@ -147,10 +147,10 @@ fun KitchenDisplayOrderItem(
 						) {
 							item?.branchItem?.itemIngredients?.forEach { itemIngredient ->
 								DropdownMenuItem(
-									text = { Text("${itemIngredient.quantity}${itemIngredient.unit} ${itemIngredient.ingredient.ingredientName}") },
+									text = { Text("${itemIngredient.quantity} (${itemIngredient.unit}) ${itemIngredient.ingredient.ingredientName}") },
 									onClick = {
 										expandedItemId = null
-										println("${itemIngredient.quantity}${itemIngredient.unit} ${itemIngredient.ingredient.ingredientName}")
+										println("${itemIngredient.quantity} (${itemIngredient.unit}) ${itemIngredient.ingredient.ingredientName}")
 									}
 								)
 							}
@@ -295,10 +295,10 @@ fun ExpandedOrderOverlay(
 								) {
 									item?.branchItem?.itemIngredients?.forEach { itemIngredient ->
 										DropdownMenuItem(
-											text = { Text("${itemIngredient.quantity}${itemIngredient.unit} ${itemIngredient.ingredient.ingredientName}") },
+											text = { Text("${itemIngredient.quantity} (${itemIngredient.unit}) ${itemIngredient.ingredient.ingredientName}") },
 											onClick = {
 												expandedItemId = null
-												println("${itemIngredient.quantity}${itemIngredient.unit} ${itemIngredient.ingredient.ingredientName}")
+												println("${itemIngredient.quantity} (${itemIngredient.unit}) ${itemIngredient.ingredient.ingredientName}")
 											}
 										)
 									}
