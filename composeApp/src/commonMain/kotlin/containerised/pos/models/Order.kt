@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class OrderStatus {
+	CANCELED,
 	PREPARING,
 	FINISHED
 }
@@ -63,6 +64,20 @@ suspend fun markOrderAsFinished(orderId: String) {
 		.update(
 			{
 				set("status", OrderStatus.FINISHED)
+			}
+		) {
+			filter {
+				eq("order_id", orderId)
+				eq("status", OrderStatus.PREPARING)
+			}
+		}
+}
+
+suspend fun markOrderAsCanceled(orderId: String) {
+	SupabaseClientProvider.supabase.postgrest["orders"]
+		.update(
+			{
+				set("status", OrderStatus.CANCELED)
 			}
 		) {
 			filter {

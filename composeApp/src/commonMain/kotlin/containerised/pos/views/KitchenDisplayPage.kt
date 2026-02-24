@@ -170,7 +170,12 @@ fun KitchenDisplayOrderItem(
 					.padding(vertical = 6.dp, horizontal = 12.dp),
 			){
 				Button(
-					onClick = { },
+					onClick = {
+						scope.launch {
+							markOrderAsCanceled(order.orderId)
+							onDone()
+						}
+					},
 					shape = RoundedCornerShape(16.dp),
 					colors = ButtonDefaults.buttonColors(
 						containerColor = MaterialTheme.colorScheme.outlineVariant,
@@ -319,7 +324,13 @@ fun ExpandedOrderOverlay(
 							.padding(vertical = 6.dp, horizontal = 12.dp),
 					){
 						Button(
-							onClick = { },
+							onClick = {
+								scope.launch {
+									markOrderAsCanceled(order.orderId)
+									onDone()
+									onDismiss()
+								}
+							},
 							shape = RoundedCornerShape(16.dp),
 							colors = ButtonDefaults.buttonColors(
 								containerColor = MaterialTheme.colorScheme.outlineVariant,
