@@ -16,7 +16,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import containerised.pos.CartEntry
 import containerised.pos.CheckoutItemStorage
+import containerised.pos.CheckoutItemStorage.decreaseItem
+import containerised.pos.CheckoutItemStorage.saveItem
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
 import containerised.pos.models.CustomerPayment
@@ -32,7 +35,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 	var selected by remember { mutableStateOf<String>("Cash") }
 	var menuItems by remember { mutableStateOf<List<BranchItem>?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
-	var checkoutItemFromStorage by remember { mutableStateOf<List<BranchItem>?>(null) }
+	var checkoutItemFromStorage by remember { mutableStateOf<List<CartEntry>?>(null) }
 	val tableNumber = 1
 
 
@@ -47,7 +50,8 @@ fun CustomerCheckoutPage(navController: NavController?) {
 				)
 			}
 			CheckoutItemStorage.clear()
-			CheckoutItemStorage.saveItems(menuItems!!)
+
+			menuItems?.forEach { item -> saveItem(item)}
 
 			checkoutItemFromStorage = CheckoutItemStorage.loadItems()
 			println(checkoutItemFromStorage ?: "No stored items")
@@ -104,7 +108,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 							.padding(vertical = 3.dp, horizontal = 12.dp),
 						verticalArrangement = Arrangement.spacedBy(6.dp)
 					) {
-						checkoutItemFromStorage?.forEach { item -> CheckoutMenuItem(item, sum = itemSum[item.itemId] ?: 0.0, onValueChange = {newValue -> itemSum[item.itemId] = newValue; println("$newValue, $itemSum")}) }
+						checkoutItemFromStorage?.forEach { item -> CheckoutMenuItem(item.branchItem, sum = itemSum[item.branchItem.itemId] ?: 0.0, onValueChange = {newValue -> itemSum[item.branchItem.itemId] = newValue; println("$newValue, $itemSum")}) }
 					}
 				}
 			}
@@ -304,7 +308,7 @@ fun CheckoutMenuItem(item: BranchItem, sum: Double, onValueChange: (Double) -> U
 			){
 				Button(
 					modifier = Modifier.size(32.dp),
-					onClick = { value--; onValueChange((value*item.price).toDouble())},
+					onClick = { decreaseItem(item)},
 					colors = ButtonDefaults.buttonColors(
 						containerColor = MaterialTheme.colorScheme.primaryContainer,
 						contentColor = Color.Black
@@ -323,7 +327,7 @@ fun CheckoutMenuItem(item: BranchItem, sum: Double, onValueChange: (Double) -> U
 				Button(
 					modifier = Modifier
 						.size(32.dp),
-					onClick = {value++; onValueChange((value*item.price).toDouble()) },
+					onClick = {saveItem(item) },
 					colors = ButtonDefaults.buttonColors(
 						containerColor = MaterialTheme.colorScheme.primaryContainer,
 						contentColor = Color.Black
