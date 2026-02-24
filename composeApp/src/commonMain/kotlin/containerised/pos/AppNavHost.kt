@@ -53,6 +53,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 					composable<StaffRoutes.EditItem> { EditItemPage(navController) }
 					composable<StaffRoutes.EditTag> { EditTagPage(navController) }
 					composable<StaffRoutes.EditPromotion> { EditPromotionPage(navController) }
+					composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage(navController) }
 				}
 			}
 		}

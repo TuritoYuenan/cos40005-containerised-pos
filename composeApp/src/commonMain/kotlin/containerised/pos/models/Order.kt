@@ -43,46 +43,50 @@ data class Order(
 
 	@SerialName("created_at")
 	val createdAt: String?
-)
+) {
+	companion object {
 
-suspend fun fetchOrder(): List<Order> {
-	return SupabaseClientProvider.supabase.postgrest["orders"].select().decodeList<Order>()
-}
 
-suspend fun fetchPreparingOrders(): List<Order> {
-	return SupabaseClientProvider.supabase.postgrest["orders"]
-		.select {
-			filter {
-				eq("status", OrderStatus.PREPARING)
-			}
+		suspend fun fetchOrder(): List<Order> {
+			return SupabaseClientProvider.supabase.postgrest["orders"].select().decodeList<Order>()
 		}
-		.decodeList<Order>()
-}
 
-suspend fun markOrderAsFinished(orderId: String) {
-	SupabaseClientProvider.supabase.postgrest["orders"]
-		.update(
-			{
-				set("status", OrderStatus.FINISHED)
-			}
-		) {
-			filter {
-				eq("order_id", orderId)
-				eq("status", OrderStatus.PREPARING)
-			}
+		suspend fun fetchPreparingOrders(): List<Order> {
+			return SupabaseClientProvider.supabase.postgrest["orders"]
+				.select {
+					filter {
+						eq("status", OrderStatus.PREPARING)
+					}
+				}
+				.decodeList<Order>()
 		}
-}
 
-suspend fun markOrderAsCanceled(orderId: String) {
-	SupabaseClientProvider.supabase.postgrest["orders"]
-		.update(
-			{
-				set("status", OrderStatus.CANCELED)
-			}
-		) {
-			filter {
-				eq("order_id", orderId)
-				eq("status", OrderStatus.PREPARING)
-			}
+		suspend fun markOrderAsFinished(orderId: String) {
+			SupabaseClientProvider.supabase.postgrest["orders"]
+				.update(
+					{
+						set("status", OrderStatus.FINISHED)
+					}
+				) {
+					filter {
+						eq("order_id", orderId)
+						eq("status", OrderStatus.PREPARING)
+					}
+				}
 		}
+
+		suspend fun markOrderAsCanceled(orderId: String) {
+			SupabaseClientProvider.supabase.postgrest["orders"]
+				.update(
+					{
+						set("status", OrderStatus.CANCELED)
+					}
+				) {
+					filter {
+						eq("order_id", orderId)
+						eq("status", OrderStatus.PREPARING)
+					}
+				}
+		}
+	}
 }

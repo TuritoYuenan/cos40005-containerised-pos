@@ -27,27 +27,30 @@ data class OrderItem(
 
 	@SerialName("item_status")
 	val itemStatus: OrderStatus? = null
-)
+) {
+	companion object {
 
-suspend fun fetchOrderItem(): List<OrderItem> {
-	return SupabaseClientProvider.supabase.postgrest["order_items"].select().decodeList<OrderItem>()
-}
-suspend fun fetchOrderItemByOrder(orderId: String): List<OrderItem> {
-	val result = SupabaseClientProvider.supabase.postgrest["order_items"]
-		.select {
-			filter {
-				eq("order_id", orderId)
-			}
+
+		suspend fun fetchOrderItem(): List<OrderItem> {
+			return SupabaseClientProvider.supabase.postgrest["order_items"].select().decodeList<OrderItem>()
 		}
-		.decodeList<OrderItem>()
-	return result
-}
 
-suspend fun fetchAndJoinOrderItemByOrder(orderId: String): List<OrderItem> {
-	val result = SupabaseClientProvider.supabase.postgrest["order_items"]
-		.select(
-			columns = Columns.raw(
-				"""
+		suspend fun fetchOrderItemByOrder(orderId: String): List<OrderItem> {
+			val result = SupabaseClientProvider.supabase.postgrest["order_items"]
+				.select {
+					filter {
+						eq("order_id", orderId)
+					}
+				}
+				.decodeList<OrderItem>()
+			return result
+		}
+
+		suspend fun fetchAndJoinOrderItemByOrder(orderId: String): List<OrderItem> {
+			val result = SupabaseClientProvider.supabase.postgrest["order_items"]
+				.select(
+					columns = Columns.raw(
+						"""
 					order_id,
 					item_id,
 					branchItem:branch_items (
@@ -80,12 +83,14 @@ suspend fun fetchAndJoinOrderItemByOrder(orderId: String): List<OrderItem> {
 					special_notes,
 					item_status
 				""".trimIndent()
-			)
-		) {
-			filter {
-				eq("order_id", orderId)
-			}
+					)
+				) {
+					filter {
+						eq("order_id", orderId)
+					}
+				}
+				.decodeList<OrderItem>()
+			return result
 		}
-		.decodeList<OrderItem>()
-	return result
+	}
 }

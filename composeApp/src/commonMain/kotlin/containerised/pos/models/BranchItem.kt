@@ -156,3 +156,39 @@ data class BranchItem(
 		}
 	}
 }
+@Serializable
+data class BranchItemWithCatAndIng(
+	@SerialName("branch_id")
+	val branchId: String,
+
+	@SerialName("item_id")
+	val itemId: String,
+
+	@SerialName("category_id")
+	val categoryId: String? = null,
+
+	val category: Category,
+
+	val itemIngredients: List<ItemIngredient>,
+
+	@SerialName("item_name")
+	val itemName: String,
+
+	@SerialName("item_des")
+	val itemDes: String? = null,
+
+	@SerialName("price")
+	val price: Float,
+
+	@SerialName("estimated_prep")
+	val estimatedPrep: String,
+
+	@SerialName("is_available")
+	val isAvailable: Boolean = false,
+
+	@SerialName("is_featured")
+	val isFeatured: Boolean = false,
+
+	@SerialName("url_img")
+	val urlImg: String? = null,
+)

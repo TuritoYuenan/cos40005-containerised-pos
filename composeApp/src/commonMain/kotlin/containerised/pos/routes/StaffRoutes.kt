@@ -21,4 +21,7 @@ object StaffRoutes {
 
 	@Serializable @SerialName("edit-promotion")
 	object EditPromotion
+
+	@Serializable @SerialName("kitchen-display")
+	object KitchenDisplay
 }

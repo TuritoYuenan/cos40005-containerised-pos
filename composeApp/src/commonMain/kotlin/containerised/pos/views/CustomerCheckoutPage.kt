@@ -23,8 +23,6 @@ import containerised.pos.CheckoutItemStorage.saveItem
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
 import containerised.pos.routes.CustomerRoutes
-import containerised.pos.models.CustomerPayment
-import containerised.pos.models.fetchBranchItemByBranch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.math.round
 
@@ -232,7 +230,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 						.align(Alignment.BottomCenter),
 					onClick = {
 						if (selected == "Bank transfer")
-							navController?.navigate(CustomerRoutes.Payment(amount = totalAmount, currency = currency))
+							navController?.navigate(CustomerRoutes.Payment(amount = total, currency = currency))
 						else
 							navController?.popBackStack()
 					}

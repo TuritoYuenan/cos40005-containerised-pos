@@ -24,7 +24,8 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.collections.component1
 import kotlin.collections.component2
-
+import containerised.pos.models.Order
+import containerised.pos.models.OrderItem
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview(showBackground = true)
@@ -35,7 +36,7 @@ fun KitchenDisplayPage(navController: NavController) {
 	var error by remember { mutableStateOf<String?>(null) }
 	LaunchedEffect(Unit) {
 		try {
-			orders = fetchPreparingOrders()
+			orders = Order.fetchPreparingOrders()
 			println("Fetched ${orders.size} orders:")
 
 		} catch (e: Exception) {
@@ -80,7 +81,7 @@ fun KitchenDisplayOrderItem(
 
 	LaunchedEffect(Unit) {
 		try {
-			orderItems = fetchAndJoinOrderItemByOrder(order.orderId)
+			orderItems = OrderItem.fetchAndJoinOrderItemByOrder(order.orderId)
 			println("Fetched ${orderItems.size} order items:")
 			orderItems.forEach { item ->
 				println(
@@ -172,7 +173,7 @@ fun KitchenDisplayOrderItem(
 				Button(
 					onClick = {
 						scope.launch {
-							markOrderAsCanceled(order.orderId)
+							Order.markOrderAsCanceled(order.orderId)
 							onDone()
 						}
 					},
@@ -192,7 +193,7 @@ fun KitchenDisplayOrderItem(
 				Button(
 					onClick = {
 						scope.launch {
-							markOrderAsFinished(order.orderId)
+							Order.markOrderAsFinished(order.orderId)
 							onDone()
 						}
 					},
@@ -326,7 +327,7 @@ fun ExpandedOrderOverlay(
 						Button(
 							onClick = {
 								scope.launch {
-									markOrderAsCanceled(order.orderId)
+									Order.markOrderAsCanceled(order.orderId)
 									onDone()
 									onDismiss()
 								}
@@ -347,7 +348,7 @@ fun ExpandedOrderOverlay(
 						Button(
 							onClick = {
 								scope.launch {
-									markOrderAsFinished(order.orderId)
+									Order.markOrderAsFinished(order.orderId)
 									onDone()
 									onDismiss()
 								}
