@@ -22,6 +22,7 @@ import containerised.pos.views.EditItemPage
 import containerised.pos.views.EditPromotionPage
 import containerised.pos.views.EditTagPage
 import containerised.pos.views.CustomerPaymentPage
+import containerised.pos.views.KitchenDisplayPage
 import containerised.pos.views.LoginPage
 import containerised.pos.views.MenuEditPage
 import org.jetbrains.compose.ui.tooling.preview.Preview
