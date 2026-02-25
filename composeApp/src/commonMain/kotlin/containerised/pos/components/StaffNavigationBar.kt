@@ -21,7 +21,7 @@ data class NavigationItem(val label: String, val route: Any, val icon: ImageVect
 val navItems = listOf(
 	NavigationItem("Order", StaffRoutes.Inventory, Icons.AutoMirrored.Filled.Comment),
 	NavigationItem("Menu", StaffRoutes.MenuEdit, Icons.AutoMirrored.Filled.MenuOpen),
-	NavigationItem("Kitchen", StaffRoutes.Inventory, Icons.Filled.Tab),
+	NavigationItem("Kitchen", StaffRoutes.KitchenDisplay, Icons.Filled.Tab),
 	NavigationItem("Sales", StaffRoutes.Inventory, Icons.Filled.Inbox),
 	NavigationItem("Inventory", StaffRoutes.Inventory, Icons.Filled.Folder)
 )
