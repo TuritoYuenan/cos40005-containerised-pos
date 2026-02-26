@@ -1,6 +1,5 @@
 package containerised.pos.models
 
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

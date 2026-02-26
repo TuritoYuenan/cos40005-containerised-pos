@@ -23,23 +23,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import containerised.pos.database.SupabaseClientProvider.supabase
 import containerised.pos.database.uploadImage
-import containerised.pos.models.BranchItem
-import containerised.pos.models.Category
-import containerised.pos.models.fetchBranchItemById
-import containerised.pos.models.fetchCategory
-import containerised.pos.models.fetchCategoryById
-import containerised.pos.models.updateBranchItem
+import containerised.pos.models.*
 import containerised.pos.rememberImagePickerBytes
 import containerised.pos.rememberImagePickerUri
 import io.github.jan.supabase.storage.storage
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
 fun EditItemPage(navController: NavController?) {
 //
 //    val scope = rememberCoroutineScope()

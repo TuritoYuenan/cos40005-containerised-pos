@@ -1,9 +1,16 @@
 package containerised.pos
 
 import containerised.pos.models.BranchItem
+import kotlinx.serialization.Serializable
 
+@Serializable
+data class CartEntry(
+	val branchItem: BranchItem,
+	val count: Int
+)
 expect object CheckoutItemStorage{
-	fun saveItems(items: List<BranchItem>)
-	fun loadItems(): List<BranchItem>?
+	fun saveItem(item: BranchItem)
+	fun decreaseItem(item: BranchItem)
+	fun loadItems(): List<CartEntry>
 	fun clear()
 }

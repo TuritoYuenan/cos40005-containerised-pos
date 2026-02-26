@@ -27,14 +27,14 @@ data class Branch(
 
 	@SerialName("created_at")
 	val createdAt: String? = null
-)
+) {
+	companion object {
+		suspend fun add(branch: Branch) {
+			SupabaseClientProvider.supabase.postgrest["branches"].insert(branch)
+		}
 
-// Add a new branch
-suspend fun addBranch(branch: Branch) {
-	SupabaseClientProvider.supabase.postgrest["branches"].insert(branch)
-}
-
-// Fetch all branches
-suspend fun fetchBranches(): List<Branch> {
-	return SupabaseClientProvider.supabase.postgrest["branches"].select().decodeList<Branch>()
+		suspend fun fetchAll(): List<Branch> {
+			return SupabaseClientProvider.supabase.postgrest["branches"].select().decodeList<Branch>()
+		}
+	}
 }

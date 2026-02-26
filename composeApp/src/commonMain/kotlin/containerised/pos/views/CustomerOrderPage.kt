@@ -27,16 +27,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Tag
-import containerised.pos.models.fetchBranchItem
-import containerised.pos.models.fetchTags
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview(showBackground = true)
 fun CustomerOrderPage(navController: NavController?) {
 	val padding = 16.dp
 	val textFieldState = remember { TextFieldState() }
@@ -53,9 +49,9 @@ fun CustomerOrderPage(navController: NavController?) {
 	LaunchedEffect(Unit) {
 		scope.launch {
 			try {
-				featuredItems = fetchBranchItem()
-				allItems = fetchBranchItem()
-				tags = fetchTags()
+				featuredItems = BranchItem.fetchAll()
+				allItems = BranchItem.fetchAll()
+				tags = Tag.fetchAll()
 			} catch (e: Exception) {
 				// Handle error - you might want to show an error message
 				println("Error fetching data: ${e.message}")
@@ -206,7 +202,6 @@ fun ImageSlider(modifier: Modifier) {
 	Card(modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)) { }
 }
 
-@Preview
 @Composable
 fun CartFAB(navController: NavController?) {
 	ExtendedFloatingActionButton(

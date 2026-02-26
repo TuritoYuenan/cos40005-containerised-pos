@@ -13,13 +13,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.models.Bank
 import containerised.pos.models.Currency
-import containerised.pos.models.CustomerPayment
 import containerised.pos.models.PaymentCodeBuilder
+import containerised.pos.routes.CustomerRoutes
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomerPaymentPage(navController: NavController, args: CustomerPayment) {
+fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payment) {
 	val currencyNumericCode = Currency.fromCode(args.currency) ?: Currency.VND
 
 	val paymentCode = PaymentCodeBuilder()

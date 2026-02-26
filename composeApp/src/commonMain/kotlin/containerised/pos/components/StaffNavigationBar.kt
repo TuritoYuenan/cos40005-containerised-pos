@@ -10,24 +10,25 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
+import containerised.pos.routes.StaffRoutes
 
-data class NavigationItem(val label: String, val route: String, val icon: ImageVector)
+data class NavigationItem(val label: String, val route: Any, val icon: ImageVector)
 
 val navItems = listOf(
-	NavigationItem("Order", "order", Icons.AutoMirrored.Filled.Comment),
-	NavigationItem("Menu", "menu_list", Icons.AutoMirrored.Filled.MenuOpen),
-	NavigationItem("Kitchen", "kitchen", Icons.Filled.Tab),
-	NavigationItem("Sales", "sales", Icons.Filled.Inbox),
-	NavigationItem("Inventory", "inventory", Icons.Filled.Folder)
+	NavigationItem("Order", StaffRoutes.Inventory, Icons.AutoMirrored.Filled.Comment),
+	NavigationItem("Menu", StaffRoutes.MenuEdit, Icons.AutoMirrored.Filled.MenuOpen),
+	NavigationItem("Kitchen", StaffRoutes.KitchenDisplay, Icons.Filled.Tab),
+	NavigationItem("Sales", StaffRoutes.Inventory, Icons.Filled.Inbox),
+	NavigationItem("Inventory", StaffRoutes.Inventory, Icons.Filled.Folder)
 )
 
 @Composable
-fun StaffNavigationBar(navController: NavController) {
-	var selectedDestination by rememberSaveable { mutableStateOf("login") }
+fun StaffNavigationBar(navController: NavController, startDestination: Any) {
+	var selectedDestination by remember { mutableStateOf(startDestination) }
 
 	NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
 		for (item in navItems) {
