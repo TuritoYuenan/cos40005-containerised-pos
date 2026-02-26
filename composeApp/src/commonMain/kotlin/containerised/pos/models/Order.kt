@@ -33,16 +33,16 @@ data class Order(
 	val branchId: String? = null,
 
 	@SerialName("tax_amount")
-	val taxAmount: String? = null,
+	val taxAmount: Int? = null,
 
 	@SerialName("final_amount")
-	val finalAmount: String? = null,
+	val finalAmount: Int? = null,
 
 	@SerialName("updated_at")
 	val updatedAt: String? = null,
 
 	@SerialName("created_at")
-	val createdAt: String?
+	val createdAt: String? = null
 ) {
 	companion object {
 

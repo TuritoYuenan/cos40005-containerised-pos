@@ -20,7 +20,7 @@ data class OrderItem(
 	val quantity: Int,
 
 	@SerialName("subtotal")
-	val subtotal: Double? = null,
+	val subtotal: Int? = null,
 
 	@SerialName("special_notes")
 	val specialNotes: String? = null,
