@@ -26,7 +26,7 @@ data class BranchItem(
 	val itemDes: String? = null,
 
 	@SerialName("price")
-	val price: Float,
+	val price: Int,
 
 	@SerialName("estimated_prep")
 	val estimatedPrep: String,
@@ -178,7 +178,7 @@ data class BranchItemWithCatAndIng(
 	val itemDes: String? = null,
 
 	@SerialName("price")
-	val price: Float,
+	val price: Int,
 
 	@SerialName("estimated_prep")
 	val estimatedPrep: String,

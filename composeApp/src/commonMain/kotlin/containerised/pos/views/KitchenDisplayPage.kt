@@ -27,6 +27,9 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.ui.tooling.preview.Preview
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview(showBackground = true)
@@ -38,7 +41,7 @@ fun KitchenDisplayPage(navController: NavController) {
 
 	LaunchedEffect(Unit) {
 		try {
-			orders = Order.fetchPreparingOrders()
+			orders = Order.fetchPreparing()
 			println("Fetched ${orders.size} orders:")
 
 		} catch (e: Exception) {
@@ -51,15 +54,15 @@ fun KitchenDisplayPage(navController: NavController) {
 		items(items = orders, key = { it.orderId }) { order ->
 			KitchenDisplayOrderItem(
 				order,
-				onDone = {orders = orders.filterNot { it.orderId == order.orderId }},
-				onClickOrder = {selectedOrder = order; println(order)},
-				onClickOrderItem = {selectedOrderItem -> selectedOrderItems = selectedOrderItem})
+				onDone = { orders = orders.filterNot { it.orderId == order.orderId } },
+				onClickOrder = { selectedOrder = order; println(order) },
+				onClickOrderItem = { selectedOrderItem -> selectedOrderItems = selectedOrderItem })
 		}
 	}
 	selectedOrder?.let { order ->
 		ExpandedOrderOverlay(
 			order = order,
-			onDone = {orders = orders.filterNot { it.orderId == order.orderId }},
+			onDone = { orders = orders.filterNot { it.orderId == order.orderId } },
 			orderItems = selectedOrderItems,
 			onDismiss = { selectedOrder = null }
 		)
@@ -74,7 +77,7 @@ fun KitchenDisplayOrderItem(
 	onDone: () -> Unit,
 	onClickOrder: () -> Unit,
 	onClickOrderItem: (List<OrderItem>) -> Unit
-){
+) {
 	val scope = rememberCoroutineScope()
 	var orderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
 	var itemMap by remember { mutableStateOf<Map<String, List<OrderItem?>>>(emptyMap()) }
@@ -103,15 +106,15 @@ fun KitchenDisplayOrderItem(
 			.fillMaxWidth()
 			.clip(RoundedCornerShape(8.dp))
 			.padding(vertical = 6.dp, horizontal = 12.dp)
-			.clickable { onClickOrder(); onClickOrderItem(orderItems)},
-	){
+			.clickable { onClickOrder(); onClickOrderItem(orderItems) },
+	) {
 		Column {
 			Row(
 				modifier = Modifier
 					.fillMaxWidth()
 					.background(MaterialTheme.colorScheme.primary)
 			) {
-				Box{}
+				Box {}
 				Column(
 					modifier = Modifier
 						.fillMaxWidth()
@@ -128,12 +131,12 @@ fun KitchenDisplayOrderItem(
 					)
 				}
 			}
-			itemMap.forEach { (category, itemsOfCategory)->
+			itemMap.forEach { (category, itemsOfCategory) ->
 				Column(
 					modifier = Modifier
 						.fillMaxWidth()
 						.padding(vertical = 6.dp, horizontal = 12.dp),
-				){
+				) {
 					Text(
 						text = category,
 						style = MaterialTheme.typography.titleMedium,
@@ -171,11 +174,11 @@ fun KitchenDisplayOrderItem(
 				modifier = Modifier
 					.fillMaxWidth()
 					.padding(vertical = 6.dp, horizontal = 12.dp),
-			){
+			) {
 				Button(
 					onClick = {
 						scope.launch {
-							Order.markOrderAsCanceled(order.orderId)
+							Order.markCancelled(order.orderId)
 							onDone()
 						}
 					},
@@ -202,7 +205,7 @@ fun KitchenDisplayOrderItem(
 								}
 							}
 
-//							Order.markOrderAsFinished(order.orderId)
+//							Order.markFinished(order.orderId)
 //							onDone()
 						}
 					},
@@ -271,7 +274,7 @@ fun ExpandedOrderOverlay(
 							.fillMaxWidth()
 							.background(MaterialTheme.colorScheme.primary)
 					) {
-						Box{}
+						Box {}
 						Column(
 							modifier = Modifier
 								.fillMaxWidth()
@@ -288,12 +291,12 @@ fun ExpandedOrderOverlay(
 							)
 						}
 					}
-					itemMap.forEach { (category, itemsOfCategory)->
+					itemMap.forEach { (category, itemsOfCategory) ->
 						Column(
 							modifier = Modifier
 								.fillMaxWidth()
 								.padding(vertical = 6.dp, horizontal = 12.dp),
-						){
+						) {
 							Text(
 								text = category,
 								style = MaterialTheme.typography.titleMedium,
@@ -332,11 +335,11 @@ fun ExpandedOrderOverlay(
 						modifier = Modifier
 							.fillMaxWidth()
 							.padding(vertical = 6.dp, horizontal = 12.dp),
-					){
+					) {
 						Button(
 							onClick = {
 								scope.launch {
-									Order.markOrderAsCanceled(order.orderId)
+									Order.markCancelled(order.orderId)
 									onDone()
 									onDismiss()
 								}
@@ -357,7 +360,7 @@ fun ExpandedOrderOverlay(
 						Button(
 							onClick = {
 								scope.launch {
-									Order.markOrderAsFinished(order.orderId)
+									Order.markFinished(order.orderId)
 									onDone()
 									onDismiss()
 								}

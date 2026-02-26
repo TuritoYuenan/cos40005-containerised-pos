@@ -25,16 +25,20 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import containerised.pos.CheckoutItemStorage
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Tag
+import containerised.pos.routes.CustomerRoutes
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomerOrderPage(navController: NavController?) {
+fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order) {
 	val padding = 16.dp
+
+	//	Search state
 	val textFieldState = remember { TextFieldState() }
 	var searchResults by remember { mutableStateOf(listOf<String>()) }
 
@@ -42,6 +46,8 @@ fun CustomerOrderPage(navController: NavController?) {
 	var featuredItems by remember { mutableStateOf<List<BranchItem>>(emptyList()) }
 	var allItems by remember { mutableStateOf<List<BranchItem>>(emptyList()) }
 	var tags by remember { mutableStateOf<List<Tag>>(emptyList()) }
+
+	//	Data fetching state
 	var isLoading by remember { mutableStateOf(true) }
 	val scope = rememberCoroutineScope()
 
@@ -79,7 +85,11 @@ fun CustomerOrderPage(navController: NavController?) {
 		bottomBar = {
 			BottomAppBar(
 				actions = {
-					Text("Total: $0.00", Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
+					Text(
+						"Table ${args.tableNumber ?: "N/A"}\nTotal: $0.00",
+						Modifier.padding(padding),
+						style = MaterialTheme.typography.titleMedium
+					)
 				},
 				floatingActionButton = { CartFAB(navController) }
 			)
@@ -115,7 +125,13 @@ fun CustomerOrderPage(navController: NavController?) {
 						horizontalArrangement = Arrangement.spacedBy(padding),
 					) {
 						items(featuredItems.size) { index ->
-							TallItemCard(item = featuredItems[index])
+							TallItemCard(
+								item = featuredItems[index],
+								onAddToCart = {
+									println("Item added to cart: ${featuredItems[index].itemName}")
+									CheckoutItemStorage.saveItem(featuredItems[index])
+								}
+							)
 						}
 					}
 				}
@@ -144,7 +160,8 @@ fun CustomerOrderPage(navController: NavController?) {
 				items(allItems.size) { index ->
 					WideItemCard(
 						item = allItems[index],
-						modifier = Modifier.padding(8.dp, 0.dp)
+						modifier = Modifier.padding(8.dp, 0.dp),
+						onAddToCart = { CheckoutItemStorage.saveItem(allItems[index]) }
 					)
 				}
 			}
@@ -258,7 +275,7 @@ fun TallItemCard(item: BranchItem, onAddToCart: () -> Unit = {}) {
 						style = MaterialTheme.typography.bodyMedium
 					)
 				}
-				Text("$${item.price}", style = MaterialTheme.typography.bodyLarge)
+				Text("${item.price} VND", style = MaterialTheme.typography.bodyLarge)
 			}
 		}
 	}
@@ -266,9 +283,9 @@ fun TallItemCard(item: BranchItem, onAddToCart: () -> Unit = {}) {
 
 @Composable
 fun WideItemCard(item: BranchItem, modifier: Modifier = Modifier, onAddToCart: () -> Unit = {}) {
-	OutlinedCard(modifier = modifier.fillMaxWidth().height(120.dp)) {
+	OutlinedCard(modifier.fillMaxWidth().height(120.dp)) {
 		Box {
-			Row(modifier = Modifier.fillMaxWidth()) {
+			Row(Modifier.fillMaxWidth()) {
 				KamelImage(
 					resource = { asyncPainterResource("https://placehold.co/256x256") },
 					contentDescription = item.itemName,
@@ -296,7 +313,7 @@ fun WideItemCard(item: BranchItem, modifier: Modifier = Modifier, onAddToCart: (
 						overflow = TextOverflow.Ellipsis,
 						style = MaterialTheme.typography.titleMedium
 					)
-					Text("$${item.price}", style = MaterialTheme.typography.bodyLarge)
+					Text("${item.price} VND", style = MaterialTheme.typography.bodyLarge)
 				}
 			}
 
@@ -319,41 +336,3 @@ fun AddToCartButton(onAddToCart: () -> Unit, modifier: Modifier = Modifier) {
 		)
 	}
 }
-
-//@Preview
-//@Composable
-//fun PreviewTallItemCard() {
-//	val sampleItem = Item(
-//		id = "1",
-//		name = "Sample Dish",
-//		description = "A delicious sample dish to try out.",
-//		price = 9.99f,
-//		categoryID = "cat1",
-//		isAvailable = true,
-//		estimatedPreparationTime = 15,
-//		imageURL = null,
-//		branchID = "branch1",
-//		specialNotes = null,
-//	)
-//
-//	TallItemCard(item = sampleItem)
-//}
-
-//@Preview
-//@Composable
-//fun PreviewWideItemCard() {
-//	val sampleItem = MenuItem(
-//		id = "1",
-//		name = "Sample Dish",
-//		description = "A delicious sample dish to try out.",
-//		price = 9.99f,
-//		categoryID = "cat1",
-//		isAvailable = true,
-//		estimatedPreparationTime = 15,
-//		imageURL = null,
-//		branchID = "branch1",
-//		specialNotes = null,
-//	)
-//
-//	WideItemCard(item = sampleItem)
-//}

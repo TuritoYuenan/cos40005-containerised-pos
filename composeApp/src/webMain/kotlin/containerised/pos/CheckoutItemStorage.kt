@@ -4,21 +4,16 @@ import containerised.pos.models.BranchItem
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
 
-
 actual object CheckoutItemStorage {
 	private const val KEY = "items"
 
-	fun save(items: String) {
-		window.localStorage.setItem(KEY, items)
-	}
+	fun save(items: String) = window.localStorage.setItem(KEY, items)
+	fun load(): String? = window.localStorage.getItem(KEY)
 
-	fun load(): String? {
-		return window.localStorage.getItem(KEY)
-	}
 	actual fun saveItem(item: BranchItem) {
 		val current = loadItems().toMutableList()
 
-		val index = current.indexOfFirst { it.branchItem.branchId == item.branchId }
+		val index = current.indexOfFirst { it.branchItem.itemId == item.itemId }
 
 		if (index >= 0) {
 			val existing = current[index]
@@ -27,13 +22,13 @@ actual object CheckoutItemStorage {
 			current.add(CartEntry(item, 1))
 		}
 
-		CheckoutItemStorage.save(Json.encodeToString(current))
+		save(Json.encodeToString<List<CartEntry>>(current))
 	}
 
 	actual fun decreaseItem(item: BranchItem) {
 		val current = loadItems().toMutableList()
 
-		val index = current.indexOfFirst { it.branchItem.branchId == item.branchId }
+		val index = current.indexOfFirst { it.branchItem.itemId == item.itemId }
 
 		if (index >= 0) {
 			val existing = current[index]
@@ -45,15 +40,10 @@ actual object CheckoutItemStorage {
 				current.removeAt(index)
 			}
 
-			CheckoutItemStorage.save(Json.encodeToString(current))
+			save(Json.encodeToString<List<CartEntry>>(current))
 		}
 	}
 
-	actual fun loadItems(): List<CartEntry> =
-		CheckoutItemStorage.load()?.let {
-			Json.decodeFromString(it)
-		} ?: emptyList()
-	actual fun clear(){
-		window.localStorage.removeItem(KEY)
-	}
+	actual fun loadItems(): List<CartEntry> = load()?.let { Json.decodeFromString<List<CartEntry>>(it) } ?: emptyList()
+	actual fun clear() = window.localStorage.removeItem(KEY)
 }
