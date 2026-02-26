@@ -23,7 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import containerised.pos.database.SupabaseClientProvider.supabase
 import containerised.pos.database.uploadImage
-import containerised.pos.models.*
+import containerised.pos.models.BranchItem
+import containerised.pos.models.Category
 import containerised.pos.rememberImagePickerBytes
 import containerised.pos.rememberImagePickerUri
 import io.github.jan.supabase.storage.storage
@@ -44,7 +45,7 @@ fun EditItemPage(navController: NavController?) {
 	imageBytes = rememberImagePickerBytes(uri)
 //	println("Image bytes size = ${imageBytes?.size}")
 
-	val itemId = "ITM26011701"	//Editing a predefined item
+	val itemId = "ITM26011701"    //Editing a predefined item
 	var branchItem by remember { mutableStateOf<BranchItem?>(null) }
 	var category by remember { mutableStateOf<List<Category>>(emptyList()) }
 
@@ -53,26 +54,23 @@ fun EditItemPage(navController: NavController?) {
 	var expanded by remember { mutableStateOf(false) }
 	LaunchedEffect(Unit) {
 		try {
-			branchItem = BranchItem.fetchById(itemId)	//Editing a predefined item
+			branchItem = BranchItem.fetchById(itemId)    //Editing a predefined item
 			category = Category.fetchAll()
 			val value: String? = branchItem?.categoryId
 			if (value != null) {
 				selected = Category.fetchById(value)?.categoryName.toString()
 			}
-		}
-		catch (e: Exception) {
+		} catch (e: Exception) {
 			val error = e.message
 			println("Error: $error")
 		}
 	}
-	var price by remember { mutableStateOf("") }
-	price = branchItem?.price.toString()
-	var isFeatured by remember { mutableStateOf<Boolean?>(null) }
-	isFeatured = branchItem?.isFeatured
-	var imgUrl by remember { mutableStateOf<String?>(null) }
-	imgUrl = branchItem?.urlImg
 
-	LazyColumn{
+	var price by remember { mutableStateOf(branchItem?.price ?: 0) }
+	var isFeatured by remember { mutableStateOf(branchItem?.isFeatured) }
+	var imgUrl by remember { mutableStateOf(branchItem?.urlImg) }
+
+	LazyColumn {
 		item {
 			CenterAlignedTopAppBar(
 				navigationIcon = {
@@ -105,8 +103,7 @@ fun EditItemPage(navController: NavController?) {
 								.size(120.dp)
 								.clip(RoundedCornerShape(8.dp))
 						)
-					}
-					else if (imgUrl != null){
+					} else if (imgUrl != null) {
 						val url = imgUrl.toString()
 						KamelImage(
 							resource = { asyncPainterResource(url) },
@@ -115,8 +112,7 @@ fun EditItemPage(navController: NavController?) {
 								.size(120.dp)
 								.clip(RoundedCornerShape(8.dp))
 						)
-					}
-					else {
+					} else {
 						Box(
 							modifier = Modifier
 								.size(120.dp)
@@ -176,8 +172,8 @@ fun EditItemPage(navController: NavController?) {
 					)
 
 					OutlinedTextField(
-						value = price,
-						onValueChange = {price = it},
+						value = price.toString(),
+						onValueChange = { price = it.toIntOrNull() ?: price },
 						label = { Text("Price") },
 						singleLine = true,
 						modifier = Modifier.fillMaxWidth(),
@@ -213,7 +209,7 @@ fun EditItemPage(navController: NavController?) {
 									text = { Text(text = item.categoryName) },
 									onClick = {
 										selected = item.categoryName
-										selectedId= item.categoryId
+										selectedId = item.categoryId
 										expanded = false
 									}
 								)
@@ -288,10 +284,10 @@ fun EditItemPage(navController: NavController?) {
 							}
 
 							val updatedBranchItem = branchItem?.copy(
-								price = price.toFloat(),
+								price = price,
 								categoryId = selectedId,
 								isFeatured = isFeatured == true,
-								urlImg = imageUrl?: imgUrl
+								urlImg = imageUrl ?: imgUrl
 
 							)
 							if (updatedBranchItem != null) {

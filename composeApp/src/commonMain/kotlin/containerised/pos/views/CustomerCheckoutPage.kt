@@ -292,9 +292,7 @@ fun CheckoutMenuItem(item: BranchItem, sum: Double, onValueChange: (Double) -> U
 					style = MaterialTheme.typography.bodySmall
 				)
 				Row {
-					Text(
-						text = "Total: " + round(value*item.price*100)/100 + currency,
-					)
+					Text(text = "Total: " + (count * item.price))
 				}
 			}
 			Row(

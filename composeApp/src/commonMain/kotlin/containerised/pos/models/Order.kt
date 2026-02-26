@@ -13,6 +13,39 @@ enum class OrderStatus {
 }
 
 @Serializable
+data class OrderInsert(
+	@SerialName("order_id")
+	val orderId: String? = null,
+
+	@SerialName("order_number")
+	val orderNumber: String? = null,
+
+	@SerialName("order_type")
+	val orderType: String? = null,
+
+	@SerialName("table_number")
+	val tableNumber: String? = null,
+
+	@SerialName("status")
+	val status: OrderStatus? = null,
+
+	@SerialName("branch_id")
+	val branchId: String? = null,
+
+	@SerialName("tax_amount")
+	val taxAmount: Int? = null,
+
+	@SerialName("final_amount")
+	val finalAmount: Int? = null,
+
+	@SerialName("updated_at")
+	val updatedAt: String? = null,
+
+	@SerialName("created_at")
+	val createdAt: String? = null
+)
+
+@Serializable
 data class Order(
 	@SerialName("order_id")
 	val orderId: String,
@@ -45,29 +78,19 @@ data class Order(
 	val createdAt: String? = null
 ) {
 	companion object {
-
-
-		suspend fun fetchOrder(): List<Order> {
+		suspend fun fetchAll(): List<Order> {
 			return SupabaseClientProvider.supabase.postgrest["orders"].select().decodeList<Order>()
 		}
 
-		suspend fun fetchPreparingOrders(): List<Order> {
+		suspend fun fetchPreparing(): List<Order> {
 			return SupabaseClientProvider.supabase.postgrest["orders"]
-				.select {
-					filter {
-						eq("status", OrderStatus.PREPARING)
-					}
-				}
+				.select { filter { eq("status", OrderStatus.PREPARING) } }
 				.decodeList<Order>()
 		}
 
-		suspend fun markOrderAsFinished(orderId: String) {
+		suspend fun markFinished(orderId: String) {
 			SupabaseClientProvider.supabase.postgrest["orders"]
-				.update(
-					{
-						set("status", OrderStatus.FINISHED)
-					}
-				) {
+				.update({ set("status", OrderStatus.FINISHED) }) {
 					filter {
 						eq("order_id", orderId)
 						eq("status", OrderStatus.PREPARING)
@@ -75,18 +98,35 @@ data class Order(
 				}
 		}
 
-		suspend fun markOrderAsCanceled(orderId: String) {
+		suspend fun markCancelled(orderId: String) {
 			SupabaseClientProvider.supabase.postgrest["orders"]
-				.update(
-					{
-						set("status", OrderStatus.CANCELED)
-					}
-				) {
+				.update({ set("status", OrderStatus.CANCELED) }) {
 					filter {
 						eq("order_id", orderId)
 						eq("status", OrderStatus.PREPARING)
 					}
 				}
+		}
+
+		suspend fun fetchByID(orderId: String): Order? {
+			return SupabaseClientProvider.supabase.postgrest["orders"]
+				.select { filter { eq("order_id", orderId) } }
+				.decodeSingleOrNull<Order>()
+		}
+
+		suspend fun add(order: OrderInsert): String {
+			return SupabaseClientProvider.supabase.postgrest["orders"]
+				.insert(order) { select() }
+				.decodeSingle<Order>().orderId
+		}
+
+		suspend fun addWithItems(order: OrderInsert, items: List<OrderItem>): String {
+			val orderID = add(order)
+			items.forEach { item ->
+				SupabaseClientProvider.supabase.postgrest["order_items"].insert(item)
+			}
+
+			return orderID
 		}
 	}
 }
