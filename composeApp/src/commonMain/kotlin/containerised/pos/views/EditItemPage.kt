@@ -41,288 +41,337 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 @Preview
 fun EditItemPage(navController: NavController?) {
-	val scope = rememberCoroutineScope()
-	var uri by remember { mutableStateOf<Any?>(null) }
-	var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
-	val openImagePicker = rememberImagePickerUri { result ->
-		println("Picked image: $result")
-		uri = result
-	}
-	imageBytes = rememberImagePickerBytes(uri)
-//	println("Image bytes size = ${imageBytes?.size}")
+//
+//    val scope = rememberCoroutineScope()
+//
+//    // --- Image picker state ---
+//    var uri by remember { mutableStateOf<Any?>(null) }
+//    var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
+//
+//    val openImagePicker = rememberImagePickerUri { result ->
+//        uri = result
+//    }
+//    imageBytes = rememberImagePickerBytes(uri)
+//
+//    // --- Data state ---
+//    val itemId = "ITM26011701" // predefined item
+//    var branchItem by remember { mutableStateOf<BranchItem?>(null) }
+//    var categories by remember { mutableStateOf<List<Category>>(emptyList()) }
+//
+//    // --- Form state ---
+//    var name by remember { mutableStateOf("") }
+//    var price by remember { mutableStateOf("") }
+//    var isFeatured by remember { mutableStateOf(false) }
+//    var selectedCategoryName by remember { mutableStateOf<Category?>(null) }
+//    var selectedCategoryId by remember { mutableStateOf<String?>(null) }
+//    var imgUrl by remember { mutableStateOf<String?>(null) }
+//
+//    // --- Load data ---
+//    LaunchedEffect(Unit) {
+//        try {
+//            branchItem = fetchBranchItemById(itemId)
+//            categories = fetchCategory()
+//        } catch (e: Exception) {
+//            println("Load error: ${e.message}")
+//        }
+//    }
+//
+//    // --- Sync UI state when item loads ---
+//    LaunchedEffect(branchItem) {
+//        branchItem?.let { item ->
+//            name = item.itemName
+//            price = item.price.toString()
+//            isFeatured = item.isFeatured
+//            selectedCategoryId = item.categoryId
+//            imgUrl = item.urlImg
+//
+//            item.categoryId?.let { categoryId ->
+//                fetchCategoryById(categoryId)?.let {
+//                    selectedCategoryName = it.categoryName
+//                }
+//            }
+//        }
+//    }
+//
+//    // --- UI ---
+//    LazyColumn {
+//        item {
+//
+//            EditItemTopBar {
+//                navController?.popBackStack()
+//            }
+//
+//            EditMenuImageSection(
+//                imageBytes = imageBytes,
+//                imageUrl = imgUrl,
+//                onUploadClick = openImagePicker
+//            )
+//
+//            EditMenuFormSection(
+//                name = name,
+//                price = price,
+//                selectedCategoryName = selectedCategoryName,
+//                categories = categories,
+//                isFeatured = isFeatured,
+//                onNameChange = { name = it },
+//                onPriceChange = { price = it },
+//                onCategorySelected = {
+//                    selectedCategoryName = it.categoryName
+//                    selectedCategoryId = it.categoryId
+//                },
+//                onFeaturedChange = { isFeatured = it }
+//            )
+//
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(12.dp),
+//                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
+//            ) {
+//
+//                Button(
+//                    onClick = {
+//                        // TODO: delete logic
+//                    },
+//                    shape = RoundedCornerShape(8.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = MaterialTheme.colorScheme.error,
+//                        contentColor = Color.White
+//                    ),
+//                    modifier = Modifier.height(40.dp)
+//                ) {
+//                    Icon(Icons.Filled.Delete, contentDescription = null)
+//                    Spacer(Modifier.width(6.dp))
+//                    Text("Delete")
+//                }
+//
+//                Button(
+//                    onClick = {
+//                        scope.launch {
+//
+//                            var finalImageUrl = imgUrl
+//
+//                            if (imageBytes != null) {
+//                                val name = List(10) { ('a'..'z').random() }.joinToString("")
+//                                uploadImage("menu-images/$name.png", imageBytes!!)
+//                                finalImageUrl = supabase.storage
+//                                    .from("images")
+//                                    .publicUrl("menu-images/$name.png")
+//                            }
+//
+//                            val updatedItem = branchItem?.copy(
+//                                itemName = name,
+//                                price = price.toFloatOrNull() ?: 0f,
+//                                categoryId = selectedCategoryId,
+//                                isFeatured = isFeatured,
+//                                urlImg = finalImageUrl
+//                            )
+//
+//                            if (updatedItem != null) {
+//                                updateBranchItem(itemId, updatedItem)
+//                            }
+//
+//                            navController?.popBackStack()
+//                        }
+//                    },
+//                    shape = RoundedCornerShape(8.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = MaterialTheme.colorScheme.primary,
+//                        contentColor = Color.White
+//                    ),
+//                    modifier = Modifier.height(40.dp)
+//                ) {
+//                    Icon(Icons.Filled.Check, contentDescription = null)
+//                    Spacer(Modifier.width(6.dp))
+//                    Text("Update")
+//                }
+//            }
+//        }
+//    }
+}
 
-	val itemId = "ITM26011701"	//Editing a predefined item
-	var branchItem by remember { mutableStateOf<BranchItem?>(null) }
-	var category by remember { mutableStateOf<List<Category>>(emptyList()) }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditItemTopBar(onBack: () -> Unit) {
+    CenterAlignedTopAppBar(
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+            }
+        },
+        title = { Text("Item edit") }
+    )
+}
 
-	var selected by remember { mutableStateOf("") }
-	var selectedId by remember { mutableStateOf("") }
-	var expanded by remember { mutableStateOf(false) }
-	LaunchedEffect(Unit) {
-		try {
-			branchItem = fetchBranchItemById(itemId)	//Editing a predefined item
-			category = fetchCategory()
-			val value: String? = branchItem?.categoryId
-			if (value != null) {
-				selected = fetchCategoryById(value)?.categoryName.toString()
-			}
-		}
-		catch (e: Exception) {
-			val error = e.message
-			println("Error: $error")
-		}
-	}
-	var price by remember { mutableStateOf("") }
-	price = branchItem?.price.toString()
-	var isFeatured by remember { mutableStateOf<Boolean?>(null) }
-	isFeatured = branchItem?.isFeatured
-	var imgUrl by remember { mutableStateOf<String?>(null) }
-	imgUrl = branchItem?.urlImg
+@Composable
+fun EditMenuImageSection(
+    imageBytes: ByteArray?,
+    imageUrl: String?,
+    onUploadClick: () -> Unit
+)
+{
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 12.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp, horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(60.dp)
+        ) {
+            if (imageBytes != null) {
+                Image(
+                    bitmap = imageBytes!!.decodeToImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+            }
+            else if (imageUrl != null){
+                val url = imageUrl.toString()
+                KamelImage(
+                    resource = { asyncPainterResource(url) },
+                    contentDescription = "Menu image",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+            }
+            else {
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFACACAC)),
+                    contentAlignment = Alignment.Center
+                ) {}
+            }
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Button(
+                    onClick = { onUploadClick() },
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.height(40.dp)
+                ) {
+                    Text("Upload", color = Color.White)
+                }
+                Text(
+                    text = "Supports PNG, JPEG, WEBP images below 5MB",
+                    color = Color.Black.copy(alpha = 0.5f),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 12.sp
+                    )
+                )
+            }
 
-	LazyColumn{
-		item {
-			CenterAlignedTopAppBar(
-				navigationIcon = {
-					IconButton(onClick = { navController?.popBackStack() }) {
-						Icon(
-							imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-							contentDescription = "Back"
-						)
-					}
-				},
-				title = { Text("Item edit") }
-			)
-			Card(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(vertical = 6.dp, horizontal = 12.dp),
-			) {
-				Row(
-					verticalAlignment = Alignment.CenterVertically,
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(vertical = 6.dp, horizontal = 12.dp),
-					horizontalArrangement = Arrangement.spacedBy(60.dp)
-				) {
-					if (imageBytes != null) {
-						Image(
-							bitmap = imageBytes!!.decodeToImageBitmap(),
-							contentDescription = null,
-							modifier = Modifier
-								.size(120.dp)
-								.clip(RoundedCornerShape(8.dp))
-						)
-					}
-					else if (imgUrl != null){
-						val url = imgUrl.toString()
-						KamelImage(
-							resource = { asyncPainterResource(url) },
-							contentDescription = "Menu image",
-							modifier = Modifier
-								.size(120.dp)
-								.clip(RoundedCornerShape(8.dp))
-						)
-					}
-					else {
-						Box(
-							modifier = Modifier
-								.size(120.dp)
-								.clip(RoundedCornerShape(8.dp))
-								.background(Color(0xFFACACAC)),
-							contentAlignment = Alignment.Center
-						) {}
-					}
-					Column(
-						verticalArrangement = Arrangement.spacedBy(8.dp),
-					) {
-						Button(
-							onClick = { openImagePicker() },
-							shape = RoundedCornerShape(50),
-							colors = ButtonDefaults.buttonColors(
-								containerColor = MaterialTheme.colorScheme.primary,
-								contentColor = Color.White
-							),
-							modifier = Modifier.height(40.dp)
-						) {
-							Text("Upload", color = Color.White)
-						}
-						Text(
-							text = "Supports PNG, JPEG, WEBP images below 5MB",
-							color = Color.Black.copy(alpha = 0.5f),
-							style = MaterialTheme.typography.labelSmall.copy(
-								fontSize = 12.sp
-							)
-						)
-					}
+        }
+    }
+}
 
-				}
-			}
-			Card(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(vertical = 6.dp, horizontal = 12.dp),
-			) {
-				Column(
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(vertical = 6.dp, horizontal = 12.dp),
-					verticalArrangement = Arrangement.spacedBy(6.dp)
-				) {
-					OutlinedTextField(
-						value = "Input",
-						onValueChange = {},
-						label = { Text("Name") },
-						singleLine = true,
-						modifier = Modifier.fillMaxWidth(),
-						trailingIcon = {
-							Icon(
-								imageVector = Icons.Outlined.Edit,
-								contentDescription = "Action"
-							)
-						}
-					)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditMenuFormSection(
+    name: String,
+    price: String,
+    selectedCategoryName: String,
+    categories: List<Category>,
+    isFeatured: Boolean,
+    onNameChange: (String) -> Unit,
+    onPriceChange: (String) -> Unit,
+    onCategorySelected: (Category) -> Unit,
+    onFeaturedChange: (Boolean) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
 
-					OutlinedTextField(
-						value = price,
-						onValueChange = {price = it},
-						label = { Text("Price") },
-						singleLine = true,
-						modifier = Modifier.fillMaxWidth(),
-						trailingIcon = {
-							Icon(
-								imageVector = Icons.Outlined.Edit,
-								contentDescription = "Action"
-							)
-						}
-					)
-					ExposedDropdownMenuBox(
-						expanded = expanded,
-						onExpandedChange = { expanded = !expanded }
-					) {
-						OutlinedTextField(
-							label = { Text("Category") },
-							value = selected,
-							onValueChange = {},
-							readOnly = true,
-							modifier = Modifier
-								.menuAnchor()
-								.fillMaxWidth(),
-							trailingIcon = {
-								ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-							}
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 12.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
 
-						)
-						ExposedDropdownMenu(
-							expanded = expanded,
-							onDismissRequest = { expanded = false }
-						) {
-							category.forEach { item ->
-								DropdownMenuItem(
-									text = { Text(text = item.categoryName) },
-									onClick = {
-										selected = item.categoryName
-										selectedId= item.categoryId
-										expanded = false
-									}
-								)
-							}
-						}
-					}
-					OutlinedTextField(
-						value = "Type to find tags",
-						onValueChange = {},
-						label = { Text("Tags") },
-						singleLine = true,
-						modifier = Modifier.fillMaxWidth(),
-						trailingIcon = {
-							Icon(
-								imageVector = Icons.Outlined.Search,
-								contentDescription = "Action"
-							)
-						}
-					)
-					Row(
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(horizontal = 4.dp),
-						verticalAlignment = Alignment.CenterVertically
-					) {
-						Text(
-							text = "Is featured",
-							modifier = Modifier.weight(1f)
-						)
-						RadioButton(
-							selected = isFeatured == true,
-							onClick = { isFeatured = !isFeatured!! }
-						)
-					}
-				}
-			}
-			Row(
-				horizontalArrangement = Arrangement.spacedBy(
-					10.dp,
-					Alignment.End
-				),
-				verticalAlignment = Alignment.CenterVertically,
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(vertical = 6.dp, horizontal = 12.dp),
-			) {
-				Button(
-					onClick = { },
-					shape = RoundedCornerShape(8.dp),
-					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.primary,
-						contentColor = Color.White
-					),
-					modifier = Modifier.height(40.dp)
-				) {
-					Icon(
-						Icons.Filled.Delete,
-						contentDescription = "Decrease"
-					)
-					Text("Delete", color = Color.White)
-				}
-				Button(
-					onClick = {
-						scope.launch {
-							var imageUrl: String? = null
-							if (imageBytes != null) {
-								val name = List(10) { ('a'..'z').random() }.joinToString("")
-								uploadImage("menu-images/$name.png", imageBytes!!)
-								imageUrl = supabase.storage
-									.from("images")
-									.publicUrl("menu-images/$name.png")
-							}
+            OutlinedTextField(
+                value = name,
+                onValueChange = onNameChange,
+                label = { Text("Name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    Icon(Icons.Outlined.Edit, contentDescription = null)
+                }
+            )
 
-							val updatedBranchItem = branchItem?.copy(
-								price = price.toFloat(),
-								categoryId = selectedId,
-								isFeatured = isFeatured == true,
-								urlImg = imageUrl?: imgUrl
+            OutlinedTextField(
+                value = price,
+                onValueChange = onPriceChange,
+                label = { Text("Price") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    Icon(Icons.Outlined.Edit, contentDescription = null)
+                }
+            )
 
-							)
-							if (updatedBranchItem != null) {
-								updateBranchItem(itemId, updatedBranchItem)
-								println(updatedBranchItem)
-							}
-						}
-						navController?.popBackStack()
-					},
-					shape = RoundedCornerShape(8.dp),
-					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.primary,
-						contentColor = Color.White
-					),
-					modifier = Modifier.height(40.dp)
-				) {
-					Icon(
-						Icons.Filled.Check,
-						contentDescription = "Decrease"
-					)
-					Text("Update", color = Color.White)
-				}
-			}
-		}
-	}
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = selectedCategoryName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Category") },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                    }
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    categories.forEach { item ->
+                        DropdownMenuItem(
+                            text = { Text(item.categoryName) },
+                            onClick = {
+                                onCategorySelected(item)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Is featured",
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = isFeatured,
+                    onCheckedChange = onFeaturedChange
+                )
+            }
+        }
+    }
 }
