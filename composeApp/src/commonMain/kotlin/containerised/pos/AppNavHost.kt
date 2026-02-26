@@ -16,15 +16,7 @@ import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
 import containerised.pos.routes.CustomerRoutes
 import containerised.pos.routes.StaffRoutes
-import containerised.pos.views.CustomerCheckoutPage
-import containerised.pos.views.CustomerOrderPage
-import containerised.pos.views.EditItemPage
-import containerised.pos.views.EditPromotionPage
-import containerised.pos.views.EditTagPage
-import containerised.pos.views.CustomerPaymentPage
-import containerised.pos.views.KitchenDisplayPage
-import containerised.pos.views.LoginPage
-import containerised.pos.views.MenuEditPage
+import containerised.pos.views.*
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
@@ -28,7 +27,7 @@ val navItems = listOf(
 
 @Composable
 fun StaffNavigationBar(navController: NavController, startDestination: Any) {
-	var selectedDestination by rememberSaveable { mutableStateOf(startDestination) }
+	var selectedDestination by remember { mutableStateOf(startDestination) }
 
 	NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
 		for (item in navItems) {
