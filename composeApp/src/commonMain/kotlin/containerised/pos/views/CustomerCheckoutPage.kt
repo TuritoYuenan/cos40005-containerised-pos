@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -22,47 +23,57 @@ import containerised.pos.CheckoutItemStorage.decreaseItem
 import containerised.pos.CheckoutItemStorage.saveItem
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
+import containerised.pos.models.Order
+import containerised.pos.models.OrderInsert
+import containerised.pos.models.OrderStatus
 import containerised.pos.routes.CustomerRoutes
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.math.round
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerCheckoutPage(navController: NavController?) {
-	var expanded by remember { mutableStateOf(false) }
-	var selected by remember { mutableStateOf<String>("Cash") }
-	var menuItems by remember { mutableStateOf<List<BranchItem>?>(null) }
-	var error by remember { mutableStateOf<String?>(null) }
-	var checkoutItemFromStorage by remember { mutableStateOf<List<CartEntry>?>(null) }
+	var checkoutItems by remember { mutableStateOf<List<CartEntry>?>(null) }
 	val tableNumber = 1
+	val scope = rememberCoroutineScope()
 
-
-	val sampleBranchId = "BRA26011700"
-	LaunchedEffect(Unit) {
-		try {
-			menuItems = BranchItem.fetchByBranch(sampleBranchId)
-			println("Fetched ${menuItems!!.size} menu items:")
-			menuItems!!.forEach { item ->
-				println(
-					"• ${item.itemId}: ${item.itemName} (${item.price})"
-				)
-			}
-			CheckoutItemStorage.clear()
-
-			menuItems?.forEach { item -> saveItem(item)}
-
-			checkoutItemFromStorage = CheckoutItemStorage.loadItems()
-			println(checkoutItemFromStorage ?: "No stored items")
-		} catch (e: Exception) {
-			error = e.message
-			println("Error: $error")
-		}
+	// Load cart items
+	fun refreshCart() {
+		checkoutItems = CheckoutItemStorage.loadItems()
 	}
-	val itemSum = remember(menuItems) {
-		mutableStateMapOf<String, Double>().apply {
-			menuItems?.forEach { item -> put(item.itemId, item.price.toDouble()) }
-	} }
-	val total = itemSum.values.sum()
+
+	suspend fun placeOrder(isPayingAtCounter: Boolean) {
+		val order = OrderInsert(
+			orderNumber = "001",
+			orderType = "DINE_IN",
+			tableNumber = tableNumber.toString(),
+			status = OrderStatus.PREPARING,
+			branchId = "BRA26011700",
+			taxAmount = 0,
+			finalAmount = checkoutItems?.sumOf { entry -> entry.count * entry.branchItem.price },
+		)
+
+		val orderID = Order.addWithItems(order, emptyList())
+
+//		After order is created, clear the cart and navigate to payment if needed
+		CheckoutItemStorage.clear()
+		refreshCart()
+
+		navController?.navigate(CustomerRoutes.Payment(orderID, isPayingAtCounter))
+	}
+
+	// Initial load
+	LaunchedEffect(Unit) {
+		refreshCart()
+		println("Loaded cart items: $checkoutItems")
+	}
+
+	// Calculate total based on cart items
+	val total = remember(checkoutItems) {
+		checkoutItems?.sumOf { entry -> entry.count * entry.branchItem.price.toDouble() } ?: 0.0
+	}
+
 	LazyColumn {
 		item {
 			CenterAlignedTopAppBar(
@@ -83,128 +94,39 @@ fun CustomerCheckoutPage(navController: NavController?) {
 				shape = RoundedCornerShape(12.dp),
 				elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
 			) {
-				Column(
-					modifier = Modifier
-						.background(Color.White)
-				) {
-					Row(
-						modifier = Modifier
-							.padding(vertical = 6.dp),
-					) {
-						Icon(
-							Icons.Filled.RoomService,
-							contentDescription = "RoomService"
-						)
-						Text(
-							text = "Table $tableNumber's order",
-							style = MaterialTheme.typography.titleMedium,
-						)
+				Column(modifier = Modifier.background(Color.White).padding(12.dp)) {
+					Row(modifier = Modifier.padding(vertical = 6.dp)) {
+						Icon(Icons.Filled.RoomService, contentDescription = "RoomService")
+						Text(text = "Table $tableNumber's order", style = MaterialTheme.typography.titleMedium)
 					}
 					Column(
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(vertical = 3.dp, horizontal = 12.dp),
+						modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp, horizontal = 12.dp),
 						verticalArrangement = Arrangement.spacedBy(6.dp)
 					) {
-						checkoutItemFromStorage?.forEach { item -> CheckoutMenuItem(item.branchItem, sum = itemSum[item.branchItem.itemId] ?: 0.0, onValueChange = {newValue -> itemSum[item.branchItem.itemId] = newValue; println("$newValue, $itemSum")}) }
-					}
-				}
-			}
-			Card(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(vertical = 6.dp, horizontal = 12.dp),
-				shape = RoundedCornerShape(12.dp),
-				elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-			) {
-				Column(
-					modifier = Modifier
-						.background(Color.White)
-				) {
-					Row(
-						modifier = Modifier
-							.padding(vertical = 6.dp),
-					) {
-						Icon(
-							Icons.Filled.Payments,
-							contentDescription = "Payments"
-						)
-						Text(
-							text = "Table $tableNumber's payment option",
-							style = MaterialTheme.typography.titleMedium,
-						)
-					}
-					Row(
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(vertical = 3.dp, horizontal = 12.dp),
-						verticalAlignment = Alignment.CenterVertically,
-					) {
-						Text(
-							text = "Payment method:",
-							style = MaterialTheme.typography.titleMedium,
-							modifier = Modifier.weight(1f),
-						)
-						ExposedDropdownMenuBox(
-							expanded = expanded,
-							onExpandedChange = { expanded = !expanded }
-						) {
-							TextField(
-								value = selected,
-								onValueChange = {},
-								readOnly = true,
-								modifier = Modifier
-									.menuAnchor()
-									.width(480.dp),
-								trailingIcon = {
-									ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-								}
-
+						checkoutItems?.forEach { entry ->
+							CheckoutMenuItem(
+								item = entry.branchItem,
+								count = entry.count,
+								onRefresh = { refreshCart() }
 							)
-							ExposedDropdownMenu(
-								expanded = expanded,
-								onDismissRequest = { expanded = false }
-							) {
-								DropdownMenuItem(
-									text = { Text("Cash") },
-									onClick = {
-										selected = "Cash"
-										expanded = false
-									}
-								)
-								DropdownMenuItem(
-									text = { Text("Bank transfer") },
-									onClick = {
-										selected = "Bank transfer"
-										expanded = false
-									}
-								)
-							}
 						}
 					}
 				}
 			}
+
 			Card(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(vertical = 6.dp, horizontal = 12.dp),
+				modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 12.dp),
 				shape = RoundedCornerShape(12.dp),
 				elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
 			) {
-				Column(
-					modifier = Modifier
-						.background(Color.White)
-				) {
-					Row(
-						modifier = Modifier
-							.padding(vertical = 6.dp),
-					) {
+				Column(modifier = Modifier.background(Color.White).padding(12.dp)) {
+					Row(modifier = Modifier.padding(vertical = 6.dp)) {
 						Icon(
 							Icons.Filled.Discount,
 							contentDescription = "Discount"
 						)
 						Text(
-							text = "Table $tableNumber's discount",
+							text = "Discounts and Promotions",
 							style = MaterialTheme.typography.titleMedium,
 						)
 					}
@@ -219,34 +141,20 @@ fun CustomerCheckoutPage(navController: NavController?) {
 					}
 				}
 			}
-			Box {
+
+			Column(modifier = Modifier.background(Color.White).padding(12.dp)) {
 				val currency = Currency.VND.code
+				val formattedTotal = round(total * 100).div(100).toString() + currency
 
-				Card(
-					modifier = Modifier
-						.fillMaxWidth()
-						.background(MaterialTheme.colorScheme.surface)
-						.padding(vertical = 6.dp, horizontal = 6.dp)
-						.align(Alignment.BottomCenter),
-					onClick = {
-						if (selected == "Bank transfer")
-							navController?.navigate(CustomerRoutes.Payment(amount = total, currency = currency))
-						else
-							navController?.popBackStack()
-					}
+				// Bank Transfer Payment Button
+				PaymentButton(
+					label = "Place Order",
+					amount = formattedTotal,
+					icon = Icons.Filled.AccountBalance,
+					iconCaption = "Bank Transfer"
 				) {
-					Row(
-						modifier = Modifier
-							.fillMaxWidth()
-							.clip(RoundedCornerShape(2.dp))
-							.background(MaterialTheme.colorScheme.primaryContainer)
-							.padding(vertical = 6.dp, horizontal = 6.dp),
-
-						horizontalArrangement = Arrangement.SpaceBetween,
-						verticalAlignment = Alignment.CenterVertically
-					) {
-						Text("Order:")
-						Text(round(total*100).div(100).toString() + currency)
+					scope.launch {
+						placeOrder(isPayingAtCounter = false)
 					}
 				}
 			}
@@ -256,13 +164,11 @@ fun CustomerCheckoutPage(navController: NavController?) {
 
 @Preview
 @Composable
-fun CheckoutMenuItem(item: BranchItem, sum: Double, onValueChange: (Double) -> Unit) {
-	var value by remember { mutableStateOf<Int>(1) }
+fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
 	val currency = Currency.VND.code
 	Box {
 		Row(
-			modifier = Modifier
-				.fillMaxWidth(),
+			modifier = Modifier.fillMaxWidth(),
 			horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
 		) {
 			Box(
@@ -273,38 +179,35 @@ fun CheckoutMenuItem(item: BranchItem, sum: Double, onValueChange: (Double) -> U
 				contentAlignment = Alignment.Center
 			) {}
 			Column(
-				modifier = Modifier
-					.height(76.dp)
-					.width(152.dp),
-
+				modifier = Modifier.height(76.dp).width(152.dp),
 				verticalArrangement = Arrangement.SpaceEvenly
 			) {
 				Text(
-					modifier = Modifier
-						.width(82.dp),
+					modifier = Modifier.width(82.dp),
 					maxLines = 1,
 					overflow = TextOverflow.Ellipsis,
 					text = item.itemName,
 					style = MaterialTheme.typography.titleSmall
 				)
-				Text(
-					text = item.price.toString() + currency,
-					style = MaterialTheme.typography.bodySmall
-				)
+
+				Text(text = item.price.toString() + currency, style = MaterialTheme.typography.bodySmall)
+
 				Row {
 					Text(text = "Total: " + (count * item.price))
 				}
 			}
+
 			Row(
 				verticalAlignment = Alignment.CenterVertically,
 				horizontalArrangement = Arrangement.spacedBy(12.dp),
-				modifier = Modifier
-					.height(76.dp)
-					.width(114.dp),
-			){
+				modifier = Modifier.height(76.dp).width(114.dp),
+			) {
 				Button(
 					modifier = Modifier.size(32.dp),
-					onClick = { decreaseItem(item)},
+					onClick = {
+						decreaseItem(item)
+						onRefresh()
+					},
 					colors = ButtonDefaults.buttonColors(
 						containerColor = MaterialTheme.colorScheme.primaryContainer,
 						contentColor = Color.Black
@@ -312,38 +215,34 @@ fun CheckoutMenuItem(item: BranchItem, sum: Double, onValueChange: (Double) -> U
 					shape = RoundedCornerShape(4.dp),
 					contentPadding = PaddingValues(0.dp)
 				) {
-					Icon(
-						Icons.Filled.Remove,
-						contentDescription = "Decrease"
-					)
+					Icon(Icons.Filled.Remove, contentDescription = "Decrease")
 				}
-				Text(
-					text = value.toString(),
-				)
+
+				Text(text = count.toString())
+
 				Button(
-					modifier = Modifier
-						.size(32.dp),
-					onClick = {saveItem(item) },
+					modifier = Modifier.size(32.dp),
+					onClick = {
+						saveItem(item)
+						onRefresh()
+					},
 					colors = ButtonDefaults.buttonColors(
 						containerColor = MaterialTheme.colorScheme.primaryContainer,
 						contentColor = Color.Black
 					),
 					shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
 					contentPadding = PaddingValues(0.dp)
-				){
+				) {
 					Icon(Icons.Filled.Add, contentDescription = "Increase")
 				}
 			}
+
 			Button(
-				modifier = Modifier
-					.size(24.dp),
+				modifier = Modifier.size(24.dp),
 				onClick = {},
-				colors = ButtonDefaults.buttonColors(
-					containerColor = Color(0x00FFFFFF),
-					contentColor = Color.Black
-				),
+				colors = ButtonDefaults.buttonColors(containerColor = Color(0x00FFFFFF), contentColor = Color.Black),
 				contentPadding = PaddingValues(0.dp)
-			){
+			) {
 				Icon(Icons.Filled.Edit, contentDescription = "Edit")
 			}
 		}
@@ -367,20 +266,39 @@ fun CheckoutDiscountItem() {
 				.background(Color(0xFFACACAC)),
 			contentAlignment = Alignment.Center
 		) {}
-		Column(
-			modifier = Modifier
-				.height(52.dp),
 
+		Column(
+			modifier = Modifier.height(52.dp),
 			verticalArrangement = Arrangement.SpaceEvenly
 		) {
-			Text(
-				text = "Lorem isum title",
-				style = MaterialTheme.typography.titleSmall
-			)
-			Text(
-				text = "Lorem isum condition",
-				style = MaterialTheme.typography.bodySmall
-			)
+			Text(text = "Lorem Ipsum title", style = MaterialTheme.typography.titleSmall)
+			Text(text = "Lorem Ipsum condition", style = MaterialTheme.typography.bodySmall)
+		}
+	}
+}
+
+@Composable
+fun PaymentButton(label: String, amount: String, icon: ImageVector, iconCaption: String?, onClick: () -> Unit) {
+	Button(
+		onClick = onClick,
+		modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+		shape = RoundedCornerShape(8.dp),
+		colors = ButtonDefaults.buttonColors(
+			containerColor = MaterialTheme.colorScheme.primaryContainer,
+			contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+		)
+	) {
+		Row(
+			modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+			horizontalArrangement = Arrangement.SpaceBetween,
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			Row(verticalAlignment = Alignment.CenterVertically) {
+				Icon(icon, contentDescription = iconCaption)
+				Spacer(modifier = Modifier.width(8.dp))
+				Text(text = label, style = MaterialTheme.typography.titleMedium)
+			}
+			Text(text = amount, style = MaterialTheme.typography.titleMedium)
 		}
 	}
 }
