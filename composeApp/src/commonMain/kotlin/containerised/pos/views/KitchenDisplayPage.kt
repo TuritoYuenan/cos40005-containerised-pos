@@ -19,12 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
-import containerised.pos.models.*
-import containerised.pos.models.ItemIngredient.Companion.fetchItemIngredientByItemId
-import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import kotlin.collections.component1
-import kotlin.collections.component2
+import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
 import kotlinx.coroutines.launch
@@ -200,8 +195,8 @@ fun KitchenDisplayOrderItem(
 						scope.launch {
 							orderItems.forEach { orderItem ->
 								orderItem.branchItem.itemIngredients.forEach { itemIngredient ->
-									Ingredient.decreaseStock(itemIngredient.itemId, orderItem.quantity*(itemIngredient.quantity?: 0.0))
-									println("decrease ${orderItem.quantity*(itemIngredient.quantity?: 0.0)} from ${itemIngredient.itemId}")
+									Ingredient.decreaseStock(itemIngredient.ingredientId, orderItem.quantity*(itemIngredient.quantity?: 0.0))
+									println("decrease ${orderItem.quantity*(itemIngredient.quantity?: 0.0)} from ${itemIngredient.ingredientId}")
 								}
 							}
 
