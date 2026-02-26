@@ -1,5 +1,8 @@
 package containerised.pos.models
 
+import containerised.pos.database.SupabaseClientProvider
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -29,5 +32,25 @@ data class Ingredient(
 
 	@SerialName("is_active")
 	val isActive: Boolean? = null
-)
+) {
+	companion object {
+		@Serializable
+		data class DecreaseStockRequest(
+			val id: String,
+
+			val amount: Double
+		)
+
+		suspend fun decreaseStock(ingredientId: String, amount: Double) {
+			SupabaseClientProvider.supabase.postgrest
+				.rpc(
+					"decrease_stock",
+					DecreaseStockRequest(
+						id = ingredientId,
+						amount = amount
+					)
+				)
+		}
+	}
+}
 

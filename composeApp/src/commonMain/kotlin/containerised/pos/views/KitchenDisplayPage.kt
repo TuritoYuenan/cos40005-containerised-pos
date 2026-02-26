@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import containerised.pos.models.*
+import containerised.pos.models.ItemIngredient.Companion.fetchItemIngredientByItemId
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.collections.component1
@@ -34,6 +35,7 @@ fun KitchenDisplayPage(navController: NavController) {
 	var selectedOrder by remember { mutableStateOf<Order?>(null) }
 	var selectedOrderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
 	var error by remember { mutableStateOf<String?>(null) }
+
 	LaunchedEffect(Unit) {
 		try {
 			orders = Order.fetchPreparingOrders()
@@ -193,8 +195,15 @@ fun KitchenDisplayOrderItem(
 				Button(
 					onClick = {
 						scope.launch {
-							Order.markOrderAsFinished(order.orderId)
-							onDone()
+							orderItems.forEach { orderItem ->
+								orderItem.branchItem.itemIngredients.forEach { itemIngredient ->
+									Ingredient.decreaseStock(itemIngredient.itemId, orderItem.quantity*(itemIngredient.quantity?: 0.0))
+									println("decrease ${orderItem.quantity*(itemIngredient.quantity?: 0.0)} from ${itemIngredient.itemId}")
+								}
+							}
+
+//							Order.markOrderAsFinished(order.orderId)
+//							onDone()
 						}
 					},
 					shape = RoundedCornerShape(16.dp),

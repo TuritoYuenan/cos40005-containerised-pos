@@ -47,7 +47,7 @@ data class Order(
 	companion object {
 
 
-		suspend fun fetchOrder(): List<Order> {
+		suspend fun fetchAllOrder(): List<Order> {
 			return SupabaseClientProvider.supabase.postgrest["orders"].select().decodeList<Order>()
 		}
 
