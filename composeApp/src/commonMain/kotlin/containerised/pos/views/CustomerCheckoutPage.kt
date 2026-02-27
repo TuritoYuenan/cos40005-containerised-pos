@@ -19,8 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.CartEntry
 import containerised.pos.CheckoutItemStorage
-import containerised.pos.CheckoutItemStorage.decreaseItem
-import containerised.pos.CheckoutItemStorage.saveItem
+import containerised.pos.CheckoutItemStorage.removeOrDecreaseItem
+import containerised.pos.CheckoutItemStorage.addOrIncreaseItem
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
 import containerised.pos.models.Order
@@ -205,7 +205,7 @@ fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
 				Button(
 					modifier = Modifier.size(32.dp),
 					onClick = {
-						decreaseItem(item)
+						removeOrDecreaseItem(item)
 						onRefresh()
 					},
 					colors = ButtonDefaults.buttonColors(
@@ -223,7 +223,7 @@ fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
 				Button(
 					modifier = Modifier.size(32.dp),
 					onClick = {
-						saveItem(item)
+						addOrIncreaseItem(item)
 						onRefresh()
 					},
 					colors = ButtonDefaults.buttonColors(

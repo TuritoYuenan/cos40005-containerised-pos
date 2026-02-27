@@ -129,7 +129,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 								item = featuredItems[index],
 								onAddToCart = {
 									println("Item added to cart: ${featuredItems[index].itemName}")
-									CheckoutItemStorage.saveItem(featuredItems[index])
+									CheckoutItemStorage.addOrIncreaseItem(featuredItems[index])
 								}
 							)
 						}
@@ -161,7 +161,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 					WideItemCard(
 						item = allItems[index],
 						modifier = Modifier.padding(8.dp, 0.dp),
-						onAddToCart = { CheckoutItemStorage.saveItem(allItems[index]) }
+						onAddToCart = { CheckoutItemStorage.addOrIncreaseItem(allItems[index]) }
 					)
 				}
 			}

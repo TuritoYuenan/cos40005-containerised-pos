@@ -7,12 +7,12 @@ import kotlinx.serialization.json.Json
 actual object CheckoutItemStorage {
 	private const val KEY = "items"
 
-	fun save(items: String) = window.localStorage.setItem(KEY, items)
-	fun load(): String? = window.localStorage.getItem(KEY)
+	fun save(items: List<CartEntry>) {
+		window.localStorage.setItem(KEY, Json.encodeToString<List<CartEntry>>(items))
+	}
 
-	actual fun saveItem(item: BranchItem) {
+	actual fun addOrIncreaseItem(item: BranchItem) {
 		val current = loadItems().toMutableList()
-
 		val index = current.indexOfFirst { it.branchItem.itemId == item.itemId }
 
 		if (index >= 0) {
@@ -22,28 +22,30 @@ actual object CheckoutItemStorage {
 			current.add(CartEntry(item, 1))
 		}
 
-		save(Json.encodeToString<List<CartEntry>>(current))
+		save(current)
 	}
 
-	actual fun decreaseItem(item: BranchItem) {
+	actual fun removeOrDecreaseItem(item: BranchItem) {
 		val current = loadItems().toMutableList()
-
 		val index = current.indexOfFirst { it.branchItem.itemId == item.itemId }
 
-		if (index >= 0) {
-			val existing = current[index]
+		if (index < 0) return
 
-			if (existing.count > 1) {
-				current[index] = existing.copy(count = existing.count - 1)
-			} else {
-				// remove when count reaches 0
-				current.removeAt(index)
-			}
-
-			save(Json.encodeToString<List<CartEntry>>(current))
+		val existing = current[index]
+		if (existing.count > 1) {
+			current[index] = existing.copy(count = existing.count - 1)
+		} else {
+			// remove when count reaches 0
+			current.removeAt(index)
 		}
+
+		save(current)
 	}
 
-	actual fun loadItems(): List<CartEntry> = load()?.let { Json.decodeFromString<List<CartEntry>>(it) } ?: emptyList()
+	actual fun loadItems(): List<CartEntry> {
+		return window.localStorage.getItem(KEY)
+			?.let { Json.decodeFromString<List<CartEntry>>(it) } ?: emptyList()
+	}
+
 	actual fun clear() = window.localStorage.removeItem(KEY)
 }
