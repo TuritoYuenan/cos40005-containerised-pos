@@ -7,6 +7,27 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class OrderItemInsert(
+	@SerialName("order_id")
+	val orderId: String,
+
+	@SerialName("item_id")
+	val itemId: String,
+
+	@SerialName("quantity")
+	val quantity: Int,
+
+	@SerialName("subtotal")
+	val subtotal: Int? = null,
+
+	@SerialName("special_notes")
+	val specialNotes: String? = null,
+
+	@SerialName("item_status")
+	val itemStatus: OrderStatus? = null
+)
+
+@Serializable
 data class OrderItem(
 	@SerialName("order_id")
 	val orderId: String,
@@ -29,8 +50,6 @@ data class OrderItem(
 	val itemStatus: OrderStatus? = null
 ) {
 	companion object {
-
-
 		suspend fun fetchOrderItem(): List<OrderItem> {
 			return SupabaseClientProvider.supabase.postgrest["order_items"].select().decodeList<OrderItem>()
 		}
@@ -91,6 +110,10 @@ data class OrderItem(
 				}
 				.decodeList<OrderItem>()
 			return result
+		}
+
+		suspend fun add(orderItem: OrderItemInsert) {
+			SupabaseClientProvider.supabase.postgrest["order_items"].insert(orderItem)
 		}
 	}
 }
