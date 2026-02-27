@@ -24,7 +24,7 @@ data class CartEntry(
 	}
 }
 
-expect object CheckoutItemStorage{
+expect object CartService{
 	/**
 	 * Saves the given item to the storage.
 	 * If the item already exists, it increases the count by 1.

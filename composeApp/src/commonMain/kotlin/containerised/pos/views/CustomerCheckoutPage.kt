@@ -18,9 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.CartEntry
-import containerised.pos.CheckoutItemStorage
-import containerised.pos.CheckoutItemStorage.removeOrDecreaseItem
-import containerised.pos.CheckoutItemStorage.addOrIncreaseItem
+import containerised.pos.CartService
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
 import containerised.pos.models.Order
@@ -40,7 +38,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 
 	// Load cart items
 	fun refreshCart() {
-		checkoutItems = CheckoutItemStorage.loadItems()
+		checkoutItems = CartService.loadItems()
 	}
 
 	suspend fun placeOrder(isPayingAtCounter: Boolean) {
@@ -57,7 +55,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 		val orderID = Order.addWithItems(order, emptyList())
 
 //		After order is created, clear the cart and navigate to payment if needed
-		CheckoutItemStorage.clear()
+		CartService.clear()
 		refreshCart()
 
 		navController?.navigate(CustomerRoutes.Payment(orderID, isPayingAtCounter))
@@ -205,7 +203,7 @@ fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
 				Button(
 					modifier = Modifier.size(32.dp),
 					onClick = {
-						removeOrDecreaseItem(item)
+						CartService.removeOrDecreaseItem(item)
 						onRefresh()
 					},
 					colors = ButtonDefaults.buttonColors(
@@ -223,7 +221,7 @@ fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
 				Button(
 					modifier = Modifier.size(32.dp),
 					onClick = {
-						addOrIncreaseItem(item)
+						CartService.addOrIncreaseItem(item)
 						onRefresh()
 					},
 					colors = ButtonDefaults.buttonColors(

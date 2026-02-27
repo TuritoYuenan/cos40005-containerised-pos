@@ -25,7 +25,7 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.CheckoutItemStorage
+import containerised.pos.CartService
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Tag
 import containerised.pos.routes.CustomerRoutes
@@ -129,7 +129,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 								item = featuredItems[index],
 								onAddToCart = {
 									println("Item added to cart: ${featuredItems[index].itemName}")
-									CheckoutItemStorage.addOrIncreaseItem(featuredItems[index])
+									CartService.addOrIncreaseItem(featuredItems[index])
 								}
 							)
 						}
@@ -161,7 +161,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 					WideItemCard(
 						item = allItems[index],
 						modifier = Modifier.padding(8.dp, 0.dp),
-						onAddToCart = { CheckoutItemStorage.addOrIncreaseItem(allItems[index]) }
+						onAddToCart = { CartService.addOrIncreaseItem(allItems[index]) }
 					)
 				}
 			}

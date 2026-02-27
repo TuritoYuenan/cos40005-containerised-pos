@@ -4,7 +4,7 @@ import containerised.pos.models.BranchItem
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
 
-actual object CheckoutItemStorage {
+actual object CartService {
 	private const val KEY = "items"
 
 	fun save(items: List<CartEntry>) {

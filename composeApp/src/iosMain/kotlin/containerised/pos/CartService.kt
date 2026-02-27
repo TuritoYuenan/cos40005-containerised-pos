@@ -2,7 +2,7 @@ package containerised.pos
 
 import containerised.pos.models.BranchItem
 
-actual object CheckoutItemStorage{
+actual object CartService{
 	actual fun addOrIncreaseItem(item: BranchItem) {
 	}
 
