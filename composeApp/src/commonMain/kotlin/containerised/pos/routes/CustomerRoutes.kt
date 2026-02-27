@@ -5,11 +5,11 @@ import kotlinx.serialization.Serializable
 
 object CustomerRoutes {
 	@Serializable @SerialName("order")
-	data class Order(val tableNumber: String? = null)
+	data class Order(val branchID: String = "Unknown", val tableNumber: String = "Unknown")
 
 	@Serializable @SerialName("checkout")
-	object Checkout
+	data class Checkout(val branchID: String = "Unknown", val tableNumber: String = "Unknown")
 
 	@Serializable @SerialName("payment")
-	data class Payment(val orderID: String?, val isPayingAtCounter: Boolean)
+	data class Payment(val orderID: String = "Unknown", val isPayingAtCounter: Boolean = false)
 }

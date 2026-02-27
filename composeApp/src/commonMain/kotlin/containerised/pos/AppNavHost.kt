@@ -26,7 +26,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 	val navController = rememberNavController()
 
 //	Must change "order" to "login" when auth is implemented
-	val startDestination = if (isWeb) CustomerRoutes.Order("N/A") else StaffRoutes.MenuEdit
+	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.MenuEdit
 
 	MaterialTheme {
 //		Staff-facing application, available on mobile and desktop
@@ -60,7 +60,10 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 					val args = backStackEntry.toRoute<CustomerRoutes.Order>()
 					CustomerOrderPage(navController, args)
 				}
-				composable<CustomerRoutes.Checkout> { CustomerCheckoutPage(navController) }
+				composable<CustomerRoutes.Checkout> { backStackEntry ->
+					val args = backStackEntry.toRoute<CustomerRoutes.Checkout>()
+					CustomerCheckoutPage(navController, args)
+				}
 				composable<CustomerRoutes.Payment> { backStackEntry ->
 					val args = backStackEntry.toRoute<CustomerRoutes.Payment>()
 					CustomerPaymentPage(navController, args)

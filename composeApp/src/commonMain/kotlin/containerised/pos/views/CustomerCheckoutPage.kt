@@ -28,13 +28,16 @@ import containerised.pos.routes.CustomerRoutes
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.math.round
+import kotlin.time.Clock
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomerCheckoutPage(navController: NavController?) {
-	var checkoutItems by remember { mutableStateOf<List<CartEntry>?>(null) }
-	val tableNumber = 1
+fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Checkout) {
+	var checkoutItems by remember { mutableStateOf<List<CartEntry>>(emptyList()) }
 	val scope = rememberCoroutineScope()
+
+	// Hardcoded tax amount - assume it is gathered from settings stored in database
+	val taxAmount = 0.2
 
 	// Load cart items
 	fun refreshCart() {
@@ -42,17 +45,22 @@ fun CustomerCheckoutPage(navController: NavController?) {
 	}
 
 	suspend fun placeOrder(isPayingAtCounter: Boolean) {
+		// Generate a unique order ID client-side to avoid database function permission issues
+		val generatedOrderId = "ORD${Clock.System.now().toEpochMilliseconds()}"
+
 		val order = OrderInsert(
+			orderId = generatedOrderId,
 			orderNumber = "001",
 			orderType = "DINE_IN",
-			tableNumber = tableNumber.toString(),
+			tableNumber = args.tableNumber,
 			status = OrderStatus.PREPARING,
-			branchId = "BRA26011700",
-			taxAmount = 0,
-			finalAmount = checkoutItems?.sumOf { entry -> entry.count * entry.branchItem.price },
+			branchId = args.branchID,
+			taxAmount = taxAmount,
+			finalAmount = calculateFinalAmount(checkoutItems, taxAmount)
 		)
 
-		val orderID = Order.addWithItems(order, emptyList())
+		val orderItems = checkoutItems.map { entry -> entry.toOrderItem(generatedOrderId) }
+		val orderID = Order.addWithItems(order, orderItems)
 
 //		After order is created, clear the cart and navigate to payment if needed
 		CartService.clear()
@@ -69,7 +77,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 
 	// Calculate total based on cart items
 	val total = remember(checkoutItems) {
-		checkoutItems?.sumOf { entry -> entry.count * entry.branchItem.price.toDouble() } ?: 0.0
+		checkoutItems.sumOf { entry -> entry.count * entry.branchItem.price.toDouble() }
 	}
 
 	LazyColumn {
@@ -95,13 +103,13 @@ fun CustomerCheckoutPage(navController: NavController?) {
 				Column(modifier = Modifier.background(Color.White).padding(12.dp)) {
 					Row(modifier = Modifier.padding(vertical = 6.dp)) {
 						Icon(Icons.Filled.RoomService, contentDescription = "RoomService")
-						Text(text = "Table $tableNumber's order", style = MaterialTheme.typography.titleMedium)
+						Text(text = "Table ${args.tableNumber}'s order", style = MaterialTheme.typography.titleMedium)
 					}
 					Column(
 						modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp, horizontal = 12.dp),
 						verticalArrangement = Arrangement.spacedBy(6.dp)
 					) {
-						checkoutItems?.forEach { entry ->
+						checkoutItems.forEach { entry ->
 							CheckoutMenuItem(
 								item = entry.branchItem,
 								count = entry.count,
@@ -144,9 +152,21 @@ fun CustomerCheckoutPage(navController: NavController?) {
 				val currency = Currency.VND.code
 				val formattedTotal = round(total * 100).div(100).toString() + currency
 
+				// Cash Payment Button
+				PaymentButton(
+					label = "Place Order (Pay at Counter)",
+					amount = formattedTotal,
+					icon = Icons.Filled.Payment,
+					iconCaption = "Cash"
+				) {
+					scope.launch {
+						placeOrder(isPayingAtCounter = true)
+					}
+				}
+
 				// Bank Transfer Payment Button
 				PaymentButton(
-					label = "Place Order",
+					label = "Place Order (VietQR Payment)",
 					amount = formattedTotal,
 					icon = Icons.Filled.AccountBalance,
 					iconCaption = "Bank Transfer"
@@ -299,4 +319,9 @@ fun PaymentButton(label: String, amount: String, icon: ImageVector, iconCaption:
 			Text(text = amount, style = MaterialTheme.typography.titleMedium)
 		}
 	}
+}
+
+fun calculateFinalAmount(cartItems: List<CartEntry>, taxAmount: Double): Int {
+	val subtotal = cartItems.sumOf { entry -> entry.count * entry.branchItem.price }
+	return (subtotal * (1 + taxAmount)).toInt()
 }

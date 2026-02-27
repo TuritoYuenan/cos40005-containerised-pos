@@ -86,12 +86,12 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 			BottomAppBar(
 				actions = {
 					Text(
-						"Table ${args.tableNumber ?: "N/A"}\nTotal: $0.00",
+						"Table ${args.tableNumber} at Branch ${args.branchID}\nTotal: $0.00",
 						Modifier.padding(padding),
 						style = MaterialTheme.typography.titleMedium
 					)
 				},
-				floatingActionButton = { CartFAB(navController) }
+				floatingActionButton = { CartFAB(navController, args.branchID, args.tableNumber) }
 			)
 		}
 	) { paddingValues ->
@@ -220,11 +220,11 @@ fun ImageSlider(modifier: Modifier) {
 }
 
 @Composable
-fun CartFAB(navController: NavController?) {
+fun CartFAB(navController: NavController?, branchID: String, tableNumber: String) {
 	ExtendedFloatingActionButton(
 		text = { Text("View Cart") },
 		icon = { Icon(Icons.Filled.ShoppingCart, contentDescription = "Cart") },
-		onClick = { navController?.navigate("checkout") },
+		onClick = { navController?.navigate(CustomerRoutes.Checkout(branchID, tableNumber)) },
 		containerColor = MaterialTheme.colorScheme.primary,
 		contentColor = MaterialTheme.colorScheme.onPrimary,
 	)
