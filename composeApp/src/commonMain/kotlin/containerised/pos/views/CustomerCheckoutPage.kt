@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.CartEntry
@@ -25,7 +26,6 @@ import containerised.pos.models.OrderInsert
 import containerised.pos.models.OrderStatus
 import containerised.pos.routes.CustomerRoutes
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.time.Clock
 
 @OptIn(ExperimentalMaterial3Api::class)

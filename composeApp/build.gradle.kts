@@ -50,7 +50,7 @@ kotlin {
 			languageSettings.optIn("kotlin.time.ExperimentalTime")
 		}
 		androidMain.dependencies {
-			implementation(compose.preview)
+			implementation(libs.ui.tooling.preview)
 			implementation(libs.androidx.activity.compose)
 			implementation(libs.ktor.client.okhttp)
 			implementation(libs.ktor.client.android)
@@ -62,13 +62,13 @@ kotlin {
 		}
 		commonMain.dependencies {
 //			Compose
-			implementation(compose.runtime)
-			implementation(compose.foundation)
-			implementation(compose.material3)
-			implementation(compose.materialIconsExtended)
-			implementation(compose.ui)
-			implementation(compose.components.resources)
-			implementation(compose.components.uiToolingPreview)
+			implementation(libs.jetbrains.runtime)
+			implementation(libs.foundation)
+			implementation(libs.material3)
+			implementation(libs.material.icons.extended)
+			implementation(libs.ui)
+			implementation(libs.components.resources)
+			implementation(libs.ui.tooling.preview)
 
 //			AndroidX
 			implementation(libs.androidx.lifecycle.viewmodelCompose)
@@ -79,7 +79,7 @@ kotlin {
 			implementation(libs.kamel.image.default)
 
 //			Supabase
-			implementation(project.dependencies.platform("io.github.jan-tennert.supabase:bom:3.2.5"))
+			implementation(project.dependencies.platform("io.github.jan-tennert.supabase:bom:3.4.0"))
 			implementation(libs.supabase.postgrest.kt)
 			implementation(libs.supabase.auth.kt)
 			implementation(libs.supabase.realtime.kt)
@@ -147,7 +147,7 @@ buildkonfig {
 }
 
 dependencies {
-	debugImplementation(compose.uiTooling)
+	debugImplementation(libs.ui.tooling)
 }
 
 compose.desktop {

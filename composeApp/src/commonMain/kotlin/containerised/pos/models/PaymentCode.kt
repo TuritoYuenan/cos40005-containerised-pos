@@ -1,7 +1,7 @@
 package containerised.pos.models
 
 import containerised.pos.services.CRCService
-import io.ktor.utils.io.core.toByteArray
+import io.ktor.utils.io.core.*
 
 class PaymentCode {
 	//	1. Payload Format Indicator
