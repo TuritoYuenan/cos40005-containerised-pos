@@ -54,6 +54,12 @@ fun KitchenDisplayPage(navController: NavController) {
 					val updated = action.decodeRecord<Order>()
 					val old = action.decodeOldRecord<Order>()
 					if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
+
+					}
+					else if (old.status == OrderStatus.FINISHED && updated.status == OrderStatus.PREPARING){
+						orders = orders + updated
+					}
+					else{
 						println("Updated data: $updated")
 						orders = orders.map {
 							if (it.orderId == updated.orderId) updated else it
