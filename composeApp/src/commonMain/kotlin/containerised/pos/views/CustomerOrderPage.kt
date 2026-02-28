@@ -25,7 +25,7 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.CheckoutItemStorage
+import containerised.pos.CartService
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Tag
 import containerised.pos.routes.CustomerRoutes
@@ -86,12 +86,12 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 			BottomAppBar(
 				actions = {
 					Text(
-						"Table ${args.tableNumber ?: "N/A"}\nTotal: $0.00",
+						"Table ${args.tableNumber} at Branch ${args.branchID}\nTotal: $0.00",
 						Modifier.padding(padding),
 						style = MaterialTheme.typography.titleMedium
 					)
 				},
-				floatingActionButton = { CartFAB(navController) }
+				floatingActionButton = { CartFAB(navController, args.branchID, args.tableNumber) }
 			)
 		}
 	) { paddingValues ->
@@ -129,7 +129,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 								item = featuredItems[index],
 								onAddToCart = {
 									println("Item added to cart: ${featuredItems[index].itemName}")
-									CheckoutItemStorage.saveItem(featuredItems[index])
+									CartService.addOrIncreaseItem(featuredItems[index])
 								}
 							)
 						}
@@ -161,7 +161,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 					WideItemCard(
 						item = allItems[index],
 						modifier = Modifier.padding(8.dp, 0.dp),
-						onAddToCart = { CheckoutItemStorage.saveItem(allItems[index]) }
+						onAddToCart = { CartService.addOrIncreaseItem(allItems[index]) }
 					)
 				}
 			}
@@ -220,11 +220,11 @@ fun ImageSlider(modifier: Modifier) {
 }
 
 @Composable
-fun CartFAB(navController: NavController?) {
+fun CartFAB(navController: NavController?, branchID: String, tableNumber: String) {
 	ExtendedFloatingActionButton(
 		text = { Text("View Cart") },
 		icon = { Icon(Icons.Filled.ShoppingCart, contentDescription = "Cart") },
-		onClick = { navController?.navigate("checkout") },
+		onClick = { navController?.navigate(CustomerRoutes.Checkout(branchID, tableNumber)) },
 		containerColor = MaterialTheme.colorScheme.primary,
 		contentColor = MaterialTheme.colorScheme.onPrimary,
 	)

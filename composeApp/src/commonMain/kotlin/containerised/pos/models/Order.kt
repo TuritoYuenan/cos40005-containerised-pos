@@ -66,7 +66,7 @@ data class Order(
 	val branchId: String? = null,
 
 	@SerialName("tax_amount")
-	val taxAmount: Int? = null,
+	val taxAmount: Double? = null,
 
 	@SerialName("final_amount")
 	val finalAmount: Int? = null,
@@ -120,12 +120,9 @@ data class Order(
 				.decodeSingle<Order>().orderId
 		}
 
-		suspend fun addWithItems(order: OrderInsert, items: List<OrderItem>): String {
+		suspend fun addWithItems(order: OrderInsert, items: List<OrderItemInsert>): String {
 			val orderID = add(order)
-			items.forEach { item ->
-				SupabaseClientProvider.supabase.postgrest["order_items"].insert(item)
-			}
-
+			items.forEach { OrderItem.add(it) }
 			return orderID
 		}
 	}

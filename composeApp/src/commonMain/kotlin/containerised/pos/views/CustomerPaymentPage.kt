@@ -30,24 +30,28 @@ import kotlinx.coroutines.launch
 fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payment) {
 	var order by remember { mutableStateOf<Order?>(null) }
 	val currency = Currency.VND
-	var amount = 0
 
 	val scope = rememberCoroutineScope()
 
 	LaunchedEffect(Unit) {
 		scope.launch {
-			order = Order.fetchByID(args.orderID ?: "") ?: return@launch
-			amount = order?.finalAmount ?: 0
+			order = Order.fetchByID(args.orderID) ?: return@launch
 		}
 	}
 
-	val paymentCode = PaymentCodeBuilder()
-		.set(PaymentCodeBuilder.PIMethod.DYNAMIC)
-		.set(PaymentCodeBuilder.ServiceCode.TRANSFER_TO_ACCOUNT)
-		.setAccount(Bank.HDBank, "002704070021976")
-		.setCountryCode()
-		.setTransaction(amount, currency)
-		.build()
+	val amount = order?.finalAmount ?: 0
+
+	val paymentCode = if (order != null && amount > 0) {
+		PaymentCodeBuilder()
+			.set(PaymentCodeBuilder.PIMethod.DYNAMIC)
+			.set(PaymentCodeBuilder.ServiceCode.TRANSFER_TO_ACCOUNT)
+			.setAccount(Bank.HDBank, "002704070021976")
+			.setCountryCode()
+			.setTransaction(amount, currency)
+			.build()
+	} else {
+		""
+	}
 
 	val paymentQRCode = rememberQrCodePainter(paymentCode)
 
@@ -94,7 +98,7 @@ fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payme
 							fontWeight = FontWeight.Bold
 						)
 						Text(
-							text = "Your order has been received. Please proceed to the counter to complete your payment.",
+							text = "Your order ${order?.orderId ?: "..."} has been received. Please proceed to the counter to complete your payment.",
 							style = MaterialTheme.typography.bodyLarge,
 							modifier = Modifier.padding(horizontal = 16.dp)
 						)
@@ -102,43 +106,48 @@ fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payme
 				}
 			} else {
 				// Online payment - show QR code
-				Card(
-					modifier = Modifier.fillMaxWidth(),
-					elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-				) {
-					Column(
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(24.dp),
-						horizontalAlignment = Alignment.CenterHorizontally,
-						verticalArrangement = Arrangement.spacedBy(8.dp)
+				if (order == null) {
+					CircularProgressIndicator()
+				} else {
+					Card(
+						modifier = Modifier.fillMaxWidth(),
+						elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
 					) {
-						Text(
-							text = "Total Amount",
-							style = MaterialTheme.typography.titleMedium
-						)
-						Text(
-							text = "$amount $currency",
-							style = MaterialTheme.typography.displaySmall,
-							color = MaterialTheme.colorScheme.primary,
-							fontWeight = FontWeight.Bold,
-						)
+						Column(
+							modifier = Modifier
+								.fillMaxWidth()
+								.padding(24.dp),
+							horizontalAlignment = Alignment.CenterHorizontally,
+							verticalArrangement = Arrangement.spacedBy(8.dp)
+						) {
+							Text(
+								text = "Total Amount",
+								style = MaterialTheme.typography.titleMedium
+							)
+							Text(
+								text = "$amount $currency",
+								style = MaterialTheme.typography.displaySmall,
+								color = MaterialTheme.colorScheme.primary,
+								fontWeight = FontWeight.Bold,
+							)
+						}
 					}
+
+					Text(
+						text = "Scan the QR code below to pay",
+						style = MaterialTheme.typography.titleMedium
+					)
+
+					Image(
+						painter = paymentQRCode,
+						contentDescription = "Payment QR Code",
+					)
 				}
-
-				Text(
-					text = "Scan the QR code below to pay",
-					style = MaterialTheme.typography.titleMedium
-				)
-
-				Image(
-					painter = paymentQRCode,
-					contentDescription = "Payment QR Code",
-				)
 			}
 
+			val route = CustomerRoutes.Order(branchID = args.branchID, tableNumber = args.tableNumber)
 			Button(
-				onClick = { navController.navigate("order") },
+				onClick = { navController.navigate(route) },
 				modifier = Modifier.fillMaxWidth()
 			) {
 				Text("Back to Order Page")
