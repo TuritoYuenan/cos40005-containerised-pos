@@ -23,6 +23,7 @@ import containerised.pos.database.OrderListener
 import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
+import containerised.pos.models.OrderStatus
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
@@ -51,9 +52,12 @@ fun KitchenDisplayPage(navController: NavController) {
 
 				is PostgresAction.Update -> {
 					val updated = action.decodeRecord<Order>()
-					println("Updated data: $updated")
-					orders = orders.map {
-						if (it.orderId == updated.orderId) updated else it
+					val old = action.decodeOldRecord<Order>()
+					if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
+						println("Updated data: $updated")
+						orders = orders.map {
+							if (it.orderId == updated.orderId) updated else it
+						}
 					}
 				}
 

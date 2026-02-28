@@ -33,7 +33,7 @@ data class OrderInsert(
 	val branchId: String? = null,
 
 	@SerialName("tax_amount")
-	val taxAmount: Int? = null,
+	val taxAmount: Double? = null,
 
 	@SerialName("final_amount")
 	val finalAmount: Int? = null,

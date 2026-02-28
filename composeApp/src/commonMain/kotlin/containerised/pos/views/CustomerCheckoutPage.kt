@@ -50,7 +50,7 @@ fun CustomerCheckoutPage(navController: NavController?) {
 			tableNumber = tableNumber.toString(),
 			status = OrderStatus.PREPARING,
 			branchId = "BRA26011700",
-			taxAmount = 0,
+			taxAmount = 0.0,
 			finalAmount = checkoutItems?.sumOf { entry -> entry.count * entry.branchItem.price },
 		)
 
