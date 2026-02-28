@@ -11,5 +11,10 @@ object CustomerRoutes {
 	data class Checkout(val branchID: String = "Unknown", val tableNumber: String = "Unknown")
 
 	@Serializable @SerialName("payment")
-	data class Payment(val orderID: String = "Unknown", val isPayingAtCounter: Boolean = false)
+	data class Payment(
+		val branchID: String = "Unknown",
+		val tableNumber: String = "Unknown",
+		val orderID: String = "Unknown",
+		val isPayingAtCounter: Boolean = false
+	)
 }

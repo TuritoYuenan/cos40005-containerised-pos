@@ -145,8 +145,9 @@ fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payme
 				}
 			}
 
+			val route = CustomerRoutes.Order(branchID = args.branchID, tableNumber = args.tableNumber)
 			Button(
-				onClick = { navController.navigate("order") },
+				onClick = { navController.navigate(route) },
 				modifier = Modifier.fillMaxWidth()
 			) {
 				Text("Back to Order Page")

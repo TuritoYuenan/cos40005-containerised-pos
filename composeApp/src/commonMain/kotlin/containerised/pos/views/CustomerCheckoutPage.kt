@@ -62,11 +62,13 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 		val orderItems = checkoutItems.map { entry -> entry.toOrderItem(generatedOrderId) }
 		val orderID = Order.addWithItems(order, orderItems)
 
-//		After order is created, clear the cart and navigate to payment if needed
+//		After order creation, clear the cart
 		CartService.clear()
 		refreshCart()
 
-		navController?.navigate(CustomerRoutes.Payment(orderID, isPayingAtCounter))
+//		Navigate to payment page
+		val route = CustomerRoutes.Payment(args.branchID, args.tableNumber, orderID, isPayingAtCounter)
+		navController?.navigate(route)
 	}
 
 	// Initial load
