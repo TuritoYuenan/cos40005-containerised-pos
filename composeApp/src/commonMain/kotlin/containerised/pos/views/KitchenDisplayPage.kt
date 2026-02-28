@@ -53,10 +53,10 @@ fun KitchenDisplayPage(navController: NavController) {
 				is PostgresAction.Update -> {
 					val updated = action.decodeRecord<Order>()
 					val old = action.decodeOldRecord<Order>()
-					if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
+					if (old.status == OrderStatus.PREPARING && (updated.status == OrderStatus.FINISHED || updated.status == OrderStatus.CANCELED)) {
 
 					}
-					else if (old.status == OrderStatus.FINISHED && updated.status == OrderStatus.PREPARING){
+					else if ((updated.status == OrderStatus.FINISHED || updated.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
 						orders = orders + updated
 					}
 					else{
