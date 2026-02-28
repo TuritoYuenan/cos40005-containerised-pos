@@ -141,8 +141,10 @@ val localProperties = Properties().apply {
 buildkonfig {
 	packageName = "containerised.pos"
 	defaultConfigs {
-		buildConfigField(STRING, "SUPABASE_URL", localProperties.getProperty("supabase.url", ""))
-		buildConfigField(STRING, "SUPABASE_KEY", localProperties.getProperty("supabase.key", ""))
+		buildConfigField(STRING, "SUPABASE_URL", 
+			System.getenv("SUPABASE_URL") ?: localProperties.getProperty("supabase.url", ""))
+		buildConfigField(STRING, "SUPABASE_KEY", 
+			System.getenv("SUPABASE_KEY") ?: localProperties.getProperty("supabase.key", ""))
 	}
 }
 

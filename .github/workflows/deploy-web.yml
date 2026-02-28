@@ -35,6 +35,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Web Distribution
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: ./gradlew wasmJsBrowserDistribution
 
       - name: Upload artifact
