@@ -1,5 +1,8 @@
 package containerised.pos.views
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,9 +25,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import containerised.pos.CartEntry
 import containerised.pos.CartService
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Tag
@@ -44,12 +49,27 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 
 	// State for items and tags
 	var featuredItems by remember { mutableStateOf<List<BranchItem>>(emptyList()) }
+	var cartItems by remember { mutableStateOf<List<CartEntry>>(emptyList()) }
 	var allItems by remember { mutableStateOf<List<BranchItem>>(emptyList()) }
 	var tags by remember { mutableStateOf<List<Tag>>(emptyList()) }
 
 	//	Data fetching state
 	var isLoading by remember { mutableStateOf(true) }
 	val scope = rememberCoroutineScope()
+
+	val total = remember(cartItems) {
+		cartItems.sumOf { entry -> entry.count * entry.branchItem.price.toDouble() }
+	}
+
+	fun refreshCart() {
+		cartItems = CartService.loadItems()
+	}
+
+	fun addToCart(item: BranchItem) {
+		println("Adding item to cart: ${item.itemName}")
+		CartService.addOrIncreaseItem(item)
+		refreshCart()
+	}
 
 	// Fetch data on startup
 	LaunchedEffect(Unit) {
@@ -72,46 +92,51 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 			SimpleSearchBar(
 				textFieldState = textFieldState,
 				searchResults = searchResults,
-				onSearch = { query ->
-					// Simulate search logic
-					searchResults = if (query.isNotEmpty()) {
-						List(10) { "Result for \"$query\" #$it" }
-					} else {
-						emptyList()
-					}
-				},
+				onSearch = { /*TODO: Implement search logic here*/ },
 			)
 		},
 		bottomBar = {
-			BottomAppBar(
-				actions = {
-					Text(
-						"Table ${args.tableNumber} at Branch ${args.branchID}\nTotal: $0.00",
-						Modifier.padding(padding),
-						style = MaterialTheme.typography.titleMedium
-					)
-				},
-				floatingActionButton = { CartFAB(navController, args.branchID, args.tableNumber) }
-			)
+			AnimatedVisibility(
+				visible = !cartItems.isEmpty(),
+				enter = slideInVertically(initialOffsetY = { it }),
+				exit = slideOutVertically(targetOffsetY = { it })
+			) {
+				BottomAppBar(
+					actions = {
+						Text(
+							"${cartItems.size} items\nTotal: $total VND",
+							Modifier.padding(padding),
+							style = MaterialTheme.typography.titleMedium
+						)
+					},
+					floatingActionButton = { CartFAB(navController, args.branchID, args.tableNumber) }
+				)
+			}
 		}
 	) { paddingValues ->
 		if (isLoading) {
 			Box(
-				modifier = Modifier
-					.fillMaxSize()
-					.padding(paddingValues),
+				modifier = Modifier.fillMaxSize().padding(paddingValues),
 				contentAlignment = Alignment.Center
-			) {
-				CircularProgressIndicator()
-			}
+			) { CircularProgressIndicator() }
 		} else {
 			LazyColumn(
 				modifier = Modifier.padding(paddingValues),
 				verticalArrangement = Arrangement.spacedBy(padding)
 			) {
+				// Table Info
+				item {
+					Text(
+						"Ordering for Table ${args.tableNumber}",
+						Modifier.padding(8.dp, 8.dp, 8.dp, 0.dp).fillMaxWidth(),
+						style = MaterialTheme.typography.bodyLarge,
+						textAlign = TextAlign.Center
+					)
+				}
+
 				// Image Slider
 				item {
-					ImageSlider(Modifier.padding(8.dp))
+					ImageSlider(Modifier.padding(8.dp, 0.dp))
 				}
 
 				// Featured Section
@@ -127,10 +152,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 						items(featuredItems.size) { index ->
 							TallItemCard(
 								item = featuredItems[index],
-								onAddToCart = {
-									println("Item added to cart: ${featuredItems[index].itemName}")
-									CartService.addOrIncreaseItem(featuredItems[index])
-								}
+								onAddToCart = { addToCart(featuredItems[index]) }
 							)
 						}
 					}
@@ -161,7 +183,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 					WideItemCard(
 						item = allItems[index],
 						modifier = Modifier.padding(8.dp, 0.dp),
-						onAddToCart = { CartService.addOrIncreaseItem(allItems[index]) }
+						onAddToCart = { addToCart(allItems[index]) }
 					)
 				}
 			}
@@ -215,7 +237,7 @@ fun SimpleSearchBar(
 @Composable
 fun ImageSlider(modifier: Modifier) {
 	val pagerState = rememberPagerState(pageCount = { 5 })
-
+	println(pagerState)
 	Card(modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)) { }
 }
 

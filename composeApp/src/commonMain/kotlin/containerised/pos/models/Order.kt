@@ -43,7 +43,19 @@ data class OrderInsert(
 
 	@SerialName("created_at")
 	val createdAt: String? = null
-)
+) {
+	suspend fun add(): String {
+		return SupabaseClientProvider.supabase.postgrest["orders"]
+			.insert(this) { select() }
+			.decodeSingle<Order>().orderId
+	}
+
+	suspend fun addWithItems(items: List<OrderItemInsert>): String {
+		val orderID = add()
+		items.forEach { it.add() }
+		return orderID
+	}
+}
 
 @Serializable
 data class Order(
@@ -112,18 +124,6 @@ data class Order(
 			return SupabaseClientProvider.supabase.postgrest["orders"]
 				.select { filter { eq("order_id", orderId) } }
 				.decodeSingleOrNull<Order>()
-		}
-
-		suspend fun add(order: OrderInsert): String {
-			return SupabaseClientProvider.supabase.postgrest["orders"]
-				.insert(order) { select() }
-				.decodeSingle<Order>().orderId
-		}
-
-		suspend fun addWithItems(order: OrderInsert, items: List<OrderItemInsert>): String {
-			val orderID = add(order)
-			items.forEach { OrderItem.add(it) }
-			return orderID
 		}
 	}
 }

@@ -25,7 +25,11 @@ data class OrderItemInsert(
 
 	@SerialName("item_status")
 	val itemStatus: OrderStatus? = null
-)
+) {
+	suspend fun add() {
+		SupabaseClientProvider.supabase.postgrest["order_items"].insert(this)
+	}
+}
 
 @Serializable
 data class OrderItem(
@@ -110,10 +114,6 @@ data class OrderItem(
 				}
 				.decodeList<OrderItem>()
 			return result
-		}
-
-		suspend fun add(orderItem: OrderItemInsert) {
-			SupabaseClientProvider.supabase.postgrest["order_items"].insert(orderItem)
 		}
 	}
 }
