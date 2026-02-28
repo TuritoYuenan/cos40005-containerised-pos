@@ -1,28 +1,29 @@
 package containerised.pos.database
 
-import containerised.pos.database.SupabaseClientProvider.supabase
+import containerised.pos.BuildKonfig
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
 
-const val supabaseUrl = "https://qkpsqjlkjyvvoqcyrszw.supabase.co"
-const val supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrcHNxamxranl2dm9xY3lyc3p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4NDkwNzUsImV4cCI6MjA3NjQyNTA3NX0.QCy8IeJlvalMbtO1NTpeukEFgGgsdLg034MurFwPYqA"
+object SupabaseClient {
+	private val SUPABASE_URL = BuildKonfig.SUPABASE_URL
+	private val SUPABASE_KEY = BuildKonfig.SUPABASE_KEY
 
-object SupabaseClientProvider {
-	val supabase = createSupabaseClient(
-		supabaseUrl = supabaseUrl,
-		supabaseKey = supabaseKey
-	) {
+	private val supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_KEY) {
 		install(Auth)
 		install(Postgrest)
 		install(Storage)
 		install(Realtime)
 	}
-}
 
-suspend fun uploadImage(path: String, imageBytes: ByteArray) {
-	supabase.storage.from("images").upload(path, imageBytes)
+	val db = supabase.postgrest
+	val storage = supabase.storage
+
+	suspend fun uploadImage(path: String, imageBytes: ByteArray) {
+		storage.from("images").upload(path, imageBytes)
+	}
 }

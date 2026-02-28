@@ -1,7 +1,6 @@
 package containerised.pos.models
 
-import containerised.pos.database.SupabaseClientProvider
-import io.github.jan.supabase.postgrest.postgrest
+import containerised.pos.database.SupabaseClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -18,7 +17,7 @@ data class Tag(
 ) {
 	companion object {
 		suspend fun fetchAll(): List<Tag> {
-			return SupabaseClientProvider.supabase.postgrest["tags"].select().decodeList<Tag>()
+			return SupabaseClient.db["tags"].select().decodeList<Tag>()
 		}
 	}
 }

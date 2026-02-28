@@ -1,7 +1,6 @@
 package containerised.pos.models
 
-import containerised.pos.database.SupabaseClientProvider
-import io.github.jan.supabase.postgrest.postgrest
+import containerised.pos.database.SupabaseClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -45,7 +44,7 @@ data class OrderInsert(
 	val createdAt: String? = null
 ) {
 	suspend fun add(): String {
-		return SupabaseClientProvider.supabase.postgrest["orders"]
+		return SupabaseClient.db["orders"]
 			.insert(this) { select() }
 			.decodeSingle<Order>().orderId
 	}
@@ -91,17 +90,17 @@ data class Order(
 ) {
 	companion object {
 		suspend fun fetchAll(): List<Order> {
-			return SupabaseClientProvider.supabase.postgrest["orders"].select().decodeList<Order>()
+			return SupabaseClient.db["orders"].select().decodeList<Order>()
 		}
 
 		suspend fun fetchPreparing(): List<Order> {
-			return SupabaseClientProvider.supabase.postgrest["orders"]
+			return SupabaseClient.db["orders"]
 				.select { filter { eq("status", OrderStatus.PREPARING) } }
 				.decodeList<Order>()
 		}
 
 		suspend fun markFinished(orderId: String) {
-			SupabaseClientProvider.supabase.postgrest["orders"]
+			SupabaseClient.db["orders"]
 				.update({ set("status", OrderStatus.FINISHED) }) {
 					filter {
 						eq("order_id", orderId)
@@ -111,7 +110,7 @@ data class Order(
 		}
 
 		suspend fun markCancelled(orderId: String) {
-			SupabaseClientProvider.supabase.postgrest["orders"]
+			SupabaseClient.db["orders"]
 				.update({ set("status", OrderStatus.CANCELED) }) {
 					filter {
 						eq("order_id", orderId)
@@ -121,7 +120,7 @@ data class Order(
 		}
 
 		suspend fun fetchByID(orderId: String): Order? {
-			return SupabaseClientProvider.supabase.postgrest["orders"]
+			return SupabaseClient.db["orders"]
 				.select { filter { eq("order_id", orderId) } }
 				.decodeSingleOrNull<Order>()
 		}

@@ -21,13 +21,11 @@ import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import containerised.pos.database.SupabaseClientProvider.supabase
-import containerised.pos.database.uploadImage
+import containerised.pos.database.SupabaseClient
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Category
 import containerised.pos.rememberImagePickerBytes
 import containerised.pos.rememberImagePickerUri
-import io.github.jan.supabase.storage.storage
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
@@ -277,8 +275,8 @@ fun EditItemPage(navController: NavController?) {
 							var imageUrl: String? = null
 							if (imageBytes != null) {
 								val name = List(10) { ('a'..'z').random() }.joinToString("")
-								uploadImage("menu-images/$name.png", imageBytes!!)
-								imageUrl = supabase.storage
+								SupabaseClient.uploadImage("menu-images/$name.png", imageBytes!!)
+								imageUrl = SupabaseClient.storage
 									.from("images")
 									.publicUrl("menu-images/$name.png")
 							}

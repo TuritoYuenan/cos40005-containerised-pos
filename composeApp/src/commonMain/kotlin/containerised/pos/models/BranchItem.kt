@@ -1,7 +1,6 @@
 package containerised.pos.models
 
-import containerised.pos.database.SupabaseClientProvider
-import io.github.jan.supabase.postgrest.postgrest
+import containerised.pos.database.SupabaseClient
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -48,7 +47,7 @@ data class BranchItem(
 		 * @see BranchItem
 		 */
 		suspend fun fetchAll(): List<BranchItem> {
-			return SupabaseClientProvider.supabase.postgrest["branch_items"].select().decodeList<BranchItem>()
+			return SupabaseClient.db["branch_items"].select().decodeList<BranchItem>()
 		}
 
 		/**
@@ -59,7 +58,7 @@ data class BranchItem(
 		 * @see BranchItem
 		 */
 		suspend fun fetchByBranch(branchId: String): List<BranchItem> {
-			val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
+			val result = SupabaseClient.db["branch_items"]
 				.select {
 					filter {
 						eq("branch_id", branchId)
@@ -77,7 +76,7 @@ data class BranchItem(
 		 * @see BranchItem
 		 */
 		suspend fun fetchById(itemId: String): BranchItem? {
-			val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
+			val result = SupabaseClient.db["branch_items"]
 				.select {
 					filter {
 						eq("item_id", itemId)
@@ -96,7 +95,7 @@ data class BranchItem(
 		 * @see BranchItem
 		 */
 		suspend fun fetchAndJoinByBranch(branchId: String): List<BranchItem> {
-			val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
+			val result = SupabaseClient.db["branch_items"]
 				.select(
 					columns = Columns.raw(
 						"""
@@ -121,7 +120,7 @@ data class BranchItem(
 		 * @see BranchItem
 		 */
 		suspend fun fetchAndJoinById(itemId: String): BranchItem? {
-			val result = SupabaseClientProvider.supabase.postgrest["branch_items"]
+			val result = SupabaseClient.db["branch_items"]
 				.select(
 					columns = Columns.raw(
 						"""
@@ -147,7 +146,7 @@ data class BranchItem(
 		 * @see BranchItem
 		 */
 		suspend fun update(itemId: String, updatedData: BranchItem) {
-			SupabaseClientProvider.supabase.postgrest["branch_items"]
+			SupabaseClient.db["branch_items"]
 				.update(updatedData) {
 					filter {
 						eq("item_id", itemId)

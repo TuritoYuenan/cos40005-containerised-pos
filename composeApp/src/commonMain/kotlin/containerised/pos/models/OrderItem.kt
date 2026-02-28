@@ -1,7 +1,6 @@
 package containerised.pos.models
 
-import containerised.pos.database.SupabaseClientProvider
-import io.github.jan.supabase.postgrest.postgrest
+import containerised.pos.database.SupabaseClient
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -27,7 +26,7 @@ data class OrderItemInsert(
 	val itemStatus: OrderStatus? = null
 ) {
 	suspend fun add() {
-		SupabaseClientProvider.supabase.postgrest["order_items"].insert(this)
+		SupabaseClient.db["order_items"].insert(this)
 	}
 }
 
@@ -55,11 +54,11 @@ data class OrderItem(
 ) {
 	companion object {
 		suspend fun fetchOrderItem(): List<OrderItem> {
-			return SupabaseClientProvider.supabase.postgrest["order_items"].select().decodeList<OrderItem>()
+			return SupabaseClient.db["order_items"].select().decodeList<OrderItem>()
 		}
 
 		suspend fun fetchOrderItemByOrder(orderId: String): List<OrderItem> {
-			val result = SupabaseClientProvider.supabase.postgrest["order_items"]
+			val result = SupabaseClient.db["order_items"]
 				.select {
 					filter {
 						eq("order_id", orderId)
@@ -70,7 +69,7 @@ data class OrderItem(
 		}
 
 		suspend fun fetchAndJoinOrderItemByOrder(orderId: String): List<OrderItem> {
-			val result = SupabaseClientProvider.supabase.postgrest["order_items"]
+			val result = SupabaseClient.db["order_items"]
 				.select(
 					columns = Columns.raw(
 						"""

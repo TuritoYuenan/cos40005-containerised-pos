@@ -1,7 +1,6 @@
 package containerised.pos.models
 
-import containerised.pos.database.SupabaseClientProvider
-import io.github.jan.supabase.postgrest.postgrest
+import containerised.pos.database.SupabaseClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -30,11 +29,11 @@ data class Branch(
 ) {
 	companion object {
 		suspend fun add(branch: Branch) {
-			SupabaseClientProvider.supabase.postgrest["branches"].insert(branch)
+			SupabaseClient.db["branches"].insert(branch)
 		}
 
 		suspend fun fetchAll(): List<Branch> {
-			return SupabaseClientProvider.supabase.postgrest["branches"].select().decodeList<Branch>()
+			return SupabaseClient.db["branches"].select().decodeList<Branch>()
 		}
 	}
 }

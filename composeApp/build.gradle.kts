@@ -1,6 +1,8 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.*
 
 plugins {
 	alias(libs.plugins.kotlinMultiplatform)
@@ -10,6 +12,7 @@ plugins {
 	alias(libs.plugins.composeMultiplatform)
 	alias(libs.plugins.composeCompiler)
 	alias(libs.plugins.composeHotReload)
+	alias(libs.plugins.buildkonfig)
 }
 
 kotlin {
@@ -53,11 +56,9 @@ kotlin {
 			implementation(libs.ktor.client.android)
 			implementation(libs.android.driver)
 		}
-		iosMain {
-			dependencies {
-				implementation(libs.ktor.client.darwin)
-				implementation(libs.native.driver)
-			}
+		iosMain.dependencies {
+			implementation(libs.ktor.client.darwin)
+			implementation(libs.native.driver)
 		}
 		commonMain.dependencies {
 //			Compose
@@ -104,10 +105,8 @@ kotlin {
 			implementation(libs.kotlinx.coroutinesSwing)
 			implementation(libs.ktor.client.cio)
 		}
-		jsMain {
-			dependencies {
-				implementation(libs.ktor.client.js)
-			}
+		jsMain.dependencies {
+			implementation(libs.ktor.client.js)
 		}
 	}
 }
@@ -115,6 +114,8 @@ kotlin {
 android {
 	namespace = "containerised.pos"
 	compileSdk = libs.versions.android.compileSdk.get().toInt()
+	buildTypes.getByName("release").isMinifyEnabled = false
+	packaging.resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
 
 	defaultConfig {
 		applicationId = "containerised.pos"
@@ -123,19 +124,25 @@ android {
 		versionCode = 1
 		versionName = "1.0"
 	}
-	packaging {
-		resources {
-			excludes += "/META-INF/{AL2.0,LGPL2.1}"
-		}
-	}
-	buildTypes {
-		getByName("release") {
-			isMinifyEnabled = false
-		}
-	}
 	compileOptions {
 		sourceCompatibility = JavaVersion.VERSION_11
 		targetCompatibility = JavaVersion.VERSION_11
+	}
+}
+
+// Load local.properties
+val localProperties = Properties().apply {
+	val localPropertiesFile = rootProject.file("local.properties")
+	if (localPropertiesFile.exists()) {
+		localPropertiesFile.inputStream().use { load(it) }
+	}
+}
+
+buildkonfig {
+	packageName = "containerised.pos"
+	defaultConfigs {
+		buildConfigField(STRING, "SUPABASE_URL", localProperties.getProperty("supabase.url", ""))
+		buildConfigField(STRING, "SUPABASE_KEY", localProperties.getProperty("supabase.key", ""))
 	}
 }
 
