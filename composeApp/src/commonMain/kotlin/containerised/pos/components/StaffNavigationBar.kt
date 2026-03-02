@@ -15,10 +15,10 @@ import containerised.pos.routes.StaffRoutes
 data class NavigationItem(val label: String, val route: Any, val icon: ImageVector)
 
 val navItems = listOf(
-	NavigationItem("Order", StaffRoutes.Inventory, Icons.AutoMirrored.Filled.Comment),
+	NavigationItem("Order", StaffRoutes.Login, Icons.AutoMirrored.Filled.Comment),
 	NavigationItem("Menu", StaffRoutes.MenuEdit, Icons.AutoMirrored.Filled.MenuOpen),
 	NavigationItem("Kitchen", StaffRoutes.KitchenDisplay, Icons.Filled.Tab),
-	NavigationItem("Sales", StaffRoutes.Inventory, Icons.Filled.Inbox),
+	NavigationItem("Sales", StaffRoutes.Login, Icons.Filled.Inbox),
 	NavigationItem("Inventory", StaffRoutes.Inventory, Icons.Filled.Folder)
 )
 
@@ -31,12 +31,7 @@ fun StaffNavigationBar(navController: NavController, startDestination: Any) {
 			NavigationBarItem(
 				selected = selectedDestination == item.route,
 				label = { Text(item.label) },
-				icon = {
-					Icon(
-						imageVector = item.icon,
-						contentDescription = item.label
-					)
-				},
+				icon = { Icon(item.icon, item.label) },
 				onClick = {
 					try {
 						navController.navigate(item.route)

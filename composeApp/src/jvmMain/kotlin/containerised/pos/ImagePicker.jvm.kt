@@ -1,33 +1,25 @@
 package containerised.pos
 
 import androidx.compose.runtime.Composable
+import java.awt.FileDialog
+import java.awt.Frame
+import java.io.File
 
 @Composable
-actual fun rememberImagePickerUri(
-	onResult: (Any?) -> Unit
-): () -> Unit {
-
+actual fun rememberImagePickerUri(onResult: (Any?) -> Unit): () -> Unit {
 	return {
-		val dialog = java.awt.FileDialog(
-			null as java.awt.Frame?,
+		val dialog = FileDialog(
+			null as Frame?,
 			"Select Image",
-			java.awt.FileDialog.LOAD
+			FileDialog.LOAD
 		)
 
 		dialog.isVisible = true
 
-		val file = dialog.file?.let {
-			java.io.File(dialog.directory, it)
-		}
-
+		val file = dialog.file?.let { File(dialog.directory, it) }
 		onResult(file)
 	}
 }
-@Composable
-actual fun rememberImagePickerBytes(
-	uri: Any?
-): ByteArray? {
 
-	val file = uri as? java.io.File
-	return file?.readBytes()
-}
+@Composable
+actual fun rememberImagePickerBytes(uri: Any?): ByteArray? = (uri as? File)?.readBytes()
