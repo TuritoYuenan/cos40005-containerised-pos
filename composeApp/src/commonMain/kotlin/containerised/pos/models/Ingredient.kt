@@ -43,10 +43,10 @@ data class Ingredient(
 					}
 				}.decodeList<Ingredient>()
 		}
+
 		@Serializable
 		data class DecreaseStockRequest(
 			val id: String,
-
 			val amount: Double
 		)
 

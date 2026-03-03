@@ -109,15 +109,6 @@ fun InventoryPage() {
 	}
 }
 
-fun formatSupplier(info: JsonObject?): String {
-	if (info == null) return "No supplier info"
-
-	val supplierName = info["supplier"]?.jsonPrimitive?.content ?: "Unknown Supplier"
-	val contact = info["contact"]?.jsonPrimitive?.content ?: "No contact info"
-
-	return "Supplier: $supplierName ($contact)"
-}
-
 @Composable
 fun IngredientCard(ingredient: Ingredient) {
 	OutlinedCard {
@@ -185,10 +176,7 @@ fun IngredientCard(ingredient: Ingredient) {
 					Text("Remove")
 				}
 
-				if (showEditDialog) {
-					EditDialog(ingredient) { showEditDialog = false }
-				}
-
+				if (showEditDialog) EditDialog(ingredient) { showEditDialog = false }
 				if (showRemoveDialog) {
 					RemoveDialog(ingredient, { showRemoveDialog = false })
 					{
@@ -230,7 +218,7 @@ fun RemoveDialog(ingredient: Ingredient, onDismiss: () -> Unit, onConfirm: () ->
 	)
 }
 
-fun getMockIngredient() = Ingredient(
+private fun getMockIngredient() = Ingredient(
 	branchId = "BRA26011700",
 	id = "1",
 	ingredientName = "Tomato",
@@ -245,6 +233,15 @@ fun getMockIngredient() = Ingredient(
 		)
 	)
 )
+
+private fun formatSupplier(info: JsonObject?): String {
+	if (info == null) return "No supplier info"
+
+	val supplierName = info["supplier"]?.jsonPrimitive?.content ?: "Unknown Supplier"
+	val contact = info["contact"]?.jsonPrimitive?.content ?: "No contact info"
+
+	return "Supplier: $supplierName ($contact)"
+}
 
 @Preview(apiLevel = 35)
 @Composable
