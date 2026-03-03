@@ -23,7 +23,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import containerised.pos.models.BranchItem
-import containerised.pos.models.fetchBranchItemByBranch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,14 +54,13 @@ fun MenuEditPage() {
     var items by remember {mutableStateOf<Map<String, List<BranchItem>>>(emptyMap())}
     LaunchedEffect(Unit) {
         try {
-            items = fetchBranchItemByBranch(branchId)
+            items = BranchItem.fetchByBranch(branchId)
                 .sortedBy { it.itemId }
                 .groupBy { it.categoryId ?: "Uncategorized" }
         } catch (e: Exception) {
             println("Error fetching data: ${e.message}")
         }
     }
-
 
     Box(modifier = Modifier.fillMaxSize()) {
         //Tab Set Up

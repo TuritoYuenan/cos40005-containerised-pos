@@ -10,7 +10,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,166 +20,129 @@ import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import containerised.pos.database.SupabaseClientProvider.supabase
-import containerised.pos.database.uploadImage
-import containerised.pos.models.*
-import containerised.pos.rememberImagePickerBytes
-import containerised.pos.rememberImagePickerUri
-import io.github.jan.supabase.storage.storage
+import containerised.pos.models.BranchItem
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import kotlinx.coroutines.launch
+import containerised.pos.models.Category
+// Dummy Category model for UI-only usage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditItemPage(navController: NavController?) {
-//
-//    val scope = rememberCoroutineScope()
-//
-//    // --- Image picker state ---
-//    var uri by remember { mutableStateOf<Any?>(null) }
-//    var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
-//
-//    val openImagePicker = rememberImagePickerUri { result ->
-//        uri = result
-//    }
-//    imageBytes = rememberImagePickerBytes(uri)
-//
-//    // --- Data state ---
-//    val itemId = "ITM26011701" // predefined item
-//    var branchItem by remember { mutableStateOf<BranchItem?>(null) }
-//    var categories by remember { mutableStateOf<List<Category>>(emptyList()) }
-//
-//    // --- Form state ---
-//    var name by remember { mutableStateOf("") }
-//    var price by remember { mutableStateOf("") }
-//    var isFeatured by remember { mutableStateOf(false) }
-//    var selectedCategoryName by remember { mutableStateOf<Category?>(null) }
-//    var selectedCategoryId by remember { mutableStateOf<String?>(null) }
-//    var imgUrl by remember { mutableStateOf<String?>(null) }
-//
-//    // --- Load data ---
-//    LaunchedEffect(Unit) {
-//        try {
-//            branchItem = fetchBranchItemById(itemId)
-//            categories = fetchCategory()
-//        } catch (e: Exception) {
-//            println("Load error: ${e.message}")
-//        }
-//    }
-//
-//    // --- Sync UI state when item loads ---
-//    LaunchedEffect(branchItem) {
-//        branchItem?.let { item ->
-//            name = item.itemName
-//            price = item.price.toString()
-//            isFeatured = item.isFeatured
-//            selectedCategoryId = item.categoryId
-//            imgUrl = item.urlImg
-//
-//            item.categoryId?.let { categoryId ->
-//                fetchCategoryById(categoryId)?.let {
-//                    selectedCategoryName = it.categoryName
-//                }
-//            }
-//        }
-//    }
-//
-//    // --- UI ---
-//    LazyColumn {
-//        item {
-//
-//            EditItemTopBar {
-//                navController?.popBackStack()
-//            }
-//
-//            EditMenuImageSection(
-//                imageBytes = imageBytes,
-//                imageUrl = imgUrl,
-//                onUploadClick = openImagePicker
-//            )
-//
-//            EditMenuFormSection(
-//                name = name,
-//                price = price,
-//                selectedCategoryName = selectedCategoryName,
-//                categories = categories,
-//                isFeatured = isFeatured,
-//                onNameChange = { name = it },
-//                onPriceChange = { price = it },
-//                onCategorySelected = {
-//                    selectedCategoryName = it.categoryName
-//                    selectedCategoryId = it.categoryId
-//                },
-//                onFeaturedChange = { isFeatured = it }
-//            )
-//
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(12.dp),
-//                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
-//            ) {
-//
-//                Button(
-//                    onClick = {
-//                        // TODO: delete logic
-//                    },
-//                    shape = RoundedCornerShape(8.dp),
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = MaterialTheme.colorScheme.error,
-//                        contentColor = Color.White
-//                    ),
-//                    modifier = Modifier.height(40.dp)
-//                ) {
-//                    Icon(Icons.Filled.Delete, contentDescription = null)
-//                    Spacer(Modifier.width(6.dp))
-//                    Text("Delete")
-//                }
-//
-//                Button(
-//                    onClick = {
-//                        scope.launch {
-//
-//                            var finalImageUrl = imgUrl
-//
-//                            if (imageBytes != null) {
-//                                val name = List(10) { ('a'..'z').random() }.joinToString("")
-//                                uploadImage("menu-images/$name.png", imageBytes!!)
-//                                finalImageUrl = supabase.storage
-//                                    .from("images")
-//                                    .publicUrl("menu-images/$name.png")
-//                            }
-//
-//                            val updatedItem = branchItem?.copy(
-//                                itemName = name,
-//                                price = price.toFloatOrNull() ?: 0f,
-//                                categoryId = selectedCategoryId,
-//                                isFeatured = isFeatured,
-//                                urlImg = finalImageUrl
-//                            )
-//
-//                            if (updatedItem != null) {
-//                                updateBranchItem(itemId, updatedItem)
-//                            }
-//
-//                            navController?.popBackStack()
-//                        }
-//                    },
-//                    shape = RoundedCornerShape(8.dp),
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = MaterialTheme.colorScheme.primary,
-//                        contentColor = Color.White
-//                    ),
-//                    modifier = Modifier.height(40.dp)
-//                ) {
-//                    Icon(Icons.Filled.Check, contentDescription = null)
-//                    Spacer(Modifier.width(6.dp))
-//                    Text("Update")
-//                }
-//            }
-//        }
-//    }
+fun EditItemPage(
+    navController: NavController?,
+    item: BranchItem? = null,
+) {
+    // UI State Only
+    var name by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf("") }
+    var selectedCategoryName by remember { mutableStateOf("") }
+    var isFeatured by remember { mutableStateOf(false) }
+
+    var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
+    var imageUrl by remember { mutableStateOf<String?>(null) }
+
+
+    var categories by remember { mutableStateOf(emptyList<Category>()) }
+    LaunchedEffect(Unit) {
+        try {
+            categories = Category.fetchAll()
+        } catch (e: Exception) {
+            println("Error fetching data: ${e.message}")
+        }
+    }
+    LazyColumn {
+        item {
+            EditItemTopBar {
+                navController?.popBackStack()
+            }
+            EditMenuImageSection(
+                imageBytes = imageBytes,
+                imageUrl = imageUrl,
+                onUploadClick = {
+                }
+            )
+            EditMenuFormSection(
+                name = name,
+                price = price,
+                selectedCategoryName = selectedCategoryName,
+                categories = categories,
+                isFeatured = isFeatured,
+                onNameChange = { name = it },
+                onPriceChange = { price = it },
+                onCategorySelected = {
+                    selectedCategoryName = it.categoryName
+                },
+                onFeaturedChange = { isFeatured = it }
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
+            ) {
+                if (item == null) {CreateButton()}
+                    else {
+                        DeleteButton()
+                        UpdateButton()
+                    }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateButton(){
+    Button(
+        onClick = { },
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = Color.White
+        ),
+        modifier = Modifier.height(40.dp)
+    ) {
+        Icon(Icons.Filled.Check, contentDescription = null)
+        Spacer(Modifier.width(6.dp))
+        Text("Create")
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UpdateButton(){
+    Button(
+        onClick = { },
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = Color.White
+        ),
+        modifier = Modifier.height(40.dp)
+    ) {
+        Icon(Icons.Filled.Check, contentDescription = null)
+        Spacer(Modifier.width(6.dp))
+        Text("Update")
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteButton(){
+    Button(
+        onClick = { },
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.error,
+            contentColor = Color.White
+        ),
+        modifier = Modifier.height(40.dp)
+    ) {
+        Icon(Icons.Filled.Delete, contentDescription = null)
+        Spacer(Modifier.width(6.dp))
+        Text("Delete")
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -201,8 +163,7 @@ fun EditMenuImageSection(
     imageBytes: ByteArray?,
     imageUrl: String?,
     onUploadClick: () -> Unit
-)
-{
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -215,39 +176,46 @@ fun EditMenuImageSection(
                 .padding(vertical = 6.dp, horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(60.dp)
         ) {
-            if (imageBytes != null) {
-                Image(
-                    bitmap = imageBytes!!.decodeToImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
+
+            when {
+                imageBytes != null -> {
+                    Image(
+                        bitmap = imageBytes.decodeToImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                }
+
+                imageUrl != null -> {
+                    KamelImage(
+                        resource = { asyncPainterResource(imageUrl) },
+                        contentDescription = "Menu image",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                }
+
+                else -> {
+//                    Box(
+//                        modifier = Modifier
+//                            .size(120.dp)
+//                            .clip(RoundedCornerShape(8.dp))
+//                            .background(Color(0xFFACACAC)),
+//                        contentAlignment = Alignment.Center,
+//                        propagateMinConstraints = TODO(),
+//                        content =
+//                    )
+                }
             }
-            else if (imageUrl != null){
-                val url = imageUrl.toString()
-                KamelImage(
-                    resource = { asyncPainterResource(url) },
-                    contentDescription = "Menu image",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-            }
-            else {
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFACACAC)),
-                    contentAlignment = Alignment.Center
-                ) {}
-            }
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Button(
-                    onClick = { onUploadClick() },
+                    onClick = onUploadClick,
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -255,8 +223,9 @@ fun EditMenuImageSection(
                     ),
                     modifier = Modifier.height(40.dp)
                 ) {
-                    Text("Upload", color = Color.White)
+                    Text("Upload")
                 }
+
                 Text(
                     text = "Supports PNG, JPEG, WEBP images below 5MB",
                     color = Color.Black.copy(alpha = 0.5f),
@@ -265,7 +234,6 @@ fun EditMenuImageSection(
                     )
                 )
             }
-
         }
     }
 }
