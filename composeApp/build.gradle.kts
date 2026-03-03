@@ -114,7 +114,6 @@ kotlin {
 android {
 	namespace = "containerised.pos"
 	compileSdk = libs.versions.android.compileSdk.get().toInt()
-	buildTypes.getByName("release").isMinifyEnabled = false
 	packaging.resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
 
 	defaultConfig {
@@ -141,10 +140,14 @@ val localProperties = Properties().apply {
 buildkonfig {
 	packageName = "containerised.pos"
 	defaultConfigs {
-		buildConfigField(STRING, "SUPABASE_URL", 
-			System.getenv("SUPABASE_URL") ?: localProperties.getProperty("supabase.url", ""))
-		buildConfigField(STRING, "SUPABASE_KEY", 
-			System.getenv("SUPABASE_KEY") ?: localProperties.getProperty("supabase.key", ""))
+		buildConfigField(
+			STRING, "SUPABASE_URL",
+			System.getenv("SUPABASE_URL") ?: localProperties.getProperty("supabase.url", "")
+		)
+		buildConfigField(
+			STRING, "SUPABASE_KEY",
+			System.getenv("SUPABASE_KEY") ?: localProperties.getProperty("supabase.key", "")
+		)
 	}
 }
 
@@ -158,8 +161,23 @@ compose.desktop {
 
 		nativeDistributions {
 			targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+
+//			Package metadata
 			packageName = "containerised.pos"
 			packageVersion = "1.0.0"
+			description = "A point of sale application for F&B SMEs."
+			copyright = "2025-2026 Containerised"
+			vendor = "Containerised"
+
+//			Package icons
+			windows.iconFile = project.file("icons/icon.ico")
+			macOS.iconFile = project.file("icons/icon.icns")
+			linux.iconFile = project.file("icons/icon.png")
+
+			windows {
+				menu = true
+				menuGroup = "Containerised"
+			}
 		}
 	}
 }
