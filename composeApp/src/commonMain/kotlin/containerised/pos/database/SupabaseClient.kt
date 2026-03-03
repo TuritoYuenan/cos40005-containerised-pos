@@ -6,6 +6,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
 
@@ -22,6 +23,7 @@ object SupabaseClient {
 
 	val db = supabase.postgrest
 	val storage = supabase.storage
+	val realtime = supabase.realtime
 
 	suspend fun uploadImage(path: String, imageBytes: ByteArray) {
 		storage.from("images").upload(path, imageBytes)

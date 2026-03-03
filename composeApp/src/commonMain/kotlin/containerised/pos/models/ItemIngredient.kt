@@ -1,8 +1,6 @@
 package containerised.pos.models
 
-import containerised.pos.database.SupabaseClientProvider
-import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.postgrest.rpc
+import containerised.pos.database.SupabaseClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -22,7 +20,7 @@ data class ItemIngredient(
 ){
 	companion object {
 		suspend fun fetchItemIngredientByItemId(itemId: String): List<ItemIngredient> {
-			val result = SupabaseClientProvider.supabase.postgrest["item_ingredients"]
+			val result = SupabaseClient.db["item_ingredients"]
 				.select {
 					filter {
 						eq("item_id", itemId)

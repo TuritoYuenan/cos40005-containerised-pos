@@ -2,8 +2,6 @@ package containerised.pos.models
 
 import containerised.pos.database.SupabaseClient
 import io.github.jan.supabase.postgrest.query.Columns
-import containerised.pos.database.SupabaseClientProvider
-import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -45,8 +43,6 @@ data class Ingredient(
 					}
 				}.decodeList<Ingredient>()
 		}
-	}
-}
 		@Serializable
 		data class DecreaseStockRequest(
 			val id: String,
@@ -55,7 +51,7 @@ data class Ingredient(
 		)
 
 		suspend fun decreaseStock(ingredientId: String, amount: Double) {
-			SupabaseClientProvider.supabase.postgrest
+			SupabaseClient.db
 				.rpc(
 					"decrease_stock",
 					DecreaseStockRequest(
@@ -66,4 +62,3 @@ data class Ingredient(
 		}
 	}
 }
-
