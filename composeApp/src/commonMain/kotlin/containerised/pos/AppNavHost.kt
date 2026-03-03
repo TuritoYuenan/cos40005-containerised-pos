@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import containerised.pos.components.StaffNavigationBar
@@ -26,13 +27,15 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 	val navController = rememberNavController()
 
 //	Must change "order" to "login" when auth is implemented
-	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.MenuEdit
+	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.Inventory
 
 	MaterialTheme {
 //		Staff-facing application, available on mobile and desktop
 		if (!isWeb) {
+			val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
 			Scaffold(
-				topBar = { StaffTopBar() },
+				topBar = { StaffTopBar(currentRoute) },
 				bottomBar = { StaffNavigationBar(navController, startDestination) }
 			) { paddingValues ->
 				NavHost(
@@ -46,6 +49,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 					composable<StaffRoutes.EditTag> { EditTagPage(navController) }
 					composable<StaffRoutes.EditPromotion> { EditPromotionPage(navController) }
 					composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage(navController) }
+					composable<StaffRoutes.Inventory> { InventoryPage() }
 				}
 			}
 		}
