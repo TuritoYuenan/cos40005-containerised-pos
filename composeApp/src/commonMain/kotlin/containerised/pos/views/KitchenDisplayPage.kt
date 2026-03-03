@@ -20,25 +20,80 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import containerised.pos.database.OrderListener
+import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
+import containerised.pos.models.OrderStatus
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.decodeOldRecord
+import io.github.jan.supabase.realtime.decodeRecord
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KitchenDisplayPage(navController: NavController) {
+	val scope = rememberCoroutineScope()
 	var orders by remember { mutableStateOf<List<Order>>(emptyList()) }
 	var selectedOrder by remember { mutableStateOf<Order?>(null) }
 	var selectedOrderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
 	var error by remember { mutableStateOf<String?>(null) }
+
+	val listener = remember {
+		OrderListener(scope) { action ->
+			when (action) {
+
+				is PostgresAction.Insert -> {
+					val newOrder = action.decodeRecord<Order>()
+					println("Insert data: $newOrder")
+					orders = orders + newOrder
+				}
+
+				is PostgresAction.Update -> {
+					val updated = action.decodeRecord<Order>()
+					val old = action.decodeOldRecord<Order>()
+					if (old.status == OrderStatus.PREPARING && (updated.status == OrderStatus.FINISHED || updated.status == OrderStatus.CANCELED)) {
+
+					}
+					else if ((updated.status == OrderStatus.FINISHED || updated.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
+						orders = orders + updated
+					}
+					else{
+						println("Updated data: $updated")
+						orders = orders.map {
+							if (it.orderId == updated.orderId) updated else it
+						}
+					}
+				}
+
+				is PostgresAction.Delete -> {
+					val old = action.decodeOldRecord<Order>()
+					println("Deleted → id=${old.orderId}")
+					orders = orders.filterNot { it.orderId == old.orderId }
+				}
+				is PostgresAction.Select -> {
+
+				}
+			}
+		}
+	}
+
+
 	LaunchedEffect(Unit) {
 		try {
 			orders = Order.fetchPreparing()
 			println("Fetched ${orders.size} orders:")
+			listener.subscribe()
 
 		} catch (e: Exception) {
 			error = e.message
 			println("Error: $error")
+		}
+	}
+
+	DisposableEffect(Unit) {
+		onDispose {
+			listener.unsubscribe()
 		}
 	}
 
@@ -189,8 +244,15 @@ fun KitchenDisplayOrderItem(
 				Button(
 					onClick = {
 						scope.launch {
-							Order.markFinished(order.orderId)
-							onDone()
+							orderItems.forEach { orderItem ->
+								orderItem.branchItem.itemIngredients.forEach { itemIngredient ->
+									Ingredient.decreaseStock(itemIngredient.ingredientId, orderItem.quantity*(itemIngredient.quantity?: 0.0))
+									println("decrease ${orderItem.quantity*(itemIngredient.quantity?: 0.0)} from ${itemIngredient.ingredientId}")
+								}
+							}
+
+//							Order.markFinished(order.orderId)
+//							onDone()
 						}
 					},
 					shape = RoundedCornerShape(16.dp),

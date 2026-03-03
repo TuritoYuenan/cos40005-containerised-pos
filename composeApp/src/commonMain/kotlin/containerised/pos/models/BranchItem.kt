@@ -168,7 +168,7 @@ data class BranchItemWithCatAndIng(
 
 	val category: Category,
 
-	val itemIngredients: List<ItemIngredient>,
+	val itemIngredients: List<ItemIngredientWithIngredient>,
 
 	@SerialName("item_name")
 	val itemName: String,
