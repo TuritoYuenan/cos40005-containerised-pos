@@ -25,9 +25,7 @@ class OrderListener(
 		val channel = SupabaseClient.realtime.channel("orders-changes")
 		val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
 			table = "orders"
-			filter(
-				FilterOperation("status", FilterOperator.EQ, "PREPARING")
-			)
+
 		}
 
 		changes

@@ -16,10 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import containerised.pos.NotificationService
 import containerised.pos.database.OrderListener
 import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
@@ -28,6 +28,7 @@ import containerised.pos.models.OrderStatus
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,18 +48,37 @@ fun KitchenDisplayPage(navController: NavController) {
 					val newOrder = action.decodeRecord<Order>()
 					println("Insert data: $newOrder")
 					orders = orders + newOrder
+					NotificationService.showNotification(
+						title = "New Order",
+						message = "Order #${newOrder.orderNumber} received"
+					)
 				}
 
 				is PostgresAction.Update -> {
 					val updated = action.decodeRecord<Order>()
 					val old = action.decodeOldRecord<Order>()
-					if (old.status == OrderStatus.PREPARING && (updated.status == OrderStatus.FINISHED || updated.status == OrderStatus.CANCELED)) {
-
+					if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
+						orders = orders.filterNot { it.orderId == old.orderId}
+						println("deleted data: $old")
+						NotificationService.showNotification(
+							title = "Order Updated",
+							message = "Order #${old.orderNumber} is done"
+						)
+					}
+					else if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.CANCELED) {
+						orders = orders.filterNot { it.orderId == old.orderId}
+						println("deleted data: $old")
+						NotificationService.showNotification(
+							title = "Order Updated",
+							message = "Order #${old.orderNumber} is canceled"
+						)
 					}
 					else if ((updated.status == OrderStatus.FINISHED || updated.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
 						orders = orders + updated
+						println("Insert data: $updated")
 					}
 					else{
+						println("old data: $old")
 						println("Updated data: $updated")
 						orders = orders.map {
 							if (it.orderId == updated.orderId) updated else it
@@ -101,7 +121,7 @@ fun KitchenDisplayPage(navController: NavController) {
 		items(items = orders, key = { it.orderId }) { order ->
 			KitchenDisplayOrderItem(
 				order,
-				onDone = { orders = orders.filterNot { it.orderId == order.orderId } },
+				onDone = { },
 				onClickOrder = { selectedOrder = order; println(order) },
 				onClickOrderItem = { selectedOrderItem -> selectedOrderItems = selectedOrderItem })
 		}
@@ -211,64 +231,74 @@ fun KitchenDisplayOrderItem(
 
 				}
 			}
-			Row(
-				horizontalArrangement = Arrangement.spacedBy(
-					10.dp,
-					Alignment.End
-				),
-				verticalAlignment = Alignment.CenterVertically,
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(vertical = 6.dp, horizontal = 12.dp),
-			) {
-				Button(
-					onClick = {
-						scope.launch {
-							Order.markCancelled(order.orderId)
-							onDone()
-						}
-					},
-					shape = RoundedCornerShape(16.dp),
-					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.outlineVariant,
-						contentColor = Color.Black
-					),
-					modifier = Modifier.height(40.dp)
-				) {
-					Icon(
-						Icons.Filled.Close,
-						contentDescription = "Cancel"
-					)
-					Text("Cancel", color = Color.Black)
-				}
-				Button(
-					onClick = {
-						scope.launch {
-							orderItems.forEach { orderItem ->
-								orderItem.branchItem.itemIngredients.forEach { itemIngredient ->
-									Ingredient.decreaseStock(itemIngredient.ingredientId, orderItem.quantity*(itemIngredient.quantity?: 0.0))
-									println("decrease ${orderItem.quantity*(itemIngredient.quantity?: 0.0)} from ${itemIngredient.ingredientId}")
-								}
-							}
+			KitchenDisplayOrderButtons(scope, order, orderItems, onDone)
+		}
+	}
+}
 
-//							Order.markFinished(order.orderId)
-//							onDone()
-						}
-					},
-					shape = RoundedCornerShape(16.dp),
-					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.primary,
-						contentColor = Color.White
-					),
-					modifier = Modifier.height(40.dp)
-				) {
-					Icon(
-						Icons.Filled.Check,
-						contentDescription = "Done"
-					)
-					Text("Done", color = Color.White)
+@Composable
+fun KitchenDisplayOrderButtons(scope: CoroutineScope, order: Order, orderItems: List<OrderItem>, onDone: () -> Unit, onDismiss: (() -> Unit) = {}){
+	Row(
+		horizontalArrangement = Arrangement.spacedBy(
+			10.dp,
+			Alignment.End
+		),
+		verticalAlignment = Alignment.CenterVertically,
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(vertical = 6.dp, horizontal = 12.dp),
+	) {
+		Button(
+			onClick = {
+				scope.launch {
+					Order.markCancelled(order.orderId)
+					onDone()
+					onDismiss()
+
+
 				}
-			}
+			},
+			shape = RoundedCornerShape(16.dp),
+			colors = ButtonDefaults.buttonColors(
+				containerColor = MaterialTheme.colorScheme.outlineVariant,
+				contentColor = Color.Black
+			),
+			modifier = Modifier.height(40.dp)
+		) {
+			Icon(
+				Icons.Filled.Close,
+				contentDescription = "Cancel"
+			)
+			Text("Cancel", color = Color.Black)
+		}
+		Button(
+			onClick = {
+				scope.launch {
+					orderItems.forEach { orderItem ->
+						orderItem.branchItem.itemIngredients.forEach { itemIngredient ->
+							Ingredient.decreaseStock(itemIngredient.ingredientId, orderItem.quantity*(itemIngredient.quantity?: 0.0))
+							println("decrease ${orderItem.quantity*(itemIngredient.quantity?: 0.0)} from ${itemIngredient.ingredientId}")
+						}
+					}
+
+					Order.markFinished(order.orderId)
+					onDone()
+					onDismiss()
+
+				}
+			},
+			shape = RoundedCornerShape(16.dp),
+			colors = ButtonDefaults.buttonColors(
+				containerColor = MaterialTheme.colorScheme.primary,
+				contentColor = Color.White
+			),
+			modifier = Modifier.height(40.dp)
+		) {
+			Icon(
+				Icons.Filled.Check,
+				contentDescription = "Done"
+			)
+			Text("Done", color = Color.White)
 		}
 	}
 }
@@ -372,59 +402,7 @@ fun ExpandedOrderOverlay(
 						}
 					}
 					Spacer(modifier = Modifier.weight(1f))
-					Row(
-						horizontalArrangement = Arrangement.spacedBy(
-							10.dp,
-							Alignment.End
-						),
-						verticalAlignment = Alignment.CenterVertically,
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(vertical = 6.dp, horizontal = 12.dp),
-					) {
-						Button(
-							onClick = {
-								scope.launch {
-									Order.markCancelled(order.orderId)
-									onDone()
-									onDismiss()
-								}
-							},
-							shape = RoundedCornerShape(16.dp),
-							colors = ButtonDefaults.buttonColors(
-								containerColor = MaterialTheme.colorScheme.outlineVariant,
-								contentColor = Color.Black
-							),
-							modifier = Modifier.height(40.dp)
-						) {
-							Icon(
-								Icons.Filled.Close,
-								contentDescription = "Cancel"
-							)
-							Text("Cancel", color = Color.Black)
-						}
-						Button(
-							onClick = {
-								scope.launch {
-									Order.markFinished(order.orderId)
-									onDone()
-									onDismiss()
-								}
-							},
-							shape = RoundedCornerShape(16.dp),
-							colors = ButtonDefaults.buttonColors(
-								containerColor = MaterialTheme.colorScheme.primary,
-								contentColor = Color.White
-							),
-							modifier = Modifier.height(40.dp)
-						) {
-							Icon(
-								Icons.Filled.Check,
-								contentDescription = "Done"
-							)
-							Text("Done", color = Color.White)
-						}
-					}
+					KitchenDisplayOrderButtons(scope, order, orderItems, onDone, onDismiss)
 				}
 			}
 		}
