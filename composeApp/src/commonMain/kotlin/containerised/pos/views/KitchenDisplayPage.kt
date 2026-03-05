@@ -76,7 +76,7 @@ fun KitchenDisplayPage(navController: NavController) {
 							message = "Order #${old.orderNumber} is canceled"
 						)
 					}
-					else if ((updated.status == OrderStatus.FINISHED || updated.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
+					else if ((old.status == OrderStatus.FINISHED || old.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
 						orders = orders + updated
 						println("Insert data: $updated")
 					}
