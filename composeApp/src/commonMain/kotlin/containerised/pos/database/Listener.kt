@@ -1,7 +1,5 @@
 package containerised.pos.database
 
-import io.github.jan.supabase.postgrest.query.filter.FilterOperation
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.channel
@@ -17,26 +15,27 @@ class OrderListener(
 ) {
 	private var channel: RealtimeChannel? = null
 	private var subscribed = false
+	private var initialized = false
 
+	fun initialize() {
+		if (initialized) return
+		initialized = true
+
+		channel = SupabaseClient.realtime.channel("orders-changes")
+		channel?.postgresChangeFlow<PostgresAction>(schema = "public") {
+			table = "orders"
+		}
+			?.onEach { onChange(it) }
+			?.launchIn(scope)
+		println("Channel created")
+	}
 	fun subscribe() {
 		if (subscribed) return
 		subscribed = true
-
-		val channel = SupabaseClient.realtime.channel("orders-changes")
-		val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
-			table = "orders"
-
-		}
-
-		changes
-			.onEach {
-				onChange(it)
-			}
-			.launchIn(scope)
-
 		scope.launch {
-			channel.subscribe()
+			channel?.subscribe()
 		}
+		println("Channel subscribed")
 	}
 	fun unsubscribe() {
 		subscribed = false
@@ -44,5 +43,6 @@ class OrderListener(
 			channel?.unsubscribe()
 			channel = null
 		}
+		println("Channel unsubscribed")
 	}
 }

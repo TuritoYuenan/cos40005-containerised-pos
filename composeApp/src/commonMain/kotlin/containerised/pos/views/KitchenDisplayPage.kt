@@ -18,6 +18,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import containerised.pos.NotificationService
 import containerised.pos.database.OrderListener
@@ -98,21 +101,32 @@ fun KitchenDisplayPage(navController: NavController) {
 		}
 	}
 
+	val lifecycleOwner = LocalLifecycleOwner.current
 
 	LaunchedEffect(Unit) {
 		try {
+			listener.initialize()
 			orders = Order.fetchPreparing()
 			println("Fetched ${orders.size} orders:")
-			listener.subscribe()
-
 		} catch (e: Exception) {
 			error = e.message
 			println("Error: $error")
 		}
 	}
 
-	DisposableEffect(Unit) {
+	DisposableEffect(lifecycleOwner) {
+		val observer = LifecycleEventObserver { _, event ->
+			when (event) {
+				Lifecycle.Event.ON_RESUME -> listener.subscribe()
+				Lifecycle.Event.ON_PAUSE -> listener.unsubscribe()
+				else -> {}
+			}
+		}
+
+		lifecycleOwner.lifecycle.addObserver(observer)
+
 		onDispose {
+			lifecycleOwner.lifecycle.removeObserver(observer)
 			listener.unsubscribe()
 		}
 	}
