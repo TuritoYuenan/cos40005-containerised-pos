@@ -10,6 +10,12 @@ object StaffRoutes {
 	@Serializable @SerialName("inventory")
 	object Inventory
 
+	@Serializable @SerialName("ingredient-detail")
+	data class IngredientDetail(val ingredientId: String)
+
+	@Serializable @SerialName("stock-history")
+	data class StockHistory(val ingredientId: String)
+
 	@Serializable @SerialName("menu-edit")
 	object MenuEdit
 

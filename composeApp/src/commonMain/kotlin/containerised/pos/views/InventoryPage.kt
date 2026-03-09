@@ -6,23 +6,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import containerised.pos.components.LoadingView
 import containerised.pos.models.Ingredient
+import containerised.pos.routes.StaffRoutes
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 
+private val defaultPadding = 16.dp
+
 @Composable
-fun InventoryPage() {
-	val padding = 16.dp
+fun InventoryPage(navController: NavController) {
 	val scope = rememberCoroutineScope()
 	var error by remember { mutableStateOf<String?>(null) }
 	var isLoading by remember { mutableStateOf(true) }
@@ -73,22 +75,20 @@ fun InventoryPage() {
 		OutlinedTextField(
 			value = searchQuery,
 			onValueChange = { searchQuery = it },
-			modifier = Modifier.fillMaxWidth().padding(padding),
+			modifier = Modifier.fillMaxWidth().padding(defaultPadding),
 			placeholder = { Text("Search items by name or unit...") },
 			leadingIcon = { Icon(Icons.Filled.Search, "Search") },
 			singleLine = true
 		)
 
 		if (isLoading) {
-			Box(Modifier.fillMaxSize(), Alignment.Center) {
-				CircularProgressIndicator()
-			}
+			LoadingView(Modifier.fillMaxSize())
 			return
 		}
 
 		if (error != null) {
 			Column(
-				Modifier.fillMaxSize().padding(padding),
+				Modifier.fillMaxSize().padding(defaultPadding),
 				verticalArrangement = Arrangement.Center,
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
@@ -99,21 +99,23 @@ fun InventoryPage() {
 
 		// Ingredients list
 		LazyColumn(
-			Modifier.padding(horizontal = padding),
-			verticalArrangement = Arrangement.spacedBy(padding)
+			Modifier.padding(horizontal = defaultPadding),
+			verticalArrangement = Arrangement.spacedBy(defaultPadding)
 		) {
 			items(filteredIngredients.size) { index ->
-				IngredientCard(filteredIngredients[index])
+				IngredientCard(navController, filteredIngredients[index])
 			}
 		}
 	}
 }
 
 @Composable
-fun IngredientCard(ingredient: Ingredient) {
-	OutlinedCard {
+fun IngredientCard(navController: NavController, ingredient: Ingredient) {
+	OutlinedCard(
+		onClick = { navController.navigate(StaffRoutes.IngredientDetail(ingredient.id ?: "")) },
+	) {
 		Column(
-			Modifier.padding(16.dp),
+			Modifier.padding(defaultPadding),
 			verticalArrangement = Arrangement.spacedBy(8.dp)
 		) {
 			Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -154,85 +156,15 @@ fun IngredientCard(ingredient: Ingredient) {
 				Modifier.fillMaxWidth(),
 				horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
 			) {
-				var showEditDialog by remember { mutableStateOf(false) }
-				var showRemoveDialog by remember { mutableStateOf(false) }
-
-				Button(
-					onClick = { showEditDialog = true },
-				) {
-					Icon(Icons.Outlined.Edit, "Edit")
-					Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-					Text("Edit")
-				}
-
-				TextButton(
-					onClick = { showRemoveDialog = true },
-					colors = ButtonDefaults.textButtonColors(
-						contentColor = MaterialTheme.colorScheme.error
-					)
-				) {
-					Icon(Icons.Outlined.Delete, "Delete")
-					Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-					Text("Remove")
-				}
-
-				if (showEditDialog) EditDialog(ingredient) { showEditDialog = false }
-				if (showRemoveDialog) {
-					RemoveDialog(ingredient, { showRemoveDialog = false })
-					{
-						// TODO: Implement remove logic
-						showRemoveDialog = false
-					}
+				Button({
+					navController.navigate(StaffRoutes.StockHistory(ingredient.id ?: ""))
+				}) {
+					Text("View History")
 				}
 			}
 		}
 	}
 }
-
-@Composable
-fun EditDialog(ingredient: Ingredient, onDismiss: () -> Unit) {
-	AlertDialog(
-		onDismissRequest = onDismiss,
-		title = { Text("Edit ${ingredient.ingredientName}") },
-		text = { Text("Editing functionality is not implemented yet.") },
-		confirmButton = {
-			TextButton(onClick = onDismiss) {
-				Text("OK")
-			}
-		}
-	)
-}
-
-@Composable
-fun RemoveDialog(ingredient: Ingredient, onDismiss: () -> Unit, onConfirm: () -> Unit) {
-	AlertDialog(
-		onDismissRequest = onDismiss,
-		title = { Text("Remove ${ingredient.ingredientName}?") },
-		text = { Text("Are you sure you want to remove this ingredient? This action cannot be undone.") },
-		confirmButton = {
-			TextButton(onClick = onConfirm) { Text("Remove", color = MaterialTheme.colorScheme.error) }
-		},
-		dismissButton = {
-			TextButton(onClick = onDismiss) { Text("Cancel") }
-		}
-	)
-}
-
-private fun getMockIngredient() = Ingredient(
-	branchId = "BRA26011700",
-	id = "1",
-	ingredientName = "Tomato",
-	isActive = true,
-	currentStock = 50.0,
-	minStockLevel = 10.0,
-	unit = "kg",
-	supplierInfo = JsonObject(
-		mapOf(
-			"contact" to JsonPrimitive("0929340783"),
-			"supplier" to JsonPrimitive("Supplier 2")
-		)
-	)
-)
 
 private fun formatSupplier(info: JsonObject?): String {
 	if (info == null) return "No supplier info"
@@ -246,17 +178,5 @@ private fun formatSupplier(info: JsonObject?): String {
 @Preview(apiLevel = 35)
 @Composable
 fun IngredientCardPreview() {
-	IngredientCard(getMockIngredient())
-}
-
-@Preview(apiLevel = 35)
-@Composable
-fun EditDialogPreview() {
-	EditDialog(getMockIngredient(), onDismiss = {})
-}
-
-@Preview(apiLevel = 35)
-@Composable
-fun RemoveDialogPreview() {
-	RemoveDialog(getMockIngredient(), onConfirm = {}, onDismiss = {})
+	IngredientCard(rememberNavController(), Ingredient.MOCK)
 }
