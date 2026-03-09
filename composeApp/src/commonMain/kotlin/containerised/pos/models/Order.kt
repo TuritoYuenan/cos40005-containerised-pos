@@ -124,5 +124,18 @@ data class Order(
 				.select { filter { eq("order_id", orderId) } }
 				.decodeSingleOrNull<Order>()
 		}
+
+		val MOCK = Order(
+			orderId = "123",
+			orderNumber = "001",
+			orderType = "DINE_IN",
+			tableNumber = "5",
+			status = OrderStatus.PREPARING,
+			branchId = "branch_1",
+			taxAmount = 0.7,
+			finalAmount = 10,
+			updatedAt = "2024-01-01T12:00:00Z",
+			createdAt = "2024-01-01T11:00:00Z"
+		)
 	}
 }

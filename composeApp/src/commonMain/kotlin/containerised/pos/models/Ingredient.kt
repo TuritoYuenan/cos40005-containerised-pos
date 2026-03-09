@@ -6,6 +6,7 @@ import io.github.jan.supabase.postgrest.rpc
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
 data class Ingredient(
@@ -13,16 +14,16 @@ data class Ingredient(
 	val id: String? = null,
 
 	@SerialName("ingredient_name")
-	val ingredientName: String? = null,
+	var ingredientName: String? = null,
 
 	@SerialName("unit")
-	val unit: String? = null,
+	var unit: String? = null,
 
 	@SerialName("current_stock")
-	val currentStock: Double? = null,
+	var currentStock: Double? = null,
 
 	@SerialName("min_stock_level")
-	val minStockLevel: Double? = null,
+	var minStockLevel: Double? = null,
 
 	@SerialName("supplier_info")
 	val supplierInfo: JsonObject? = null,
@@ -33,6 +34,22 @@ data class Ingredient(
 	@SerialName("is_active")
 	val isActive: Boolean? = null
 ) {
+	suspend fun update() {
+		if (id == null) throw IllegalStateException("Ingredient ID is required for update")
+		SupabaseClient.db["ingredients"]
+			.update(this) {
+				filter { eq("ingredient_id", id) }
+			}
+	}
+
+	suspend fun markActive(isActive: Boolean?) {
+		if (id == null) throw IllegalStateException("Ingredient ID is required to mark inactive")
+		SupabaseClient.db["ingredients"]
+			.update(mapOf("is_active" to isActive)) {
+				filter { eq("ingredient_id", id) }
+			}
+	}
+
 	companion object {
 		suspend fun fetchByBranch(branchId: String, mustBeActive: Boolean = true): List<Ingredient> {
 			return SupabaseClient.db["ingredients"]
@@ -42,6 +59,13 @@ data class Ingredient(
 						if (mustBeActive) eq("is_active", true)
 					}
 				}.decodeList<Ingredient>()
+		}
+
+		suspend fun fetchByID(ingredientId: String): Ingredient? {
+			return SupabaseClient.db["ingredients"]
+				.select(Columns.ALL) {
+					filter { eq("ingredient_id", ingredientId) }
+				}.decodeSingleOrNull<Ingredient>()
 		}
 
 		@Serializable
@@ -60,5 +84,21 @@ data class Ingredient(
 					)
 				)
 		}
+
+		val MOCK = Ingredient(
+			branchId = "BRA26011700",
+			id = "1",
+			ingredientName = "Tomato",
+			isActive = true,
+			currentStock = 50.0,
+			minStockLevel = 10.0,
+			unit = "grams",
+			supplierInfo = JsonObject(
+				mapOf(
+					"contact" to JsonPrimitive("0929340783"),
+					"supplier" to JsonPrimitive("Supplier 2")
+				)
+			)
+		)
 	}
 }
