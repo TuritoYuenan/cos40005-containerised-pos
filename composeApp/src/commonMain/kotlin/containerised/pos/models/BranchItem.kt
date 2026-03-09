@@ -5,6 +5,9 @@ import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Represents a menu item available at a specific branch of a restaurant.
+ */
 @Serializable
 data class BranchItem(
 	@SerialName("branch_id")
@@ -48,6 +51,12 @@ data class BranchItem(
 		 */
 		suspend fun fetchAll(): List<BranchItem> {
 			return SupabaseClient.db["branch_items"].select().decodeList<BranchItem>()
+		}
+
+		suspend fun fetchFeatured(): List<BranchItem> {
+			return SupabaseClient.db["branch_items"]
+				.select { filter { eq("is_featured", true) } }
+				.decodeList<BranchItem>()
 		}
 
 		/**
@@ -153,8 +162,23 @@ data class BranchItem(
 					}
 				}
 		}
+
+		val MOCK = BranchItem(
+			branchId = "1",
+			itemId = "1",
+			categoryId = "1",
+			category = Category(categoryId = "1", categoryName = "Main Course", displayOrder = 1),
+			itemName = "Pho Bo",
+			itemDes = "Vietnamese beef noodle soup",
+			price = 50000,
+			estimatedPrep = "15 mins",
+			isAvailable = true,
+			isFeatured = true,
+			urlImg = null
+		)
 	}
 }
+
 @Serializable
 data class BranchItemWithCatAndIng(
 	@SerialName("branch_id")
