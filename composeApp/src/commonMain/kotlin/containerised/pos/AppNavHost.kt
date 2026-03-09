@@ -38,7 +38,10 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 	MaterialTheme {
 //		Staff-facing application, available on mobile and desktop
 		if (!isWeb) {
-			val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+			val currentRoute = navController
+				.currentBackStackEntryAsState()
+				.value?.destination?.route
+				.orEmpty()
 
 			LaunchedEffect(Unit) {
 				OrderRealtimeManager.events.collect { action ->
@@ -93,11 +96,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 				topBar = { StaffTopBar(navController, currentRoute) },
 				bottomBar = { StaffNavigationBar(navController, startDestination) }
 			) { paddingValues ->
-				NavHost(
-					navController = navController,
-					startDestination = startDestination,
-					modifier = Modifier.padding(paddingValues)
-				) {
+				NavHost(navController, startDestination, Modifier.padding(paddingValues)) {
 					composable<StaffRoutes.Login> { LoginPage() }
 					composable<StaffRoutes.MenuEdit> { MenuEditPage() }
 					composable<StaffRoutes.EditItem> { EditItemPage(navController) }
@@ -119,10 +118,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 
 //		Customer-facing application, available on web only
 		if (isWeb) {
-			NavHost(
-				navController = navController,
-				startDestination = startDestination,
-			) {
+			NavHost(navController, startDestination) {
 				composable<CustomerRoutes.Order> { backStackEntry ->
 					val args = backStackEntry.toRoute<CustomerRoutes.Order>()
 					CustomerOrderPage(navController, args)

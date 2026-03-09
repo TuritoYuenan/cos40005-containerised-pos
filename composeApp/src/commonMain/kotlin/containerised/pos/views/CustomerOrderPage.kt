@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -20,17 +21,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.CartEntry
 import containerised.pos.CartService
+import containerised.pos.components.LoadingView
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Tag
 import containerised.pos.routes.CustomerRoutes
@@ -38,11 +40,11 @@ import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
 
+private val defaultPadding = 16.dp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order) {
-	val padding = 16.dp
-
 	//	Search state
 	val textFieldState = remember { TextFieldState() }
 	var searchResults by remember { mutableStateOf(listOf<String>()) }
@@ -57,17 +59,13 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 	var isLoading by remember { mutableStateOf(true) }
 	val scope = rememberCoroutineScope()
 
-	val total = remember(cartItems) {
-		cartItems.sumOf { entry -> entry.count * entry.branchItem.price.toDouble() }
-	}
-
 	fun refreshCart() {
 		cartItems = CartService.loadItems()
 	}
 
-	fun addToCart(item: BranchItem) {
-		println("Adding item to cart: ${item.itemName}")
-		CartService.addOrIncreaseItem(item)
+	fun BranchItem.addToCart() {
+		println("Adding item to cart: $itemName")
+		CartService.addOrIncreaseItem(this)
 		refreshCart()
 	}
 
@@ -75,9 +73,9 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 	LaunchedEffect(Unit) {
 		scope.launch {
 			try {
-				featuredItems = BranchItem.fetchAll()
-				allItems = BranchItem.fetchAll()
 				tags = Tag.fetchAll()
+				allItems = BranchItem.fetchAll()
+				featuredItems = allItems.filter { it.isFeatured }
 			} catch (e: Exception) {
 				// Handle error - you might want to show an error message
 				println("Error fetching data: ${e.message}")
@@ -89,102 +87,69 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 
 	Scaffold(
 		topBar = {
-			SimpleSearchBar(
-				textFieldState = textFieldState,
-				searchResults = searchResults,
-				onSearch = { /*TODO: Implement search logic here*/ },
-			)
+			TopSearchBar(textFieldState, Modifier, searchResults) {
+				/*TODO: Implement search logic here*/
+			}
 		},
 		bottomBar = {
 			AnimatedVisibility(
-				visible = !cartItems.isEmpty(),
+				!cartItems.isEmpty(),
 				enter = slideInVertically(initialOffsetY = { it }),
-				exit = slideOutVertically(targetOffsetY = { it })
+				exit = slideOutVertically(targetOffsetY = { it }),
+				label = "Cart Bottom Bar"
 			) {
-				BottomAppBar(
-					actions = {
-						Text(
-							"${cartItems.size} items\nTotal: $total VND",
-							Modifier.padding(padding),
-							style = MaterialTheme.typography.titleMedium
-						)
-					},
-					floatingActionButton = { CartFAB(navController, args.branchID, args.tableNumber) }
-				)
+				CartStatusBar(navController, args, cartItems)
 			}
 		}
 	) { paddingValues ->
 		if (isLoading) {
-			Box(
-				modifier = Modifier.fillMaxSize().padding(paddingValues),
-				contentAlignment = Alignment.Center
-			) { CircularProgressIndicator() }
-		} else {
-			LazyColumn(
-				modifier = Modifier.padding(paddingValues),
-				verticalArrangement = Arrangement.spacedBy(padding)
-			) {
-				// Table Info
-				item {
-					Text(
-						"Ordering for Table ${args.tableNumber}",
-						Modifier.padding(8.dp, 8.dp, 8.dp, 0.dp).fillMaxWidth(),
-						style = MaterialTheme.typography.bodyLarge,
-						textAlign = TextAlign.Center
-					)
-				}
+			LoadingView(Modifier.fillMaxSize().padding(paddingValues))
+			return@Scaffold
+		}
+
+		LazyColumn(
+			Modifier.padding(paddingValues),
+			verticalArrangement = Arrangement.spacedBy(defaultPadding)
+		) {
+			// Table Info
+			item {
+				Text(
+					"Ordering for Table ${args.tableNumber}",
+					Modifier.padding(8.dp).fillMaxWidth(),
+					style = MaterialTheme.typography.bodyLarge,
+					textAlign = TextAlign.Center
+				)
 
 				// Image Slider
-				item {
-					ImageSlider(Modifier.padding(8.dp, 0.dp))
-				}
+				ImageSlider(allItems, Modifier.padding(8.dp, 0.dp))
 
 				// Featured Section
-				item {
-					Text("Featured", Modifier.padding(8.dp, 0.dp), style = MaterialTheme.typography.headlineMedium)
-				}
+				Text("Featured", Modifier.padding(defaultPadding), style = MaterialTheme.typography.headlineMedium)
 
-				item {
-					LazyRow(
-						Modifier.padding(8.dp, 0.dp),
-						horizontalArrangement = Arrangement.spacedBy(padding),
-					) {
-						items(featuredItems.size) { index ->
-							TallItemCard(
-								item = featuredItems[index],
-								onAddToCart = { addToCart(featuredItems[index]) }
-							)
+				LazyRow(
+					Modifier.padding(8.dp, 0.dp),
+					horizontalArrangement = Arrangement.spacedBy(defaultPadding),
+				) {
+					items(featuredItems.size) { index ->
+						TallItemCard(featuredItems[index]) {
+							featuredItems[index].addToCart()
 						}
 					}
 				}
 
-				// Your search Section
-				item {
-					Text("Your search", Modifier.padding(8.dp, 0.dp), style = MaterialTheme.typography.headlineMedium)
-				}
+				// Browse Section
+				Text(
+					"Browse all menu items",
+					Modifier.padding(defaultPadding),
+					style = MaterialTheme.typography.headlineMedium
+				)
+				MenuTags(tags)
+			}
 
-				item {
-					LazyRow(
-						Modifier.padding(8.dp, 0.dp),
-						horizontalArrangement = Arrangement.spacedBy(8.dp),
-					) {
-						items(tags.size) { index ->
-							InputChip(
-								label = { Text(tags[index].tagName) },
-								selected = false,
-								onClick = { /*TODO: Implement tag filtering*/ }
-							)
-						}
-					}
-				}
-
-				// Search results items
-				items(allItems.size) { index ->
-					WideItemCard(
-						item = allItems[index],
-						modifier = Modifier.padding(8.dp, 0.dp),
-						onAddToCart = { addToCart(allItems[index]) }
-					)
+			// Search results items
+			items(allItems.size) { index ->
+				WideItemCard(allItems[index], Modifier.padding(8.dp, 0.dp)) {
+					allItems[index].addToCart()
 				}
 			}
 		}
@@ -193,23 +158,18 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SimpleSearchBar(
+private fun TopSearchBar(
 	textFieldState: TextFieldState,
+	modifier: Modifier = Modifier,
+	searchResults: List<String> = emptyList(),
 	onSearch: (String) -> Unit,
-	searchResults: List<String>,
-	modifier: Modifier = Modifier
 ) {
 	// Controls expansion state of the search bar
 	var expanded by rememberSaveable { mutableStateOf(false) }
 
 	Box(modifier.semantics { isTraversalGroup = true }) {
 		SearchBar(
-			modifier = Modifier
-				.fillMaxWidth()
-				.widthIn(32.dp, 512.dp)
-				.padding(8.dp)
-				.semantics { traversalIndex = 0f },
-			inputField = {
+			{
 				SearchBarDefaults.InputField(
 					query = textFieldState.text.toString(),
 					onQueryChange = { textFieldState.edit { replace(0, length, it) } },
@@ -219,46 +179,118 @@ fun SimpleSearchBar(
 					},
 					expanded = expanded,
 					onExpandedChange = { expanded = it },
-					placeholder = { Text("Search") },
+					placeholder = { Text("Search menu items") },
 					leadingIcon = {
-						Icon(
-							imageVector = Icons.Filled.Search,
-							contentDescription = "Search Icon"
-						)
+						Icon(Icons.Filled.Search, "Search Icon")
 					}
 				)
 			},
-			expanded = expanded,
-			onExpandedChange = { expanded = it },
-		) {}
+			expanded,
+			{ expanded = it },
+			Modifier
+				.fillMaxWidth()
+				.widthIn(32.dp, 512.dp)
+				.padding(8.dp)
+				.semantics { traversalIndex = 0f },
+		) {
+			if (searchResults.isEmpty()) {
+				Text("No results found", Modifier.padding(16.dp))
+				return@SearchBar
+			}
+
+			Column {
+				searchResults.forEach { result ->
+					Text(result, Modifier.padding(16.dp))
+					HorizontalDivider()
+				}
+			}
+		}
 	}
 }
 
 @Composable
-fun ImageSlider(modifier: Modifier) {
-	val pagerState = rememberPagerState(pageCount = { 5 })
-	println(pagerState)
-	Card(modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)) { }
+private fun ImageSlider(items: List<BranchItem>, modifier: Modifier) {
+	val pagerState = rememberPagerState(pageCount = { items.size })
+
+	Card(modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)) {
+		if (items.isNotEmpty()) {
+			HorizontalPager(pagerState, Modifier.fillMaxSize()) { page ->
+				KamelImage(
+					{ asyncPainterResource("https://placehold.co/512x256") },
+					items[page % items.size].itemName,
+					Modifier.fillMaxSize(),
+					contentScale = ContentScale.Crop,
+					onFailure = {
+						Box(
+							Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
+							Alignment.Center,
+						) {}
+					}
+				)
+			}
+		} else {
+			Box(
+				Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
+				Alignment.Center,
+			) {
+				Text("No items available", color = MaterialTheme.colorScheme.onPrimary)
+			}
+		}
+	}
 }
 
 @Composable
-fun CartFAB(navController: NavController?, branchID: String, tableNumber: String) {
-	ExtendedFloatingActionButton(
-		text = { Text("View Cart") },
-		icon = { Icon(Icons.Filled.ShoppingCart, contentDescription = "Cart") },
-		onClick = { navController?.navigate(CustomerRoutes.Checkout(branchID, tableNumber)) },
-		containerColor = MaterialTheme.colorScheme.primary,
-		contentColor = MaterialTheme.colorScheme.onPrimary,
+private fun MenuTags(tags: List<Tag>) {
+	LazyRow(
+		Modifier.padding(8.dp, 0.dp),
+		horizontalArrangement = Arrangement.spacedBy(8.dp),
+	) {
+		items(tags.size) { index ->
+			InputChip(
+				false,
+				{ /*TODO: Implement tag filtering*/ },
+				{ Text(tags[index].tagName) },
+			)
+		}
+	}
+}
+
+@Composable
+private fun CartStatusBar(
+	navController: NavController?,
+	args: CustomerRoutes.Order,
+	cartItems: List<CartEntry>,
+) {
+	val total = cartItems.sumOf { entry -> entry.count * entry.branchItem.price.toDouble() }
+	val status = "${cartItems.size} items\nTotal: $total VND"
+
+	BottomAppBar(
+		actions = {
+			Text(
+				status,
+				Modifier.padding(8.dp, 0.dp),
+				style = MaterialTheme.typography.titleMedium
+			)
+		},
+		floatingActionButton = {
+			ExtendedFloatingActionButton(
+				text = { Text("View Cart") },
+				icon = { Icon(Icons.Filled.ShoppingCart, contentDescription = "Cart") },
+				onClick = { navController?.navigate(CustomerRoutes.Checkout(args.branchID, args.tableNumber)) },
+				containerColor = MaterialTheme.colorScheme.primary,
+				contentColor = MaterialTheme.colorScheme.onPrimary,
+			)
+		}
 	)
 }
 
 @Composable
-fun TallItemCard(item: BranchItem, onAddToCart: () -> Unit = {}) {
+private fun TallItemCard(item: BranchItem, onAddToCart: () -> Unit = {}) {
 	val cardWidth = 128.dp
 
-	OutlinedCard(modifier = Modifier.size(cardWidth, 256.dp)) {
-		Column {
-			Box {
+	OutlinedCard(Modifier.size(cardWidth, 256.dp)) {
+		Box {
+			Column {
 				KamelImage(
 					resource = { asyncPainterResource("https://placehold.co/256x256") },
 					contentDescription = item.itemName,
@@ -272,40 +304,26 @@ fun TallItemCard(item: BranchItem, onAddToCart: () -> Unit = {}) {
 							contentAlignment = Alignment.Center,
 							modifier = Modifier
 								.size(cardWidth)
-								.aspectRatio(1f)
 								.clip(RoundedCornerShape(8.dp))
-								.background(Color(0xFF0358AD)),
+								.background(MaterialTheme.colorScheme.primary),
 						) {}
 					}
 				)
 
-				// Add to cart button positioned at top-right
-				AddToCartButton(onAddToCart, modifier = Modifier.align(Alignment.TopEnd))
+				ItemMetadata(item)
 			}
-			Column(modifier = Modifier.padding(8.dp)) {
-				Text(
-					item.itemName,
-					maxLines = 2,
-					overflow = TextOverflow.Ellipsis,
-					style = MaterialTheme.typography.titleMedium
-				)
-				item.itemDes?.let {
-					Text(
-						it,
-						maxLines = 2,
-						overflow = TextOverflow.Ellipsis,
-						style = MaterialTheme.typography.bodyMedium
-					)
-				}
-				Text("${item.price} VND", style = MaterialTheme.typography.bodyLarge)
-			}
+
+			// Add to cart button positioned at top-right
+			AddToCartButton(onAddToCart, Modifier.align(Alignment.TopEnd))
 		}
 	}
 }
 
 @Composable
-fun WideItemCard(item: BranchItem, modifier: Modifier = Modifier, onAddToCart: () -> Unit = {}) {
-	OutlinedCard(modifier.fillMaxWidth().height(120.dp)) {
+private fun WideItemCard(item: BranchItem, modifier: Modifier = Modifier, onAddToCart: () -> Unit = {}) {
+	val cardHeight = 128.dp
+
+	OutlinedCard(modifier.width(384.dp).height(cardHeight)) {
 		Box {
 			Row(Modifier.fillMaxWidth()) {
 				KamelImage(
@@ -313,48 +331,92 @@ fun WideItemCard(item: BranchItem, modifier: Modifier = Modifier, onAddToCart: (
 					contentDescription = item.itemName,
 					contentScale = ContentScale.Crop,
 					modifier = Modifier
-						.size(120.dp)
+						.size(cardHeight)
 						.clip(RoundedCornerShape(8.dp)),
 					onFailure = {
 						Box(
 							contentAlignment = Alignment.Center,
 							modifier = Modifier
-								.size(120.dp)
+								.size(cardHeight)
 								.clip(RoundedCornerShape(8.dp))
-								.background(Color(0xFF0358AD)),
+								.background(MaterialTheme.colorScheme.primary),
 						) {}
 					}
 				)
-				Column(
-					modifier = Modifier.padding(8.dp),
-					verticalArrangement = Arrangement.SpaceBetween
-				) {
-					Text(
-						item.itemName,
-						maxLines = 2,
-						overflow = TextOverflow.Ellipsis,
-						style = MaterialTheme.typography.titleMedium
-					)
-					Text("${item.price} VND", style = MaterialTheme.typography.bodyLarge)
-				}
+				ItemMetadata(item)
 			}
 
 			// Add to cart button positioned at top-right
-			AddToCartButton(onAddToCart, modifier = Modifier.align(Alignment.TopEnd))
+			AddToCartButton(onAddToCart, Modifier.align(Alignment.TopEnd))
 		}
 	}
 }
 
 @Composable
-fun AddToCartButton(onAddToCart: () -> Unit, modifier: Modifier = Modifier) {
-	FilledTonalIconButton(
-		onClick = onAddToCart,
-		modifier = modifier.padding(8.dp).size(32.dp),
-	) {
-		Icon(
-			imageVector = Icons.Filled.Add,
-			contentDescription = "Add to cart",
-			modifier = Modifier.size(18.dp)
+private fun ItemMetadata(item: BranchItem) {
+	Column(Modifier.padding(8.dp)) {
+		Text(
+			item.itemName,
+			maxLines = 2,
+			overflow = TextOverflow.Ellipsis,
+			style = MaterialTheme.typography.titleMedium
 		)
+		item.itemDes?.let {
+			Text(
+				it,
+				maxLines = 2,
+				overflow = TextOverflow.Ellipsis,
+				style = MaterialTheme.typography.bodyMedium
+			)
+		}
+		Text("${item.price} VND", style = MaterialTheme.typography.bodyLarge)
 	}
 }
+
+@Composable
+private fun AddToCartButton(onAddToCart: () -> Unit, modifier: Modifier = Modifier) {
+	FilledTonalIconButton(onAddToCart, modifier.padding(8.dp).size(32.dp)) {
+		Icon(Icons.Filled.Add, "Add to cart", Modifier.size(18.dp))
+	}
+}
+
+@Preview(apiLevel = 35)
+@Composable
+private fun TopBarPreview() = TopSearchBar(
+	remember { TextFieldState() },
+	Modifier.fillMaxWidth(),
+) {}
+
+@Preview(apiLevel = 35)
+@Composable
+private fun ImageSliderPreview() = ImageSlider(
+	listOf(
+		BranchItem.MOCK,
+		BranchItem.MOCK.copy(itemName = "Item 2"),
+		BranchItem.MOCK.copy(itemName = "Item 3"),
+		BranchItem.MOCK.copy(itemName = "Item 4"),
+		BranchItem.MOCK.copy(itemName = "Item 5")
+	),
+	Modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)
+)
+
+@Preview(apiLevel = 35, showBackground = true)
+@Composable
+private fun MenuTagsPreview() = MenuTags(Tag.MOCKS)
+
+@Preview(apiLevel = 35)
+@Composable
+private fun CartStatusBarPreview() = CartStatusBar(
+	null, CustomerRoutes.Order("branchID", "tableNumber"), listOf(
+		CartEntry(BranchItem.MOCK, 2),
+		CartEntry(BranchItem.MOCK.copy(itemName = "Another Item"), 1)
+	)
+)
+
+@Preview(apiLevel = 35)
+@Composable
+private fun WideItemCardPreview() = WideItemCard(BranchItem.MOCK)
+
+@Preview(apiLevel = 35)
+@Composable
+private fun TallItemCardPreview() = TallItemCard(BranchItem.MOCK)

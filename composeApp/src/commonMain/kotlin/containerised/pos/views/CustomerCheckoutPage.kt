@@ -2,17 +2,16 @@ package containerised.pos.views
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,11 +19,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.CartEntry
 import containerised.pos.CartService
+import containerised.pos.components.BackButton
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
 import containerised.pos.models.OrderInsert
 import containerised.pos.models.OrderStatus
 import containerised.pos.routes.CustomerRoutes
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 
@@ -43,6 +44,11 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 	}
 
 	suspend fun placeOrder(isPayingAtCounter: Boolean) {
+		if (checkoutItems.isEmpty()) {
+			// TODO: Show a message if the cart is empty
+			return
+		}
+
 		// Generate a unique order ID client-side to avoid database function permission issues
 		val generatedOrderId = "ORD${Clock.System.now().toEpochMilliseconds()}"
 
@@ -54,7 +60,7 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 			status = OrderStatus.PREPARING,
 			branchId = args.branchID,
 			taxAmount = taxAmount,
-			finalAmount = calculateFinalAmount(checkoutItems, taxAmount)
+			finalAmount = checkoutItems.calculateFinalAmount(taxAmount)
 		)
 
 		val orderItems = checkoutItems.map { entry -> entry.toOrderItem(generatedOrderId) }
@@ -80,144 +86,129 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 		checkoutItems.sumOf { entry -> entry.count * entry.branchItem.price.toDouble() }
 	}
 
-	LazyColumn {
-		item {
-			CenterAlignedTopAppBar(
-				navigationIcon = {
-					IconButton(onClick = { navController?.popBackStack() }) {
-						Icon(
-							imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-							contentDescription = "Back"
-						)
-					}
-				},
-				title = { Text("My Cart") }
-			)
-			Card(
-				modifier = Modifier.fillMaxWidth().padding(16.dp),
-				shape = RoundedCornerShape(16.dp),
-				elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-			) {
-				Column(
-					modifier = Modifier.background(Color.White).padding(12.dp),
-					verticalArrangement = Arrangement.spacedBy(8.dp)
-				) {
-					Row {
-						Icon(Icons.Filled.RoomService, contentDescription = "RoomService")
-						Text(text = "Table ${args.tableNumber}'s order", style = MaterialTheme.typography.titleMedium)
-					}
-					Column(Modifier.fillMaxWidth()) {
-						checkoutItems.forEach { entry ->
-							CheckoutMenuItem(
-								item = entry.branchItem,
-								count = entry.count,
-								onRefresh = { refreshCart() }
-							)
-						}
-					}
-				}
+	Scaffold(
+		topBar = { TopBar(navController) },
+		contentWindowInsets = WindowInsets(16.dp)
+	) { paddingValues ->
+		Column(
+			Modifier.padding(paddingValues).verticalScroll(rememberScrollState()),
+			Arrangement.spacedBy(16.dp)
+		) {
+			CartView(args, checkoutItems) { refreshCart() }
+			DiscountView()
+			PaymentButtonsView(total, scope, ::placeOrder)
+		}
+	}
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TopBar(navController: NavController?) = CenterAlignedTopAppBar(
+	{ Text("My Cart") },
+	navigationIcon = { BackButton { navController?.popBackStack() } },
+)
+
+@Composable
+private fun CartView(
+	args: CustomerRoutes.Checkout,
+	checkoutItems: List<CartEntry>,
+	onRefresh: () -> Unit
+) {
+	OutlinedCard(Modifier.fillMaxWidth()) {
+		Column(
+			Modifier.padding(16.dp),
+			Arrangement.spacedBy(16.dp)
+		) {
+			Row {
+				Icon(Icons.Filled.RoomService, "RoomService")
+				Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+				Text("Order for Table ${args.tableNumber}", style = MaterialTheme.typography.titleMedium)
 			}
 
-			Card(
-				modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-				shape = RoundedCornerShape(16.dp),
-				elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-			) {
-				Column(modifier = Modifier.background(Color.White).padding(12.dp)) {
-					Row(modifier = Modifier.padding(vertical = 8.dp)) {
-						Icon(
-							Icons.Filled.Discount,
-							contentDescription = "Discount"
-						)
-						Text(
-							text = "Discounts and Promotions",
-							style = MaterialTheme.typography.titleMedium,
-						)
-					}
-					Column(Modifier.fillMaxWidth()) {
-						CheckoutDiscountItem()
-						CheckoutDiscountItem()
-					}
-				}
+			checkoutItems.forEach { CheckoutMenuItem(it.branchItem, it.count, onRefresh) }
+		}
+	}
+}
+
+@Composable
+private fun DiscountView() {
+	OutlinedCard(Modifier.fillMaxWidth()) {
+		Column(Modifier.padding(16.dp), Arrangement.spacedBy(16.dp)) {
+			Row {
+				Icon(Icons.Filled.Discount, "Discount")
+				Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+				Text("Discounts and Promotions", style = MaterialTheme.typography.titleMedium)
 			}
 
-			Column(modifier = Modifier.background(Color.White).padding(12.dp)) {
-				val currency = Currency.VND.code
-				val formattedTotal = "$total $currency"
-
-				// Cash Payment Button
-				PaymentButton(
-					label = "Place Order (Pay at Counter)",
-					amount = formattedTotal,
-					icon = Icons.Filled.Payment,
-					iconCaption = "Cash"
-				) {
-					if (checkoutItems.isEmpty()) {
-						// Show a message or disable the button if the cart is empty
-						return@PaymentButton
-					}
-					scope.launch { placeOrder(isPayingAtCounter = true) }
-				}
-
-				// Bank Transfer Payment Button
-				PaymentButton(
-					label = "Place Order (VietQR Payment)",
-					amount = formattedTotal,
-					icon = Icons.Filled.AccountBalance,
-					iconCaption = "Bank Transfer"
-				) {
-					if (checkoutItems.isEmpty()) {
-						// Show a message or disable the button if the cart is empty
-						return@PaymentButton
-					}
-					scope.launch { placeOrder(isPayingAtCounter = false) }
-				}
+			Column(Modifier, Arrangement.spacedBy(8.dp)) {
+				DiscountItemCard()
+				DiscountItemCard()
 			}
 		}
 	}
 }
 
-@Preview
 @Composable
-fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
-	val currency = Currency.VND.code
-	Column(
-		modifier = Modifier.fillMaxWidth(),
-		verticalArrangement = Arrangement.spacedBy(4.dp)
-	) {
-		// First Row: image and item details
-		Row(
-			modifier = Modifier.fillMaxWidth(),
-			horizontalArrangement = Arrangement.spacedBy(16.dp),
+private fun PaymentButtonsView(
+	total: Double,
+	scope: CoroutineScope,
+	onPlaceOrder: suspend (isPayingAtCounter: Boolean) -> Unit = { _ -> }
+) {
+	Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+		val currency = Currency.VND.code
+		val formattedTotal = "$total $currency"
+
+		// Cash Payment Button
+		PaymentButton(
+			label = "Pay at Counter",
+			amount = formattedTotal,
+			icon = Icons.Filled.Payment
 		) {
+			scope.launch { onPlaceOrder(true) }
+		}
+
+		// Bank Transfer Payment Button
+		PaymentButton(
+			label = "Self-checkout via VietQR",
+			amount = formattedTotal,
+			icon = Icons.Filled.AccountBalance
+		) {
+			scope.launch { onPlaceOrder(false) }
+		}
+	}
+}
+
+@Composable
+private fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
+	val currency = Currency.VND.code
+	Column(Modifier.fillMaxWidth(), Arrangement.spacedBy(4.dp)) {
+		// First Row: image and item details
+		Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(16.dp)) {
 			// Image placeholder
 			Box(
-				modifier = Modifier
+				Modifier
 					.size(76.dp)
 					.clip(RoundedCornerShape(8.dp))
-					.background(Color(0xFFACACAC)),
-				contentAlignment = Alignment.Center
+					.background(MaterialTheme.colorScheme.primary),
+				Alignment.Center
 			) {}
 
 			// Item details
-			Column(
-				modifier = Modifier.weight(1f),
-				verticalArrangement = Arrangement.spacedBy(4.dp)
-			) {
+			Column(Modifier.weight(1f), Arrangement.spacedBy(4.dp)) {
 				Text(
-					text = item.itemName,
+					item.itemName,
 					maxLines = 1,
 					overflow = TextOverflow.Ellipsis,
 					style = MaterialTheme.typography.titleMedium
 				)
 
 				Text(
-					text = item.price.toString() + " " + currency,
+					item.price.toString() + " " + currency,
 					style = MaterialTheme.typography.bodyMedium
 				)
 
 				Text(
-					text = "Total: " + (count * item.price) + " " + currency,
+					"Total: " + (count * item.price) + " " + currency,
 					style = MaterialTheme.typography.bodyMedium
 				)
 			}
@@ -225,15 +216,15 @@ fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
 
 		// Second Row: quantity counter and edit button (aligned to right)
 		Row(
-			modifier = Modifier.fillMaxWidth(),
-			horizontalArrangement = Arrangement.spacedBy(0.dp, Alignment.End),
-			verticalAlignment = Alignment.CenterVertically
+			Modifier.fillMaxWidth(),
+			Arrangement.spacedBy(0.dp, Alignment.End),
+			Alignment.CenterVertically
 		) {
 			// Edit button
 			TextButton(
 				onClick = { /*TODO: Open dialogue to edit special notes for the order item*/ },
 			) {
-				Icon(Icons.Filled.Edit, contentDescription = "Edit")
+				Icon(Icons.Filled.Edit, "Edit")
 				Spacer(Modifier.size(ButtonDefaults.IconSpacing))
 				Text("Add special notes")
 			}
@@ -250,7 +241,7 @@ fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
 					},
 				) { Icon(Icons.Filled.Remove, "Decrease") }
 
-				Text(text = count.toString())
+				Text(count.toString())
 
 				FilledTonalIconButton(
 					onClick = {
@@ -263,60 +254,78 @@ fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
 	}
 }
 
-@Preview
 @Composable
-fun CheckoutDiscountItem() {
+private fun DiscountItemCard() {
+	val cardHeight = 64.dp
+
 	Row(
-		modifier = Modifier
-			.clip(RoundedCornerShape(8.dp))
-			.background(MaterialTheme.colorScheme.outlineVariant)
-			.fillMaxWidth(),
-		horizontalArrangement = Arrangement.spacedBy(6.dp),
+		Modifier.fillMaxWidth(),
+		Arrangement.spacedBy(16.dp),
 	) {
 		Box(
-			modifier = Modifier
-				.size(52.dp)
+			Modifier
+				.size(cardHeight)
 				.clip(RoundedCornerShape(8.dp))
-				.background(Color(0xFFACACAC)),
-			contentAlignment = Alignment.Center
+				.background(MaterialTheme.colorScheme.secondary),
+			Alignment.Center
 		) {}
 
 		Column(
-			modifier = Modifier.height(52.dp),
-			verticalArrangement = Arrangement.SpaceEvenly
+			Modifier.height(cardHeight),
+			Arrangement.Center
 		) {
-			Text(text = "Lorem Ipsum title", style = MaterialTheme.typography.titleSmall)
-			Text(text = "Lorem Ipsum condition", style = MaterialTheme.typography.bodySmall)
+			Text("Lorem Ipsum title", style = MaterialTheme.typography.titleSmall)
+			Text("Lorem Ipsum condition", style = MaterialTheme.typography.bodySmall)
 		}
 	}
 }
 
 @Composable
-fun PaymentButton(label: String, amount: String, icon: ImageVector, iconCaption: String?, onClick: () -> Unit) {
-	Button(
-		onClick = onClick,
-		modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+private fun PaymentButton(label: String, amount: String, icon: ImageVector, onClick: () -> Unit) {
+	FilledTonalButton(
+		onClick,
+		Modifier.fillMaxWidth(),
 		shape = RoundedCornerShape(8.dp),
-		colors = ButtonDefaults.buttonColors(
-			containerColor = MaterialTheme.colorScheme.primaryContainer,
-			contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-		)
 	) {
 		Row(
-			modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-			horizontalArrangement = Arrangement.spacedBy(8.dp),
-			verticalAlignment = Alignment.Top
+			Modifier.fillMaxWidth().padding(vertical = 4.dp),
+			Arrangement.spacedBy(8.dp),
+			Alignment.Top
 		) {
-			Icon(icon, iconCaption)
-			Column(modifier = Modifier.fillMaxWidth()) {
+			Icon(icon, label)
+			Column(Modifier.fillMaxWidth()) {
 				Text(label, style = MaterialTheme.typography.titleMedium)
-				Text(amount, style = MaterialTheme.typography.titleMedium)
+				Text(amount, style = MaterialTheme.typography.bodyMedium)
 			}
 		}
 	}
 }
 
-fun calculateFinalAmount(cartItems: List<CartEntry>, taxAmount: Double): Int {
-	val subtotal = cartItems.sumOf { entry -> entry.count * entry.branchItem.price }
+// TODO: Move this logic to CartService
+private fun List<CartEntry>.calculateFinalAmount(taxAmount: Double): Int {
+	val subtotal = this.sumOf { entry -> entry.count * entry.branchItem.price }
 	return (subtotal * (1 + taxAmount)).toInt()
+}
+
+@Preview
+@Composable
+private fun TopBarPreview() = TopBar(null)
+
+@Preview(showBackground = true)
+@Composable
+private fun PagePreview() = Column(
+	Modifier.padding(16.dp),
+	Arrangement.spacedBy(16.dp)
+) {
+	CartView(
+		CustomerRoutes.Checkout("1", "5"),
+		listOf(
+			CartEntry(BranchItem.MOCK, 2),
+			CartEntry(BranchItem.MOCK.copy(itemId = "2", itemName = "Bun Cha"), 1)
+		)
+	) {}
+
+	DiscountView()
+
+	PaymentButtonsView(150000.0, rememberCoroutineScope()) {}
 }
