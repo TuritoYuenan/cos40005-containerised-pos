@@ -1,11 +1,6 @@
 [versions]
-componentsResources = "1.10.1"
-foundation = "1.10.1"
+compose = "1.10.1"
 materialIconsExtended = "1.7.3"
-runtime = "1.10.1"
-ui = "1.10.1"
-uiTooling = "1.10.1"
-uiToolingPreview = "1.10.1"
 agp = "8.12.3"
 dateTimeVersion = "0.7.1"
 kamelImageDefault = "1.0.9"
@@ -22,20 +17,19 @@ androidx-activity = "1.12.4"
 androidx-lifecycle = "2.9.6"
 androidx-navigation = "2.9.2"
 composeHotReload = "1.0.0"
-composeMultiplatform = "1.10.1"
 kotlinx-coroutines = "1.10.2"
 ktor = "3.4.0"
 
 [libraries]
 # Compose
-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "componentsResources" }
-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "foundation" }
-jetbrains-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "runtime" }
+components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose" }
+foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
+jetbrains-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "ui" }
-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "uiTooling" }
-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "uiToolingPreview" }
+ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
+ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "compose" }
+ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose" }
 
 # AndroidX
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
@@ -88,7 +82,7 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 
 # Compose
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
-composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
 # Kotlin

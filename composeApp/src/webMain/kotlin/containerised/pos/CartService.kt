@@ -42,6 +42,22 @@ actual object CartService {
 		save(current)
 	}
 
+	actual fun getItemNotes(item: BranchItem): String? {
+		return loadItems().firstOrNull { it.branchItem.itemId == item.itemId }?.specialNotes
+	}
+
+	actual fun updateItemNotes(item: BranchItem, notes: String?) {
+		val current = loadItems().toMutableList()
+		val index = current.indexOfFirst { it.branchItem.itemId == item.itemId }
+
+		if (index < 0) return
+
+		val existing = current[index]
+		current[index] = existing.copy(specialNotes = notes)
+
+		save(current)
+	}
+
 	actual fun loadItems(): List<CartEntry> {
 		return window.localStorage.getItem(KEY)
 			?.let { Json.decodeFromString<List<CartEntry>>(it) } ?: emptyList()

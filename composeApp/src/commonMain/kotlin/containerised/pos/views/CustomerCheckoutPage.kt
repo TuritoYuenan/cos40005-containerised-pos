@@ -181,6 +181,8 @@ private fun PaymentButtonsView(
 @Composable
 private fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit) {
 	val currency = Currency.VND.code
+	val isSpecialNotesDialogOpen = remember { mutableStateOf(false) }
+
 	Column(Modifier.fillMaxWidth(), Arrangement.spacedBy(4.dp)) {
 		// First Row: image and item details
 		Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(16.dp)) {
@@ -221,9 +223,7 @@ private fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit
 			Alignment.CenterVertically
 		) {
 			// Edit button
-			TextButton(
-				onClick = { /*TODO: Open dialogue to edit special notes for the order item*/ },
-			) {
+			TextButton({ isSpecialNotesDialogOpen.value = true }) {
 				Icon(Icons.Filled.Edit, "Edit")
 				Spacer(Modifier.size(ButtonDefaults.IconSpacing))
 				Text("Add special notes")
@@ -252,6 +252,10 @@ private fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit
 			}
 		}
 	}
+
+	if (isSpecialNotesDialogOpen.value) {
+		SpecialNotesDialog(item) { isSpecialNotesDialogOpen.value = false }
+	}
 }
 
 @Composable
@@ -278,6 +282,34 @@ private fun DiscountItemCard() {
 			Text("Lorem Ipsum condition", style = MaterialTheme.typography.bodySmall)
 		}
 	}
+}
+
+@Composable
+private fun SpecialNotesDialog(item: BranchItem, onDismiss: () -> Unit) {
+	val notes = remember {
+		mutableStateOf(CartService.getItemNotes(item).orEmpty())
+	}
+
+	AlertDialog(
+		onDismiss,
+		confirmButton = {
+			TextButton({
+				CartService.updateItemNotes(item, notes.value)
+				onDismiss()
+			}) { Text("Save") }
+		},
+		dismissButton = { TextButton(onDismiss) { Text("Cancel") } },
+		icon = { Icon(Icons.Filled.Edit, "Edit") },
+		title = { Text("Add Special Notes") },
+		text = {
+			OutlinedTextField(
+				notes.value,
+				{ notes.value = it },
+				Modifier.fillMaxWidth(),
+				placeholder = { Text("e.g. preferences, allergies") },
+			)
+		},
+	)
 }
 
 @Composable
@@ -328,4 +360,10 @@ private fun PagePreview() = Column(
 	DiscountView()
 
 	PaymentButtonsView(150000.0, rememberCoroutineScope()) {}
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun SpecialNotesDialogPreview() = Column(Modifier.fillMaxSize()) {
+	SpecialNotesDialog(BranchItem.MOCK) { }
 }

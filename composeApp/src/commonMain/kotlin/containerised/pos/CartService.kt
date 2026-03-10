@@ -8,7 +8,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CartEntry(
 	val branchItem: BranchItem,
-	val count: Int
+	val count: Int,
+	val specialNotes: String? = null
 ) {
 	/**
 	 * Convert to Order Item table schema
@@ -19,12 +20,13 @@ data class CartEntry(
 			itemId = branchItem.itemId,
 			quantity = count,
 			subtotal = branchItem.price * count,
+			specialNotes = specialNotes,
 			itemStatus = OrderStatus.PREPARING
 		)
 	}
 }
 
-expect object CartService{
+expect object CartService {
 	/**
 	 * Saves the given item to the storage.
 	 * If the item already exists, it increases the count by 1.
@@ -36,6 +38,18 @@ expect object CartService{
 	 * If the count reaches 0, it removes the item from the storage.
 	 */
 	fun removeOrDecreaseItem(item: BranchItem)
+
+	/**
+	 * Retrieves the special notes for the given item.
+	 * If the item does not exist, it returns null.
+	 */
+	fun getItemNotes(item: BranchItem): String?
+
+	/**
+	 * Updates the special notes for the given item.
+	 * If the item does not exist, it does nothing.
+	 */
+	fun updateItemNotes(item: BranchItem, notes: String?)
 
 	/**
 	 * Loads the items from the storage and returns them as a list of CartEntry.
