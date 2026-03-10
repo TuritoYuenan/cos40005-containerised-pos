@@ -1,5 +1,6 @@
 package containerised.pos
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -57,5 +58,13 @@ actual object NotificationService {
 			context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
 		manager.notify(System.currentTimeMillis().toInt(), builder.build())
+	}
+	fun createForegroundNotification(title: String, text: String): Notification {
+		return NotificationCompat.Builder(appContext!!, CHANNEL_ID)
+			.setContentTitle(title)
+			.setContentText(text)
+			.setSmallIcon(R.drawable.ic_launcher_foreground)
+			.setOngoing(true)
+			.build()
 	}
 }

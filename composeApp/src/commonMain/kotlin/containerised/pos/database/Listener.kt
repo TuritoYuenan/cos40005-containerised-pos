@@ -15,12 +15,8 @@ class OrderListener(
 ) {
 	private var channel: RealtimeChannel? = null
 	private var subscribed = false
-	private var initialized = false
 
 	fun initialize() {
-		if (initialized) return
-		initialized = true
-
 		channel = SupabaseClient.realtime.channel("orders-changes")
 		channel?.postgresChangeFlow<PostgresAction>(schema = "public") {
 			table = "orders"
@@ -38,10 +34,12 @@ class OrderListener(
 		println("Channel subscribed")
 	}
 	fun unsubscribe() {
-		subscribed = false
 		scope.launch {
-			channel?.unsubscribe()
+			channel?.let {
+				SupabaseClient.realtime.removeChannel(it)
+			}
 			channel = null
+			subscribed = false
 		}
 		println("Channel unsubscribed")
 	}

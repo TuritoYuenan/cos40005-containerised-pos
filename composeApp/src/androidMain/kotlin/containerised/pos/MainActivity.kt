@@ -1,5 +1,6 @@
 package containerised.pos
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+		AppContextHolder.context = applicationContext
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 			requestPermissionLauncher.launch(
 				android.Manifest.permission.POST_NOTIFICATIONS
@@ -30,4 +32,7 @@ class MainActivity : ComponentActivity() {
 			AppNavHost()
         }
     }
+}
+object AppContextHolder {
+	lateinit var context: Context
 }

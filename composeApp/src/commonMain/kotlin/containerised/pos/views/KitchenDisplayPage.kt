@@ -18,11 +18,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import containerised.pos.NotificationService
+import containerised.pos.OrderRealtimeManager
 import containerised.pos.database.OrderListener
 import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
@@ -101,11 +99,8 @@ fun KitchenDisplayPage(navController: NavController) {
 		}
 	}
 
-	val lifecycleOwner = LocalLifecycleOwner.current
-
 	LaunchedEffect(Unit) {
 		try {
-			listener.initialize()
 			orders = Order.fetchPreparing()
 			println("Fetched ${orders.size} orders:")
 		} catch (e: Exception) {
@@ -113,21 +108,63 @@ fun KitchenDisplayPage(navController: NavController) {
 			println("Error: $error")
 		}
 	}
+	LaunchedEffect(Unit) {
+		println("Creating channel")
+		RealtimeServiceController.start()
+		OrderRealtimeManager.events.collect { action ->
+			when (action) {
 
-	DisposableEffect(lifecycleOwner) {
-		val observer = LifecycleEventObserver { _, event ->
-			when (event) {
-				Lifecycle.Event.ON_RESUME -> listener.subscribe()
-				Lifecycle.Event.ON_PAUSE -> listener.unsubscribe()
-				else -> {}
+				is PostgresAction.Insert -> {
+					val newOrder = action.decodeRecord<Order>()
+					println("Insert data: $newOrder")
+					orders = orders + newOrder
+					NotificationService.showNotification(
+						title = "New Order",
+						message = "Order #${newOrder.orderNumber} received"
+					)
+				}
+
+				is PostgresAction.Update -> {
+					val updated = action.decodeRecord<Order>()
+					val old = action.decodeOldRecord<Order>()
+					if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
+						orders = orders.filterNot { it.orderId == old.orderId}
+						println("deleted data: $old")
+						NotificationService.showNotification(
+							title = "Order Updated",
+							message = "Order #${old.orderNumber} is done"
+						)
+					}
+					else if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.CANCELED) {
+						orders = orders.filterNot { it.orderId == old.orderId}
+						println("deleted data: $old")
+						NotificationService.showNotification(
+							title = "Order Updated",
+							message = "Order #${old.orderNumber} is canceled"
+						)
+					}
+					else if ((old.status == OrderStatus.FINISHED || old.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
+						orders = orders + updated
+						println("Insert data: $updated")
+					}
+					else{
+						println("old data: $old")
+						println("Updated data: $updated")
+						orders = orders.map {
+							if (it.orderId == updated.orderId) updated else it
+						}
+					}
+				}
+
+				is PostgresAction.Delete -> {
+					val old = action.decodeOldRecord<Order>()
+					println("Deleted → id=${old.orderId}")
+					orders = orders.filterNot { it.orderId == old.orderId }
+				}
+				is PostgresAction.Select -> {
+
+				}
 			}
-		}
-
-		lifecycleOwner.lifecycle.addObserver(observer)
-
-		onDispose {
-			lifecycleOwner.lifecycle.removeObserver(observer)
-			listener.unsubscribe()
 		}
 	}
 
