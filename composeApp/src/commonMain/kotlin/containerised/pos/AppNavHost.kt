@@ -2,7 +2,6 @@ package containerised.pos
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,6 +19,7 @@ import containerised.pos.models.Order
 import containerised.pos.models.OrderStatus
 import containerised.pos.routes.CustomerRoutes
 import containerised.pos.routes.StaffRoutes
+import containerised.pos.components.AppTheme
 import containerised.pos.views.*
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
@@ -35,7 +35,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 //	Must change "order" to "login" when auth is implemented
 	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.Inventory
 
-	MaterialTheme {
+	AppTheme {
 //		Staff-facing application, available on mobile and desktop
 		if (!isWeb) {
 			val currentRoute = navController
