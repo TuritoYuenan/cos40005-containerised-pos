@@ -1,5 +1,6 @@
 package containerised.pos.views
 
+import RealtimeServiceController
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,7 +22,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import containerised.pos.NotificationService
 import containerised.pos.OrderRealtimeManager
-import containerised.pos.database.OrderListener
 import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
@@ -35,69 +35,11 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KitchenDisplayPage(navController: NavController) {
-	val scope = rememberCoroutineScope()
+	rememberCoroutineScope()
 	var orders by remember { mutableStateOf<List<Order>>(emptyList()) }
 	var selectedOrder by remember { mutableStateOf<Order?>(null) }
 	var selectedOrderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
 	var error by remember { mutableStateOf<String?>(null) }
-
-	val listener = remember {
-		OrderListener(scope) { action ->
-			when (action) {
-
-				is PostgresAction.Insert -> {
-					val newOrder = action.decodeRecord<Order>()
-					println("Insert data: $newOrder")
-					orders = orders + newOrder
-					NotificationService.showNotification(
-						title = "New Order",
-						message = "Order #${newOrder.orderNumber} received"
-					)
-				}
-
-				is PostgresAction.Update -> {
-					val updated = action.decodeRecord<Order>()
-					val old = action.decodeOldRecord<Order>()
-					if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
-						orders = orders.filterNot { it.orderId == old.orderId}
-						println("deleted data: $old")
-						NotificationService.showNotification(
-							title = "Order Updated",
-							message = "Order #${old.orderNumber} is done"
-						)
-					}
-					else if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.CANCELED) {
-						orders = orders.filterNot { it.orderId == old.orderId}
-						println("deleted data: $old")
-						NotificationService.showNotification(
-							title = "Order Updated",
-							message = "Order #${old.orderNumber} is canceled"
-						)
-					}
-					else if ((old.status == OrderStatus.FINISHED || old.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
-						orders = orders + updated
-						println("Insert data: $updated")
-					}
-					else{
-						println("old data: $old")
-						println("Updated data: $updated")
-						orders = orders.map {
-							if (it.orderId == updated.orderId) updated else it
-						}
-					}
-				}
-
-				is PostgresAction.Delete -> {
-					val old = action.decodeOldRecord<Order>()
-					println("Deleted → id=${old.orderId}")
-					orders = orders.filterNot { it.orderId == old.orderId }
-				}
-				is PostgresAction.Select -> {
-
-				}
-			}
-		}
-	}
 
 	LaunchedEffect(Unit) {
 		try {
@@ -172,7 +114,6 @@ fun KitchenDisplayPage(navController: NavController) {
 		items(items = orders, key = { it.orderId }) { order ->
 			KitchenDisplayOrderItem(
 				order,
-				onDone = { },
 				onClickOrder = { selectedOrder = order; println(order) },
 				onClickOrderItem = { selectedOrderItem -> selectedOrderItems = selectedOrderItem })
 		}
@@ -180,7 +121,6 @@ fun KitchenDisplayPage(navController: NavController) {
 	selectedOrder?.let { order ->
 		ExpandedOrderOverlay(
 			order = order,
-			onDone = { orders = orders.filterNot { it.orderId == order.orderId } },
 			orderItems = selectedOrderItems,
 			onDismiss = { selectedOrder = null }
 		)
@@ -191,7 +131,6 @@ fun KitchenDisplayPage(navController: NavController) {
 @Composable
 fun KitchenDisplayOrderItem(
 	order: Order,
-	onDone: () -> Unit,
 	onClickOrder: () -> Unit,
 	onClickOrderItem: (List<OrderItem>) -> Unit
 ) {
@@ -282,13 +221,13 @@ fun KitchenDisplayOrderItem(
 
 				}
 			}
-			KitchenDisplayOrderButtons(scope, order, orderItems, onDone)
+			KitchenDisplayOrderButtons(scope, order, orderItems)
 		}
 	}
 }
 
 @Composable
-fun KitchenDisplayOrderButtons(scope: CoroutineScope, order: Order, orderItems: List<OrderItem>, onDone: () -> Unit, onDismiss: (() -> Unit) = {}){
+fun KitchenDisplayOrderButtons(scope: CoroutineScope, order: Order, orderItems: List<OrderItem>, onDismiss: (() -> Unit) = {}){
 	Row(
 		horizontalArrangement = Arrangement.spacedBy(
 			10.dp,
@@ -303,7 +242,6 @@ fun KitchenDisplayOrderButtons(scope: CoroutineScope, order: Order, orderItems: 
 			onClick = {
 				scope.launch {
 					Order.markCancelled(order.orderId)
-					onDone()
 					onDismiss()
 
 
@@ -333,7 +271,6 @@ fun KitchenDisplayOrderButtons(scope: CoroutineScope, order: Order, orderItems: 
 					}
 
 					Order.markFinished(order.orderId)
-					onDone()
 					onDismiss()
 
 				}
@@ -357,7 +294,6 @@ fun KitchenDisplayOrderButtons(scope: CoroutineScope, order: Order, orderItems: 
 @Composable
 fun ExpandedOrderOverlay(
 	order: Order,
-	onDone: () -> Unit,
 	orderItems: List<OrderItem>,
 	onDismiss: () -> Unit,
 ) {
@@ -453,7 +389,7 @@ fun ExpandedOrderOverlay(
 						}
 					}
 					Spacer(modifier = Modifier.weight(1f))
-					KitchenDisplayOrderButtons(scope, order, orderItems, onDone, onDismiss)
+					KitchenDisplayOrderButtons(scope, order, orderItems, onDismiss)
 				}
 			}
 		}
