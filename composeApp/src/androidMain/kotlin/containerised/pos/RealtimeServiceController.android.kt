@@ -1,7 +1,7 @@
+package containerised.pos
+
 import android.content.Intent
 import androidx.core.content.ContextCompat
-import containerised.pos.AppContextHolder
-import containerised.pos.OrderRealtimeService
 
 actual object RealtimeServiceController {
 

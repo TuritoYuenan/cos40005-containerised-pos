@@ -1,3 +1,5 @@
+package containerised.pos
+
 actual object RealtimeServiceController {
     actual fun start() {
     }
