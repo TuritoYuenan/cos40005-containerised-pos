@@ -33,7 +33,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 	val navController = rememberNavController()
 
 //	Must change "order" to "login" when auth is implemented
-	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.KitchenDisplay
+	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.Inventory
 
 	MaterialTheme {
 //		Staff-facing application, available on mobile and desktop
@@ -90,7 +90,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 			}
 
 			Scaffold(
-				topBar = { StaffTopBar(currentRoute) },
+				topBar = { StaffTopBar(navController, currentRoute) },
 				bottomBar = { StaffNavigationBar(navController, startDestination) }
 			) { paddingValues ->
 				NavHost(
@@ -104,7 +104,15 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 					composable<StaffRoutes.EditTag> { EditTagPage(navController) }
 					composable<StaffRoutes.EditPromotion> { EditPromotionPage(navController) }
 					composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage(navController) }
-					composable<StaffRoutes.Inventory> { InventoryPage() }
+					composable<StaffRoutes.Inventory> { InventoryPage(navController) }
+					composable<StaffRoutes.IngredientDetail> { backStackEntry ->
+						val args = backStackEntry.toRoute<StaffRoutes.IngredientDetail>()
+						EditIngredientPage(navController, args)
+					}
+					composable<StaffRoutes.StockHistory> { backStackEntry ->
+						val args = backStackEntry.toRoute<StaffRoutes.StockHistory>()
+						StockHistoryPage(args)
+					}
 				}
 			}
 		}
