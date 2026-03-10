@@ -1,4 +1,4 @@
-import containerised.pos.OrderRealtimeManager
+package containerised.pos
 
 actual object RealtimeServiceController {
 
