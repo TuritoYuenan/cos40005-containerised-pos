@@ -7,7 +7,7 @@ kamelImageDefault = "1.0.9"
 kotlin = "2.3.10"
 koin = "4.1.1"
 material3 = "1.9.0"
-buildkonfig = "0.17.1"
+buildConfig = "6.0.9"
 qrose = "1.1.2"
 sqlDelight = "2.2.1"
 android-compileSdk = "36"
@@ -92,5 +92,5 @@ kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 # SQLDelight
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
 
-# BuildKonfig
-buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
+# BuildConfig
+buildConfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildConfig" }
