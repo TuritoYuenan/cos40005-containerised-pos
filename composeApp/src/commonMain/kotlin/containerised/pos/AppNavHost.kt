@@ -16,9 +16,15 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
+import containerised.pos.models.Order
+import containerised.pos.models.OrderStatus
 import containerised.pos.routes.CustomerRoutes
 import containerised.pos.routes.StaffRoutes
 import containerised.pos.views.*
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.decodeOldRecord
+import io.github.jan.supabase.realtime.decodeRecord
+import kotlin.collections.plus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
@@ -33,6 +39,55 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 //		Staff-facing application, available on mobile and desktop
 		if (!isWeb) {
 			val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
+			LaunchedEffect(Unit) {
+				OrderRealtimeManager.events.collect { action ->
+					when (action) {
+						is PostgresAction.Insert -> {
+							val newOrder = action.decodeRecord<Order>()
+							println("Insert data: $newOrder")
+							NotificationService.showNotification(
+								title = "New Order",
+								message = "Order #${newOrder.orderNumber} received"
+							)
+						}
+
+						is PostgresAction.Update -> {
+							val updated = action.decodeRecord<Order>()
+							val old = action.decodeOldRecord<Order>()
+							if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
+								println("deleted data: $old")
+								NotificationService.showNotification(
+									title = "Order Updated",
+									message = "Order #${old.orderNumber} is done"
+								)
+							}
+							else if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.CANCELED) {
+								println("deleted data: $old")
+								NotificationService.showNotification(
+									title = "Order Updated",
+									message = "Order #${old.orderNumber} is canceled"
+								)
+							}
+							else if ((old.status == OrderStatus.FINISHED || old.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
+								println("Insert data: $updated")
+							}
+							else{
+								println("old data: $old")
+								println("Updated data: $updated")
+							}
+						}
+
+						is PostgresAction.Delete -> {
+							val old = action.decodeOldRecord<Order>()
+							println("Deleted → id=${old.orderId}")
+						}
+						is PostgresAction.Select -> {
+
+						}
+					}
+				}
+			}
 
 			Scaffold(
 				topBar = { StaffTopBar(currentRoute) },

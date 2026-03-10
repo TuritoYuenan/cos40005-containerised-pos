@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
-import containerised.pos.NotificationService
 import containerised.pos.OrderRealtimeManager
 import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
@@ -55,15 +54,10 @@ fun KitchenDisplayPage(navController: NavController) {
 		RealtimeServiceController.start()
 		OrderRealtimeManager.events.collect { action ->
 			when (action) {
-
 				is PostgresAction.Insert -> {
 					val newOrder = action.decodeRecord<Order>()
-					println("Insert data: $newOrder")
+//					println("Insert data: $newOrder")
 					orders = orders + newOrder
-					NotificationService.showNotification(
-						title = "New Order",
-						message = "Order #${newOrder.orderNumber} received"
-					)
 				}
 
 				is PostgresAction.Update -> {
@@ -71,27 +65,19 @@ fun KitchenDisplayPage(navController: NavController) {
 					val old = action.decodeOldRecord<Order>()
 					if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
 						orders = orders.filterNot { it.orderId == old.orderId}
-						println("deleted data: $old")
-						NotificationService.showNotification(
-							title = "Order Updated",
-							message = "Order #${old.orderNumber} is done"
-						)
+//						println("deleted data: $old")
 					}
 					else if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.CANCELED) {
 						orders = orders.filterNot { it.orderId == old.orderId}
-						println("deleted data: $old")
-						NotificationService.showNotification(
-							title = "Order Updated",
-							message = "Order #${old.orderNumber} is canceled"
-						)
+//						println("deleted data: $old")
 					}
 					else if ((old.status == OrderStatus.FINISHED || old.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
 						orders = orders + updated
-						println("Insert data: $updated")
+//						println("Insert data: $updated")
 					}
 					else{
-						println("old data: $old")
-						println("Updated data: $updated")
+//						println("old data: $old")
+//						println("Updated data: $updated")
 						orders = orders.map {
 							if (it.orderId == updated.orderId) updated else it
 						}
@@ -100,7 +86,7 @@ fun KitchenDisplayPage(navController: NavController) {
 
 				is PostgresAction.Delete -> {
 					val old = action.decodeOldRecord<Order>()
-					println("Deleted → id=${old.orderId}")
+//					println("Deleted → id=${old.orderId}")
 					orders = orders.filterNot { it.orderId == old.orderId }
 				}
 				is PostgresAction.Select -> {
@@ -114,7 +100,7 @@ fun KitchenDisplayPage(navController: NavController) {
 		items(items = orders, key = { it.orderId }) { order ->
 			KitchenDisplayOrderItem(
 				order,
-				onClickOrder = { selectedOrder = order; println(order) },
+				onClickOrder = { selectedOrder = order; },
 				onClickOrderItem = { selectedOrderItem -> selectedOrderItems = selectedOrderItem })
 		}
 	}
@@ -145,9 +131,9 @@ fun KitchenDisplayOrderItem(
 			orderItems = OrderItem.fetchAndJoinOrderItemByOrder(order.orderId)
 			println("Fetched ${orderItems.size} order items:")
 			orderItems.forEach { item ->
-				println(
-					"• ${item.itemId}: ${item.quantity} (${item.subtotal})"
-				)
+//				println(
+//					"• ${item.itemId}: ${item.quantity} (${item.subtotal})"
+//				)
 			}
 			itemMap = orderItems.groupBy { it.branchItem.category.categoryName }
 			println(itemMap)
