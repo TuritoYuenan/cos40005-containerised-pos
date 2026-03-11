@@ -17,14 +17,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.CartEntry
-import containerised.pos.CartService
-import containerised.pos.components.BackButton
+import containerised.pos.components.CheckoutTopBar
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
 import containerised.pos.models.OrderInsert
 import containerised.pos.models.OrderStatus
 import containerised.pos.routes.CustomerRoutes
+import containerised.pos.services.CartService
+import containerised.pos.services.CartService.getFinalAmount
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -32,7 +32,7 @@ import kotlin.time.Clock
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Checkout) {
-	var checkoutItems by remember { mutableStateOf<List<CartEntry>>(emptyList()) }
+	var checkoutItems by remember { mutableStateOf<List<CartService.Entry>>(emptyList()) }
 	val scope = rememberCoroutineScope()
 
 	// Hardcoded tax amount - assume it is gathered from settings stored in database
@@ -46,6 +46,7 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 	suspend fun placeOrder(isPayingAtCounter: Boolean) {
 		if (checkoutItems.isEmpty()) {
 			// TODO: Show a message if the cart is empty
+			println("Cart is empty, cannot place order")
 			return
 		}
 
@@ -60,7 +61,7 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 			status = OrderStatus.PREPARING,
 			branchId = args.branchID,
 			taxAmount = taxAmount,
-			finalAmount = checkoutItems.calculateFinalAmount(taxAmount)
+			finalAmount = checkoutItems.getFinalAmount(taxAmount)
 		)
 
 		val orderItems = checkoutItems.map { entry -> entry.toOrderItem(generatedOrderId) }
@@ -87,7 +88,7 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 	}
 
 	Scaffold(
-		topBar = { TopBar(navController) },
+		topBar = { CheckoutTopBar(navController) },
 		contentWindowInsets = WindowInsets(16.dp)
 	) { paddingValues ->
 		Column(
@@ -101,17 +102,10 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 	}
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TopBar(navController: NavController?) = CenterAlignedTopAppBar(
-	{ Text("My Cart") },
-	navigationIcon = { BackButton { navController?.popBackStack() } },
-)
-
 @Composable
 private fun CartView(
 	args: CustomerRoutes.Checkout,
-	checkoutItems: List<CartEntry>,
+	checkoutItems: List<CartService.Entry>,
 	onRefresh: () -> Unit
 ) {
 	OutlinedCard(Modifier.fillMaxWidth()) {
@@ -333,16 +327,6 @@ private fun PaymentButton(label: String, amount: String, icon: ImageVector, onCl
 	}
 }
 
-// TODO: Move this logic to CartService
-private fun List<CartEntry>.calculateFinalAmount(taxAmount: Double): Int {
-	val subtotal = this.sumOf { entry -> entry.count * entry.branchItem.price }
-	return (subtotal * (1 + taxAmount)).toInt()
-}
-
-@Preview
-@Composable
-private fun TopBarPreview() = TopBar(null)
-
 @Preview(showBackground = true)
 @Composable
 private fun PagePreview() = Column(
@@ -352,8 +336,8 @@ private fun PagePreview() = Column(
 	CartView(
 		CustomerRoutes.Checkout("1", "5"),
 		listOf(
-			CartEntry(BranchItem.MOCK, 2),
-			CartEntry(BranchItem.MOCK.copy(itemId = "2", itemName = "Bun Cha"), 1)
+			CartService.Entry(BranchItem.MOCK, 2),
+			CartService.Entry(BranchItem.MOCK.copy(itemId = "2", itemName = "Bun Cha"), 1)
 		)
 	) {}
 

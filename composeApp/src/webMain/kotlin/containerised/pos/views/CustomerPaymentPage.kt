@@ -10,9 +10,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import containerised.pos.components.BackButton
 import containerised.pos.components.LoadingView
+import containerised.pos.components.PaymentTopBar
 import containerised.pos.models.Bank
 import containerised.pos.models.Currency
 import containerised.pos.models.Order
@@ -34,7 +33,7 @@ fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payme
 	}
 
 	Scaffold(
-		topBar = { CustomerPaymentTopBar(navController) },
+		topBar = { PaymentTopBar { navController.popBackStack(CustomerRoutes.Order, true) } },
 		contentWindowInsets = WindowInsets(16.dp)
 	) { paddingValues ->
 		Column(
@@ -60,13 +59,6 @@ fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payme
 		}
 	}
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CustomerPaymentTopBar(navController: NavController) = CenterAlignedTopAppBar(
-	title = { Text("Payment") },
-	navigationIcon = { BackButton(Modifier) { navController.popBackStack() } }
-)
 
 @Composable
 private fun PayAtCounter(order: Order?) {
@@ -131,10 +123,6 @@ private fun SelfCheckout(order: Order?) {
 		}
 	}
 }
-
-@Preview
-@Composable
-private fun TopBarPreview() = CustomerPaymentTopBar(rememberNavController())
 
 @Preview(showBackground = true)
 @Composable
