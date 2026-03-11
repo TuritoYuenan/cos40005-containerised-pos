@@ -21,6 +21,22 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @Composable
+fun CartStatusBar(
+	itemCount: Int,
+	totalPrice: Int,
+	onViewCart: () -> Unit = {},
+) = BottomAppBar(
+	actions = {
+		Text(
+			"$itemCount items\nTotal: $totalPrice VND",
+			Modifier.padding(8.dp, 0.dp),
+			style = MaterialTheme.typography.titleMedium
+		)
+	},
+	floatingActionButton = { CartFAB { onViewCart() } }
+)
+
+@Composable
 fun OrderSearchBar(
 	textFieldState: TextFieldState,
 	modifier: Modifier = Modifier,
@@ -82,6 +98,10 @@ fun PaymentTopBar(onBackToHome: () -> Unit) = CenterAlignedTopAppBar(
 	{ Text("Payment") },
 	navigationIcon = { HomeButton { onBackToHome() } }
 )
+
+@Preview(apiLevel = 35)
+@Composable
+private fun CartStatusBarPreview() = CartStatusBar(3, 15000)
 
 @Preview(apiLevel = 35)
 @Composable

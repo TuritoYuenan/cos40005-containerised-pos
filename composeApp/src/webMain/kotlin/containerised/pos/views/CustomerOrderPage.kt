@@ -3,24 +3,23 @@ package containerised.pos.views
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.components.LoadingView
-import containerised.pos.components.OrderSearchBar
-import containerised.pos.components.CartFAB
-import containerised.pos.components.ImageSlider
-import containerised.pos.components.MenuTags
-import containerised.pos.components.TallItemCard
-import containerised.pos.components.WideItemCard
+import containerised.pos.components.*
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Tag
 import containerised.pos.routes.CustomerRoutes
@@ -56,6 +55,11 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 		refreshCart()
 	}
 
+	fun List<CartService.Entry>.cartInfo(): Pair<Int, Int> = Pair(
+		this.sumOf { it.count },
+		this.sumOf { it.count * it.branchItem.price }
+	)
+
 	// Fetch data on startup
 	LaunchedEffect(Unit) {
 		scope.launch {
@@ -85,7 +89,12 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 				exit = slideOutVertically(targetOffsetY = { it }),
 				label = "Cart Bottom Bar"
 			) {
-				CartStatusBar(navController, args, cartItems)
+				val (itemCount, totalPrice) = cartItems.cartInfo()
+				CartStatusBar(itemCount, totalPrice) {
+					navController?.navigate(
+						CustomerRoutes.Checkout(args.branchID, args.tableNumber)
+					)
+				}
 			}
 		}
 	) { paddingValues ->
@@ -111,7 +120,11 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 				ImageSlider(allItems, Modifier.padding(8.dp, 0.dp))
 
 				// Featured Section
-				Text("Featured", Modifier.padding(defaultPadding), style = MaterialTheme.typography.headlineMedium)
+				Text(
+					"Featured",
+					Modifier.padding(defaultPadding),
+					style = MaterialTheme.typography.headlineMedium
+				)
 
 				LazyRow(
 					Modifier.padding(8.dp, 0.dp),
@@ -130,10 +143,11 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 					Modifier.padding(defaultPadding),
 					style = MaterialTheme.typography.headlineMedium
 				)
+
 				MenuTags(tags)
 			}
 
-			// Search results items
+			// Display all items for browsing, manipulated by tags
 			items(allItems.size) { index ->
 				WideItemCard(allItems[index], Modifier.padding(8.dp, 0.dp)) {
 					allItems[index].addToCart()
@@ -142,37 +156,3 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 		}
 	}
 }
-
-@Composable
-private fun CartStatusBar(
-	navController: NavController?,
-	args: CustomerRoutes.Order,
-	cartItems: List<CartService.Entry>,
-) {
-	val total = cartItems.sumOf { entry -> entry.count * entry.branchItem.price.toDouble() }
-	val status = "${cartItems.size} items\nTotal: $total VND"
-
-	BottomAppBar(
-		actions = {
-			Text(
-				status,
-				Modifier.padding(8.dp, 0.dp),
-				style = MaterialTheme.typography.titleMedium
-			)
-		},
-		floatingActionButton = {
-			CartFAB {
-				navController?.navigate(CustomerRoutes.Checkout(args.branchID, args.tableNumber))
-			}
-		}
-	)
-}
-
-@Preview(apiLevel = 35)
-@Composable
-private fun CartStatusBarPreview() = CartStatusBar(
-	null, CustomerRoutes.Order("branchID", "tableNumber"), listOf(
-		CartService.Entry(BranchItem.MOCK, 2),
-		CartService.Entry(BranchItem.MOCK.copy(itemName = "Another Item"), 1)
-	)
-)

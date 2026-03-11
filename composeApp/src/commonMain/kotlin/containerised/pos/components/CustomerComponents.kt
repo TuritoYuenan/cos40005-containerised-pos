@@ -1,5 +1,6 @@
 package containerised.pos.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -12,11 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import containerised.pos.models.BranchItem
-import containerised.pos.models.Tag
+import containerised.pos.models.*
+import io.github.alexzhirkevich.qrose.rememberQrCodePainter
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 
@@ -147,6 +149,68 @@ fun TallItemCard(item: BranchItem, onAddToCart: () -> Unit = {}) {
 }
 
 @Composable
+fun PayAtCounterView(order: Order?) = Card(
+	Modifier.fillMaxWidth(),
+	elevation = CardDefaults.cardElevation(4.dp)
+) {
+	Column(
+		Modifier.padding(24.dp),
+		Arrangement.spacedBy(16.dp),
+		Alignment.CenterHorizontally,
+	) {
+		Text(
+			"Order Received",
+			color = MaterialTheme.colorScheme.primary,
+			style = MaterialTheme.typography.headlineMedium,
+			fontWeight = FontWeight.Bold,
+		)
+		Text(
+			"Your order ${order?.orderId ?: "..."} has been received. Please proceed to the counter to complete your payment.",
+			Modifier.padding(horizontal = 16.dp),
+			style = MaterialTheme.typography.bodyLarge,
+		)
+	}
+}
+
+@Composable
+fun SelfCheckoutView(order: Order?) {
+	val amount = order?.finalAmount ?: 0
+	val currency = Currency.VND
+
+	val paymentCode = if (order == null || amount <= 0) "" else PaymentCodeBuilder()
+		.set(PaymentCodeBuilder.PIMethod.DYNAMIC)
+		.set(PaymentCodeBuilder.ServiceCode.TRANSFER_TO_ACCOUNT)
+		.setAccount(Bank.HDBank, "002704070021976")
+		.setCountryCode()
+		.setTransaction(amount, currency)
+		.setPurpose("Payment for order ${order.orderId}")
+		.build()
+
+	val paymentQRCode = rememberQrCodePainter(paymentCode)
+
+	Card(
+		Modifier.fillMaxWidth(),
+		elevation = CardDefaults.cardElevation(4.dp)
+	) {
+		Column(
+			Modifier.fillMaxWidth().padding(16.dp),
+			Arrangement.spacedBy(8.dp),
+			Alignment.CenterHorizontally,
+		) {
+			Text("Self-checkout", style = MaterialTheme.typography.titleMedium)
+			Text(
+				"$amount $currency",
+				color = MaterialTheme.colorScheme.primary,
+				style = MaterialTheme.typography.displaySmall,
+				fontWeight = FontWeight.Bold,
+			)
+			Text("We accept VietQR bank transfer", style = MaterialTheme.typography.titleMedium)
+			Image(paymentQRCode, "Payment QR Code")
+		}
+	}
+}
+
+@Composable
 private fun ItemMetadata(item: BranchItem) = Column(Modifier.padding(8.dp)) {
 	Text(
 		item.itemName,
@@ -189,4 +253,24 @@ private fun OrderPagePreview() = Column(
 
 	WideItemCard(BranchItem.MOCK)
 	WideItemCard(BranchItem.MOCK)
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PayAtCounterPreview() = Column(
+	Modifier.padding(16.dp).fillMaxWidth(),
+	Arrangement.spacedBy(24.dp),
+	Alignment.CenterHorizontally,
+) {
+	PayAtCounterView(Order.MOCK)
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SelfCheckoutPreview() = Column(
+	Modifier.padding(16.dp).fillMaxWidth(),
+	Arrangement.spacedBy(24.dp),
+	Alignment.CenterHorizontally,
+) {
+	SelfCheckoutView(Order.MOCK)
 }
