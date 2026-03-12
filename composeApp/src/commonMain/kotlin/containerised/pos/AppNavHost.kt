@@ -33,7 +33,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 	val navController = rememberNavController()
 
 //	Must change "order" to "login" when auth is implemented
-	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.Inventory
+	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.Login
 
 	MaterialTheme {
 //		Staff-facing application, available on mobile and desktop

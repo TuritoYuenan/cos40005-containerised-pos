@@ -21,10 +21,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import containerised.pos.database.SupabaseClient.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 @Preview
 fun LoginPage() {
+	val scope = rememberCoroutineScope()
 	val padding = 16.dp
 	val emailAddress = rememberTextFieldState("")
 	var password by remember { mutableStateOf("") }
@@ -74,7 +79,11 @@ fun LoginPage() {
 			verticalAlignment = Alignment.CenterVertically,
 			horizontalArrangement = Arrangement.spacedBy(8.dp)
 		) {
-			Button(onClick = { /* Handle login action */ }) {
+			Button(onClick = {
+				scope.launch{
+					login(emailAddress.toString(), password)
+				}
+			}) {
 				Icon(imageVector = Icons.Filled.AccountCircle, "Login Icon")
 				Text("Login")
 			}
@@ -83,5 +92,18 @@ fun LoginPage() {
 				Text("Forget your password?")
 			}
 		}
+	}
+}
+suspend fun login(email: String, password: String) {
+	try {
+		auth.signInWith(Email) {
+			this.email = email
+			this.password = password
+		}
+
+		println("Login successful")
+
+	} catch (e: Exception) {
+		println("Login failed: ${e.message}")
 	}
 }

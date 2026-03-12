@@ -2,6 +2,7 @@ package containerised.pos.database
 
 import containerised.pos.BuildKonfig
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
@@ -24,6 +25,7 @@ object SupabaseClient {
 	val db = supabase.postgrest
 	val storage = supabase.storage
 	val realtime = supabase.realtime
+	val auth = supabase.auth
 
 	suspend fun uploadImage(path: String, imageBytes: ByteArray) {
 		storage.from("images").upload(path, imageBytes)
