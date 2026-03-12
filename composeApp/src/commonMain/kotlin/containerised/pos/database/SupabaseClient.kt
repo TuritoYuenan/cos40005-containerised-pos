@@ -1,6 +1,6 @@
 package containerised.pos.database
 
-import containerised.pos.BuildKonfig
+import containerised.pos.BuildConfig
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -11,8 +11,8 @@ import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
 
 object SupabaseClient {
-	private val SUPABASE_URL = BuildKonfig.SUPABASE_URL
-	private val SUPABASE_KEY = BuildKonfig.SUPABASE_KEY
+	private const val SUPABASE_URL = BuildConfig.SUPABASE_URL
+	private const val SUPABASE_KEY = BuildConfig.SUPABASE_KEY
 
 	private val supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_KEY) {
 		install(Auth)
