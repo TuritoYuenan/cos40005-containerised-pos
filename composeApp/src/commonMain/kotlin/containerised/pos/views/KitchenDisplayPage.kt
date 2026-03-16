@@ -1,6 +1,5 @@
 package containerised.pos.views
 
-import containerised.pos.RealtimeServiceController
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,8 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.navigation.NavController
-import containerised.pos.OrderRealtimeManager
+import containerised.pos.RealtimeManager
+import containerised.pos.RealtimeServiceController
 import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
@@ -33,8 +32,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KitchenDisplayPage(navController: NavController) {
-	rememberCoroutineScope()
+fun KitchenDisplayPage() {
 	var orders by remember { mutableStateOf<List<Order>>(emptyList()) }
 	var selectedOrder by remember { mutableStateOf<Order?>(null) }
 	var selectedOrderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
@@ -49,10 +47,12 @@ fun KitchenDisplayPage(navController: NavController) {
 			println("Error: $error")
 		}
 	}
+
 	LaunchedEffect(Unit) {
 		println("Creating channel")
 		RealtimeServiceController.start()
-		OrderRealtimeManager.events.collect { action ->
+		RealtimeManager.forOrders.start()
+		RealtimeManager.forOrders.events.collect { action ->
 			when (action) {
 				is PostgresAction.Insert -> {
 					val newOrder = action.decodeRecord<Order>()

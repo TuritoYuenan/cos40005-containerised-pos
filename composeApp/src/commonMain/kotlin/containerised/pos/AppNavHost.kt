@@ -39,7 +39,9 @@ fun AppNavHost() {
 			.value?.destination?.route.orEmpty()
 
 		LaunchedEffect(Unit) {
-			OrderRealtimeManager.events.collect { action ->
+			RealtimeServiceController.start()
+			RealtimeManager.forOrders.start()
+			RealtimeManager.forOrders.events.collect { action ->
 				when (action) {
 					is PostgresAction.Insert -> {
 						val newOrder = action.decodeRecord<Order>()
@@ -95,7 +97,7 @@ fun AppNavHost() {
 				composable<StaffRoutes.EditItem> { EditItemPage(navController) }
 				composable<StaffRoutes.EditTag> { EditTagPage(navController) }
 				composable<StaffRoutes.EditPromotion> { EditPromotionPage(navController) }
-				composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage(navController) }
+				composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage() }
 				composable<StaffRoutes.Inventory> { InventoryPage(navController) }
 				composable<StaffRoutes.IngredientDetail> { backStackEntry ->
 					val args = backStackEntry.toRoute<StaffRoutes.IngredientDetail>()

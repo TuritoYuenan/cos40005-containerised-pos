@@ -7,11 +7,11 @@ actual object RealtimeServiceController {
 		if (started) return
 		started = true
 
-		OrderRealtimeManager.start()
+		RealtimeManager.forOrders.start()
 	}
 
 	actual fun stop() {
-		OrderRealtimeManager.stop()
+		RealtimeManager.forOrders.stop()
 		started = false
 	}
 }

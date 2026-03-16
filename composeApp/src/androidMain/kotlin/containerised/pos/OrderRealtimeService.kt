@@ -16,11 +16,11 @@ class OrderRealtimeService : Service() {
 			)
 		)
 
-		OrderRealtimeManager.start()
+		RealtimeManager.forOrders.start()
 	}
 
 	override fun onDestroy() {
-		OrderRealtimeManager.stop()
+		RealtimeManager.forOrders.stop()
 		super.onDestroy()
 	}
 
