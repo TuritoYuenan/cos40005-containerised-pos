@@ -23,7 +23,6 @@ import containerised.pos.RealtimeServiceController
 import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
-import containerised.pos.models.OrderStatus
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
@@ -54,44 +53,10 @@ fun KitchenDisplayPage() {
 		RealtimeManager.forOrders.start()
 		RealtimeManager.forOrders.events.collect { action ->
 			when (action) {
-				is PostgresAction.Insert -> {
-					val newOrder = action.decodeRecord<Order>()
-//					println("Insert data: $newOrder")
-					orders = orders + newOrder
-				}
-
-				is PostgresAction.Update -> {
-					val updated = action.decodeRecord<Order>()
-					val old = action.decodeOldRecord<Order>()
-					if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
-						orders = orders.filterNot { it.orderId == old.orderId}
-//						println("deleted data: $old")
-					}
-					else if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.CANCELED) {
-						orders = orders.filterNot { it.orderId == old.orderId}
-//						println("deleted data: $old")
-					}
-					else if ((old.status == OrderStatus.FINISHED || old.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
-						orders = orders + updated
-//						println("Insert data: $updated")
-					}
-					else{
-//						println("old data: $old")
-//						println("Updated data: $updated")
-						orders = orders.map {
-							if (it.orderId == updated.orderId) updated else it
-						}
-					}
-				}
-
-				is PostgresAction.Delete -> {
-					val old = action.decodeOldRecord<Order>()
-//					println("Deleted → id=${old.orderId}")
-					orders = orders.filterNot { it.orderId == old.orderId }
-				}
-				is PostgresAction.Select -> {
-
-				}
+				is PostgresAction.Insert -> orders = orders.onChange(action)
+				is PostgresAction.Update -> orders = orders.onChange(action)
+				is PostgresAction.Delete -> orders = orders.onChange(action)
+				is PostgresAction.Select -> {}
 			}
 		}
 	}
@@ -379,5 +344,28 @@ fun ExpandedOrderOverlay(
 				}
 			}
 		}
+	}
+}
+
+private fun List<Order>.onChange(action: PostgresAction.Insert): List<Order> {
+	return this + action.decodeRecord<Order>()
+}
+
+private fun List<Order>.onChange(action: PostgresAction.Delete): List<Order> {
+	return this.filterNot { it.orderId == action.decodeOldRecord<Order>().orderId }
+}
+
+private fun List<Order>.onChange(action: PostgresAction.Update): List<Order> {
+	val new = action.decodeRecord<Order>()
+	val old = action.decodeOldRecord<Order>()
+	val (isPtoF, isPtoC, isFCtoP) = new.inferStatusChange(old)
+
+	return when {
+		// If the update is about status, add/remove the order accordingly
+		isFCtoP -> this + new
+		isPtoF || isPtoC -> this.filterNot { it.orderId == old.orderId }
+
+		// If the update is about something else, update the order in place
+		else -> this.map { if (it.orderId == new.orderId) new else it }
 	}
 }
