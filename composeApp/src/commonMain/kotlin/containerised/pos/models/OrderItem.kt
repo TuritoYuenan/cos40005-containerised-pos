@@ -71,7 +71,7 @@ data class OrderItem(
 		suspend fun fetchAndJoinOrderItemByOrder(orderId: String): List<OrderItem> {
 			val result = SupabaseClient.db["order_items"]
 				.select(
-					columns = Columns.raw(
+					Columns.raw(
 						"""
 					order_id,
 					item_id,

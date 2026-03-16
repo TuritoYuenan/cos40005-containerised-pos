@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.IBinder
 
 class OrderRealtimeService : Service() {
-
 	override fun onCreate() {
 		super.onCreate()
 

@@ -1,7 +1,6 @@
 package containerised.pos
 
 actual object RealtimeServiceController {
-
 	private var started = false
 
 	actual fun start() {

@@ -36,8 +36,7 @@ fun AppNavHost() {
 //		Staff-facing application, available on mobile and desktop
 		val currentRoute = navController
 			.currentBackStackEntryAsState()
-			.value?.destination?.route
-			.orEmpty()
+			.value?.destination?.route.orEmpty()
 
 		LaunchedEffect(Unit) {
 			OrderRealtimeManager.events.collect { action ->
