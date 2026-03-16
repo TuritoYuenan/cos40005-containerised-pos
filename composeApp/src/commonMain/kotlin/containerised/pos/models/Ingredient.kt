@@ -34,6 +34,12 @@ data class Ingredient(
 	@SerialName("is_active")
 	val isActive: Boolean? = null
 ) {
+	fun isLowStock(): Boolean {
+		val current = currentStock ?: return false
+		val min = minStockLevel ?: return false
+		return current < min
+	}
+
 	suspend fun update() {
 		if (id == null) throw IllegalStateException("Ingredient ID is required for update")
 		SupabaseClient.db["ingredients"]

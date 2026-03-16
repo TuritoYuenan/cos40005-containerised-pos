@@ -114,5 +114,42 @@ data class OrderItem(
 				.decodeList<OrderItem>()
 			return result
 		}
+
+		val MOCKS = listOf(
+			OrderItem(
+				orderId = "order1",
+				itemId = "item1",
+				branchItem = BranchItemWithCatAndIng(
+					branchId = "branch1",
+					itemId = "item1",
+					categoryId = "cat1",
+					category = Category("cat1", "Beverages"),
+					itemIngredients = listOf(
+						ItemIngredientWithIngredient(
+							ingredientId = "ing1",
+							ingredient = Ingredient.MOCK,
+							itemId = "item1",
+							quantity = 0.5,
+							unit = "liters"
+						),
+						ItemIngredientWithIngredient(
+							ingredientId = "ing2",
+							ingredient = Ingredient.MOCK,
+							itemId = "item1",
+							quantity = 20.0,
+							unit = "grams"
+						)
+					),
+					itemName = "Americano",
+					itemDes = "Espresso with hot water",
+					price = 300,
+					estimatedPrep = "5 minutes"
+				),
+				quantity = 2,
+				subtotal = 600,
+				specialNotes = "Less water, please.",
+				itemStatus = OrderStatus.PREPARING
+			)
+		)
 	}
 }

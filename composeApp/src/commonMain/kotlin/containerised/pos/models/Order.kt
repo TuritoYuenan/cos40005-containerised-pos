@@ -88,6 +88,23 @@ data class Order(
 	@SerialName("created_at")
 	val createdAt: String? = null
 ) {
+	/**
+	 * Infers the status change of an order update action, returning a Triple of three booleans:
+	 * 1. Whether the order changed from Preparing to Finished
+	 * 2. Whether the order changed from Preparing to Canceled
+	 * 3. Whether the order changed from Finished or Canceled back to Preparing
+	 */
+	fun inferStatusChange(old: Order): Triple<Boolean, Boolean, Boolean> {
+		val (canceled, preparing, finished) =
+			Triple(OrderStatus.CANCELED, OrderStatus.PREPARING, OrderStatus.FINISHED)
+
+		val isPtoF = old.status == preparing && this.status == finished
+		val isPtoC = old.status == preparing && this.status == canceled
+		val isFCtoP = (old.status == finished || old.status == canceled) && this.status == preparing
+
+		return Triple(isPtoF, isPtoC, isFCtoP)
+	}
+
 	companion object {
 		suspend fun fetchAll(): List<Order> {
 			return SupabaseClient.db["orders"].select().decodeList<Order>()
