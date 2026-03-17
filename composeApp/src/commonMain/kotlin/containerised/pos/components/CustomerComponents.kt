@@ -177,9 +177,9 @@ fun SelfCheckoutView(order: Order?) {
 	val amount = order?.finalAmount ?: 0
 	val currency = Currency.VND
 
-	val paymentCode = if (order == null || amount <= 0) "" else PaymentCodeBuilder()
-		.set(PaymentCodeBuilder.PIMethod.DYNAMIC)
-		.set(PaymentCodeBuilder.ServiceCode.TRANSFER_TO_ACCOUNT)
+	val paymentCode = if (order == null || amount <= 0) "" else PaymentCode.Builder()
+		.set(PaymentCode.PIMethod.DYNAMIC)
+		.set(PaymentCode.ServiceCode.TRANSFER_TO_ACCOUNT)
 		.setAccount(Bank.HDBank, "002704070021976")
 		.setCountryCode()
 		.setTransaction(amount, currency)
