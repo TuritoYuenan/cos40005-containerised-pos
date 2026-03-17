@@ -117,7 +117,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 				)
 
 				// Image Slider
-				ImageSlider(allItems, Modifier.padding(8.dp, 0.dp))
+				allItems.ImageSlider(Modifier.padding(8.dp, 0.dp))
 
 				// Featured Section
 				Text(
@@ -131,7 +131,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 					horizontalArrangement = Arrangement.spacedBy(defaultPadding),
 				) {
 					items(featuredItems.size) { index ->
-						TallItemCard(featuredItems[index]) {
+						featuredItems[index].TallCard {
 							featuredItems[index].addToCart()
 						}
 					}
@@ -144,12 +144,12 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 					style = MaterialTheme.typography.headlineMedium
 				)
 
-				MenuTags(tags)
+				tags.Row()
 			}
 
 			// Display all items for browsing, manipulated by tags
 			items(allItems.size) { index ->
-				WideItemCard(allItems[index], Modifier.padding(8.dp, 0.dp)) {
+				allItems[index].WideCard(Modifier.padding(8.dp, 0.dp)) {
 					allItems[index].addToCart()
 				}
 			}

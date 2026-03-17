@@ -53,66 +53,36 @@ data class OrderItem(
 	val itemStatus: OrderStatus? = null
 ) {
 	companion object {
-		suspend fun fetchOrderItem(): List<OrderItem> {
-			return SupabaseClient.db["order_items"].select().decodeList<OrderItem>()
-		}
-
-		suspend fun fetchOrderItemByOrder(orderId: String): List<OrderItem> {
-			val result = SupabaseClient.db["order_items"]
-				.select {
-					filter {
-						eq("order_id", orderId)
-					}
-				}
-				.decodeList<OrderItem>()
-			return result
-		}
-
-		suspend fun fetchAndJoinOrderItemByOrder(orderId: String): List<OrderItem> {
-			val result = SupabaseClient.db["order_items"]
-				.select(
-					Columns.raw(
-						"""
-					order_id,
+		suspend fun fetchByOrderWithJoins(orderId: String): List<OrderItem> {
+			val query = """
+				order_id,
+				item_id,
+				branchItem:branch_items (
 					item_id,
-					branchItem:branch_items (
-						branch_id,
+					branch_id,
+					category_id,
+					category:categories (category_id, category_name),
+					itemIngredients:item_ingredients(
+						ingredient_id,
+						ingredient: ingredients(ingredient_id, ingredient_name, unit, current_stock),
 						item_id,
-						category_id,
-						category:categories (
-							category_id,
-							category_name
-						),
-						itemIngredients:item_ingredients(
-							ingredient_id,
-							ingredient: ingredients(
-								ingredient_id,
-								ingredient_name,
-								unit,
-								current_stock
-							),
-							item_id,
-							quantity,
-							unit
-						),
-						item_name,
-						item_desc,
-						price,
-						estimated_prep
+						quantity,
+						unit
 					),
-					quantity,
-					subtotal,
-					special_notes,
-					item_status
-				""".trimIndent()
-					)
-				) {
-					filter {
-						eq("order_id", orderId)
-					}
-				}
+					item_name,
+					item_desc,
+					price,
+					estimated_prep
+				),
+				quantity,
+				subtotal,
+				special_notes,
+				item_status
+			""".trimIndent()
+
+			return SupabaseClient.db["order_items"]
+				.select(Columns.raw(query)) { filter { eq("order_id", orderId) } }
 				.decodeList<OrderItem>()
-			return result
 		}
 
 		val MOCKS = listOf(

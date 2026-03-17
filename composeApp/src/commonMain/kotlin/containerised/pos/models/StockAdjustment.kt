@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class StockAdjustment(
-	@SerialName("id")
+	@SerialName("record_id")
 	val id: String,
 
 	@SerialName("ingredient_id")
@@ -33,8 +33,8 @@ data class StockAdjustment(
 	@SerialName("notes")
 	val notes: String? = null,
 
-	@SerialName("createdAt")
-	val createdAt: String,
+	@SerialName("timestamp")
+	val timestamp: String,
 ) {
 	enum class Type { DIRECT, INCREMENT, DECREMENT }
 
@@ -61,7 +61,7 @@ data class StockAdjustment(
 			quantityBefore = 10.0,
 			quantityAfter = 15.0,
 			notes = "Added 5 units",
-			createdAt = "2024-01-01T12:00:00Z"
+			timestamp = "2024-01-01T12:00:00Z"
 		)
 	}
 }

@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import containerised.pos.NotificationService
 import containerised.pos.RealtimeManager
 import containerised.pos.RealtimeServiceController
+import containerised.pos.components.ErrorView
 import containerised.pos.components.LoadingView
 import containerised.pos.models.Ingredient
 import containerised.pos.routes.StaffRoutes
@@ -86,13 +87,10 @@ fun InventoryPage(navController: NavController) {
 
 		if (isLoading) return LoadingView(Modifier.fillMaxSize())
 
-		if (error != null) return Column(
-			Modifier.fillMaxSize().padding(defaultPadding),
-			Arrangement.Center,
-			Alignment.CenterHorizontally
-		) {
-			Text("Failed to load inventory items\n$error", color = MaterialTheme.colorScheme.error)
-		}
+		if (error != null) return ErrorView(
+			error ?: "Unknown error",
+			Modifier.fillMaxSize()
+		)
 
 		// Ingredients list
 		LazyColumn(

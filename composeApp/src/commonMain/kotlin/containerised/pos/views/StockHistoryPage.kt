@@ -2,6 +2,7 @@ package containerised.pos.views
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,7 +43,7 @@ fun StockHistoryPage(args: StaffRoutes.StockHistory) {
 			isLoading = true
 			records = StockAdjustment
 				.fetchByIngredientWithDetails(args.ingredientId)
-				.sortedByDescending { it.createdAt }
+				.sortedByDescending { it.timestamp }
 			error = null
 		} catch (e: Exception) {
 			error = e.message
@@ -77,91 +79,86 @@ fun StockHistoryPage(args: StaffRoutes.StockHistory) {
 			return
 		}
 
-		records.forEach { RecordCard(it) }
-	}
-}
-
-@Composable
-private fun RecordCard(record: StockAdjustment) {
-	Card {
-		Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-			AdjustmentTypeIcon(record.adjustmentType)
-
-			Column(Modifier.padding(vertical = defaultPadding)) {
-				val unit = record.ingredient?.unit ?: "units"
-				Text(
-					"${record.quantityBefore} \u2192 ${record.quantityAfter} $unit",
-					style = MaterialTheme.typography.titleLarge
-				)
-				Text(
-					record.createdAt.formatDate(),
-					style = MaterialTheme.typography.bodyMedium
-				)
-				Text(
-					if (record.notes != null) "\"${record.notes}\"" else "No notes given",
-					style = MaterialTheme.typography.bodyMedium
-				)
-			}
+		LazyColumn(
+			Modifier.padding(defaultPadding),
+			verticalArrangement = Arrangement.spacedBy(defaultPadding)
+		) {
+			items(records.size) { i -> RecordCard(records[i]) }
 		}
 	}
 }
 
 @Composable
-private fun AdjustmentTypeIcon(adjustmentType: StockAdjustment.Type) {
-	Box(
-		Modifier
-			.padding(defaultPadding)
-			.clip(CircleShape)
-			.background(MaterialTheme.colorScheme.primaryContainer)
-	) {
-		val (icon, desc) = when (adjustmentType) {
-			StockAdjustment.Type.DIRECT -> Icons.Default.Edit to "Direct Adjustment"
-			StockAdjustment.Type.INCREMENT -> Icons.AutoMirrored.Filled.TrendingUp to "Increment"
-			StockAdjustment.Type.DECREMENT -> Icons.AutoMirrored.Filled.TrendingDown to "Decrement"
+private fun RecordCard(record: StockAdjustment) = OutlinedCard {
+	Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+		AdjustmentTypeIcon(record.adjustmentType)
+
+		Column(Modifier.padding(vertical = defaultPadding)) {
+			val unit = record.ingredient?.unit ?: "units"
+			Text(
+				"${record.quantityBefore} \u2192 ${record.quantityAfter} $unit",
+				style = MaterialTheme.typography.titleLarge
+			)
+			Text(
+				record.timestamp.formatDate(),
+				style = MaterialTheme.typography.bodyMedium
+			)
+			Text(
+				if (record.notes != null) "\"${record.notes}\"" else "No notes given",
+				style = MaterialTheme.typography.bodyMedium
+			)
 		}
-		Icon(
-			icon,
-			desc,
-			Modifier.padding(8.dp),
-			MaterialTheme.colorScheme.onPrimaryContainer
-		)
 	}
 }
 
-private fun String.formatDate(): String {
-	return try {
-		val datetime = Instant.parse(this).toLocalDateTime(TimeZone.UTC)
-
-		val (year, month, day) = listOf(
-			datetime.year,
-			datetime.month.number,
-			datetime.day,
-		).map { it.toString().padStart(2, '0') }
-
-		val (hour, minute, second) = listOf(
-			datetime.hour,
-			datetime.minute,
-			datetime.second,
-		).map { it.toString().padStart(2, '0') }
-
-		"On $year-$month-$day at $hour:$minute:$second"
-	} catch (_: Exception) {
-		this
+@Composable
+private fun AdjustmentTypeIcon(adjustmentType: StockAdjustment.Type) = Box(
+	Modifier
+		.padding(defaultPadding)
+		.clip(CircleShape)
+		.background(MaterialTheme.colorScheme.primaryContainer)
+) {
+	val (icon, desc) = when (adjustmentType) {
+		StockAdjustment.Type.DIRECT -> Icons.Default.Edit to "Direct Adjustment"
+		StockAdjustment.Type.INCREMENT -> Icons.AutoMirrored.Filled.TrendingUp to "Increment"
+		StockAdjustment.Type.DECREMENT -> Icons.AutoMirrored.Filled.TrendingDown to "Decrement"
 	}
+	Icon(
+		icon,
+		desc,
+		Modifier.padding(8.dp),
+		MaterialTheme.colorScheme.onPrimaryContainer
+	)
+}
+
+private fun String.formatDate(): String = try {
+	val datetime = Instant.parse(this).toLocalDateTime(TimeZone.UTC)
+
+	val (year, month, day) = listOf(
+		datetime.year,
+		datetime.month.number,
+		datetime.day,
+	).map { it.toString().padStart(2, '0') }
+
+	val (hour, minute, second) = listOf(
+		datetime.hour,
+		datetime.minute,
+		datetime.second,
+	).map { it.toString().padStart(2, '0') }
+
+	"On $year-$month-$day at $hour:$minute:$second"
+} catch (_: Exception) {
+	this
 }
 
 @Preview
 @Composable
-private fun RecordCardPreview() {
-	RecordCard(StockAdjustment.MOCK)
-}
+private fun RecordCardPreview() = RecordCard(StockAdjustment.MOCK)
 
 @Preview(showBackground = true)
 @Composable
-private fun AdjustmentTypeIconPreview() {
-	Row {
-		AdjustmentTypeIcon(StockAdjustment.Type.DIRECT)
-		AdjustmentTypeIcon(StockAdjustment.Type.INCREMENT)
-		AdjustmentTypeIcon(StockAdjustment.Type.DECREMENT)
-	}
+private fun AdjustmentTypeIconPreview() = Row {
+	AdjustmentTypeIcon(StockAdjustment.Type.DIRECT)
+	AdjustmentTypeIcon(StockAdjustment.Type.INCREMENT)
+	AdjustmentTypeIcon(StockAdjustment.Type.DECREMENT)
 }
