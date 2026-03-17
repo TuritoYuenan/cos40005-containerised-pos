@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tab
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -27,7 +28,7 @@ val navItems = listOf(
 
 @Composable
 fun StaffNavigationBar(navController: NavController, userPermissions: List<String>) {
-	val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+	var selectedDestination by remember { mutableStateOf(getStartRoute(userPermissions)) }
 
 	val allowedNavItems = navItems.filter { item ->
 		item.label == "Setting" || userPermissions.contains(item.label)
@@ -35,7 +36,7 @@ fun StaffNavigationBar(navController: NavController, userPermissions: List<Strin
 	NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
 		for (item in allowedNavItems) {
 			NavigationBarItem(
-				selected = currentRoute == item.route,
+				selected = selectedDestination == item.route,
 				label = { Text(item.label) },
 				icon = { Icon(item.icon, item.label) },
 				onClick = {
@@ -47,6 +48,7 @@ fun StaffNavigationBar(navController: NavController, userPermissions: List<Strin
 								saveState = true
 							}
 						}
+						selectedDestination = item.route
 					} catch (e: Exception) {
 						println("Navigation to ${item.route} failed: ${e.message}")
 					}
