@@ -27,7 +27,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 	val navController = rememberNavController()
 
 //	Must change "order" to "login" when auth is implemented
-	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.KitchenDisplay
+	val startDestination = if (isWeb) CustomerRoutes.Order("Unknown", "Unknown") else StaffRoutes.MenuEdit
 
 	MaterialTheme {
 //		Staff-facing application, available on mobile and desktop
@@ -44,10 +44,18 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 					modifier = Modifier.padding(paddingValues)
 				) {
 					composable<StaffRoutes.Login> { LoginPage() }
-					composable<StaffRoutes.MenuEdit> { MenuEditPage() }
-					composable<StaffRoutes.EditItem> { EditItemPage(navController) }
-					composable<StaffRoutes.EditTag> { EditTagPage(navController) }
-					composable<StaffRoutes.EditPromotion> { EditPromotionPage(navController) }
+					composable<StaffRoutes.MenuEdit> { MenuEditPage(navController) }
+                    composable<StaffRoutes.EditItem> { backStackEntry ->
+                        val args = backStackEntry.toRoute<StaffRoutes.EditItem>()
+                        EditItemPage(navController, args.itemId)
+                    }
+					composable<StaffRoutes.EditTag> { backStackEntry ->
+                        val args = backStackEntry.toRoute<StaffRoutes.EditTag>()
+                        EditTagPage(navController, args.tagId)}
+					composable<StaffRoutes.EditPromotion> { backStackEntry ->
+                        val args = backStackEntry.toRoute<StaffRoutes.EditPromotion>()
+                        EditPromotionPage(navController, args.promotionId)
+                    }
 					composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage(navController) }
 					composable<StaffRoutes.Inventory> { InventoryPage() }
 				}
