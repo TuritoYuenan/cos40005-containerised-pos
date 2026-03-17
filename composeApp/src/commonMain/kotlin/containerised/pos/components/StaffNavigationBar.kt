@@ -5,6 +5,7 @@ import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tab
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +21,8 @@ val navItems = listOf(
 	NavigationItem("Menu", StaffRoutes.MenuEdit, Icons.AutoMirrored.Filled.MenuOpen),
 	NavigationItem("Kitchen", StaffRoutes.KitchenDisplay, Icons.Filled.Tab),
 	NavigationItem("Sales", StaffRoutes.Login, Icons.Filled.Inbox),
-	NavigationItem("Inventory", StaffRoutes.Inventory, Icons.Filled.Folder)
+	NavigationItem("Inventory", StaffRoutes.Inventory, Icons.Filled.Folder),
+	NavigationItem("Setting", StaffRoutes.Setting, Icons.Filled.Settings)
 )
 
 @Composable
@@ -28,7 +30,7 @@ fun StaffNavigationBar(navController: NavController, userPermissions: List<Strin
 	val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
 	val allowedNavItems = navItems.filter { item ->
-		userPermissions.contains(item.label)
+		item.label == "Setting" || userPermissions.contains(item.label)
 	}
 	NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
 		for (item in allowedNavItems) {

@@ -163,6 +163,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 						val args = backStackEntry.toRoute<StaffRoutes.StockHistory>()
 						StockHistoryPage(args)
 					}
+					composable<StaffRoutes.Setting>{SettingPage(navController)}
 				}
 			}
 		}
