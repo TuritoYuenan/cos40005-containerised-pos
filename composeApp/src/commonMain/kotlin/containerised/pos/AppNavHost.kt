@@ -49,10 +49,10 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 //		Staff-facing application, available on mobile and desktop
 		if (!isWeb) {
 			var userPermissions by remember { mutableStateOf<List<String>>(emptyList()) }
-			val session = SupabaseClient.auth.currentSessionOrNull()
+			SupabaseClient.auth.currentSessionOrNull()
 
 			val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-			val isLogin = currentRoute == StaffRoutes.Login::class.qualifiedName
+			val isLogin = currentRoute == "login"
 
 			LaunchedEffect(Unit) {
 				OrderRealtimeManager.events.collect { action ->
@@ -133,9 +133,7 @@ fun AppNavHost(onNavHostReady: suspend (NavController) -> Unit = {}) {
 			}
 			Scaffold(
 				topBar = {
-					if (!isLogin) {
 						StaffTopBar(navController, currentRoute)
-					}
 				},
 				bottomBar = {
 					if (!isLogin) {

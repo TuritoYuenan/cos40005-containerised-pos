@@ -87,7 +87,9 @@ fun LoginPage(navController: NavController) {
 			Button(onClick = {
 				scope.launch{
 					try {
-						login(emailAddress.toString(), password)
+						println("Email: '${emailAddress.text}'")
+						println("Password length: ${password.length}")
+						login(emailAddress.text.toString(), password)
 					}catch (e: Exception) {
 						println("Login failed: ${e.message}")
 					}

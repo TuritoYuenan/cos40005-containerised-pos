@@ -1,5 +1,6 @@
 package containerised.pos.models
 
+import containerised.pos.database.SupabaseClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -29,4 +30,17 @@ data class User(
 
 	@SerialName("updated_at")
 	val updatedAt: String? = null
-)
+) {
+	companion object {
+		suspend fun fetchById(userId: String): User? {
+			val result = SupabaseClient.db["users"]
+				.select {
+					filter {
+						eq("user_id", userId)
+					}
+				}
+				.decodeList<User>()
+			return result.firstOrNull()
+		}
+	}
+}

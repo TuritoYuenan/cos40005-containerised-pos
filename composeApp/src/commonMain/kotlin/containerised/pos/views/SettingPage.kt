@@ -9,12 +9,19 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.database.SupabaseClient
+import containerised.pos.models.OrderItem
+import containerised.pos.models.User
 import kotlinx.coroutines.launch
 
 suspend fun logout() {
@@ -25,7 +32,30 @@ suspend fun logout() {
 @Composable
 fun SettingPage(navController: NavController) {
 	val scope = rememberCoroutineScope()
+	var user by remember { mutableStateOf<User?>(null) }
+	val userId = SupabaseClient.auth.currentUserOrNull()?.id
+	val email = SupabaseClient.auth.currentUserOrNull()?.email
+
+	LaunchedEffect(Unit) {
+		try {
+			user = User.fetchById(userId?: "")
+		} catch (e: Exception) {
+			val error = e.message
+			println("Error: $error")
+		}
+	}
+
 	Column{
+		Text(
+			text = "Name: ${user?.fullName}",
+			style = MaterialTheme.typography.titleMedium,
+			color = Color.Black,
+		)
+		Text(
+			text = "Email: $email",
+			style = MaterialTheme.typography.titleMedium,
+			color = Color.Black,
+		)
 		Row {
 			Button(
 				onClick = {

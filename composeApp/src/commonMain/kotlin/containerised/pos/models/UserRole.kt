@@ -31,7 +31,7 @@ data class UserRole(
 				}
 				.decodeList<UserRole>()
 
-			return result.map { it.role.permission }
+			return result.flatMap { it.role.permission }
 		}
 	}
 }

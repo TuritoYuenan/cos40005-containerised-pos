@@ -17,5 +17,5 @@ data class Role(
 	val description: String? = null,
 
 	@SerialName("permission")
-	val permission: String
+	val permission: List<String>
 )
