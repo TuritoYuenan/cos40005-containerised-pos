@@ -21,14 +21,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import containerised.pos.components.getStartRoute
+import containerised.pos.database.SupabaseClient
 import containerised.pos.database.SupabaseClient.auth
+import containerised.pos.models.UserRole.Companion.fetchUserPermission
+import containerised.pos.routes.StaffRoutes
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
 @Preview
-fun LoginPage() {
+fun LoginPage(navController: NavController) {
 	val scope = rememberCoroutineScope()
 	val padding = 16.dp
 	val emailAddress = rememberTextFieldState("")
@@ -81,7 +86,12 @@ fun LoginPage() {
 		) {
 			Button(onClick = {
 				scope.launch{
-					login(emailAddress.toString(), password)
+					try {
+						login(emailAddress.toString(), password)
+					}catch (e: Exception) {
+						println("Login failed: ${e.message}")
+					}
+
 				}
 			}) {
 				Icon(imageVector = Icons.Filled.AccountCircle, "Login Icon")
@@ -95,15 +105,8 @@ fun LoginPage() {
 	}
 }
 suspend fun login(email: String, password: String) {
-	try {
-		auth.signInWith(Email) {
-			this.email = email
-			this.password = password
-		}
-
-		println("Login successful")
-
-	} catch (e: Exception) {
-		println("Login failed: ${e.message}")
+	auth.signInWith(Email) {
+		this.email = email
+		this.password = password
 	}
 }
