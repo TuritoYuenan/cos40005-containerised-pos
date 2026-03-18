@@ -61,6 +61,7 @@ fun AppNavHost() {
 				composable<StaffRoutes.EditTag> { EditTagPage(navController) }
 				composable<StaffRoutes.EditPromotion> { EditPromotionPage(navController) }
 				composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage() }
+				composable<StaffRoutes.OrderConfirm> { OrderConfirmPage() }
 				composable<StaffRoutes.Inventory> { InventoryPage(navController) }
 				composable<StaffRoutes.IngredientDetail> { backStackEntry ->
 					val args = backStackEntry.toRoute<StaffRoutes.IngredientDetail>()
