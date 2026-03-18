@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import containerised.pos.RealtimeManager
 import containerised.pos.RealtimeServiceController
-import containerised.pos.models.Ingredient
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
 import io.github.jan.supabase.realtime.PostgresAction
@@ -121,40 +120,46 @@ private fun Order.ActionButtons(
 	scope: CoroutineScope,
 	orderItems: List<OrderItem>,
 	onDismiss: () -> Unit = {}
+) = Row(
+	Modifier.fillMaxWidth().padding(12.dp, 6.dp),
+	Arrangement.spacedBy(10.dp, Alignment.End),
+	Alignment.CenterVertically,
 ) {
-	Row(
-		Modifier.fillMaxWidth().padding(12.dp, 6.dp),
-		Arrangement.spacedBy(10.dp, Alignment.End),
-		Alignment.CenterVertically,
+	var isCancelProcessing by remember { mutableStateOf(false) }
+	FilledTonalButton(
+		onClick = {
+			scope.launch {
+				isCancelProcessing = true
+				Order.markCancelled(orderId)
+				onDismiss()
+				isCancelProcessing = false
+			}
+		},
+		enabled = !isCancelProcessing,
+		shape = RoundedCornerShape(16.dp)
 	) {
-		FilledTonalButton(
-			onClick = {
-				scope.launch {
-					Order.markCancelled(orderId)
-					onDismiss()
-				}
-			},
-			shape = RoundedCornerShape(16.dp)
-		) {
-			Icon(Icons.Filled.Close, "Cancel")
-			Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-			Text("Cancel")
-		}
+		Icon(Icons.Filled.Close, "Cancel")
+		Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+		Text("Cancel")
+	}
 
-		Button(
-			onClick = {
-				scope.launch {
-					orderItems.onComplete()
-					Order.markFinished(orderId)
-					onDismiss()
-				}
-			},
-			shape = RoundedCornerShape(16.dp),
-		) {
-			Icon(Icons.Filled.Check, "Done")
-			Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-			Text("Done")
-		}
+	var isDoneProcessing by remember { mutableStateOf(false) }
+	Button(
+		onClick = {
+			scope.launch {
+				isDoneProcessing = true
+				orderItems.onComplete()
+				Order.markFinished(orderId)
+				onDismiss()
+				isDoneProcessing = false
+			}
+		},
+		enabled = !isDoneProcessing,
+		shape = RoundedCornerShape(16.dp),
+	) {
+		Icon(Icons.Filled.Check, "Done")
+		Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+		Text("Done")
 	}
 }
 
@@ -250,9 +255,15 @@ private fun Order.Contents(
 
 private suspend fun List<OrderItem>.onComplete() = forEach { orderItem ->
 	orderItem.branchItem.itemIngredients.forEach { itemIngredient ->
-		val amount = orderItem.quantity * (itemIngredient.quantity ?: 0.0)
-		Ingredient.decreaseStock(itemIngredient.ingredientId, amount)
-		println("decrease $amount from ${itemIngredient.ingredientId}")
+		// No way quantity would have been null, right?
+		val unit = itemIngredient.ingredient.unit
+		val amount = itemIngredient.quantity
+			?: throw IllegalStateException("Ingredient quantity is required to complete order")
+
+		itemIngredient.ingredient = itemIngredient.ingredient.decreaseStock(
+			orderItem.quantity * amount,
+			"Used $amount $unit in order ${orderItem.orderId}"
+		)
 	}
 }
 
