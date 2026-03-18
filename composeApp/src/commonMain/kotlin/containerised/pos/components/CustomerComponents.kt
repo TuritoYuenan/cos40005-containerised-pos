@@ -23,31 +23,27 @@ import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 
 @Composable
-fun ImageSlider(
-	items: List<BranchItem>,
+fun List<BranchItem>.ImageSlider(
 	modifier: Modifier = Modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)
 ) = Card(modifier) {
-	if (items.isEmpty()) {
-		Box(
-			Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
-			Alignment.Center,
-		) {
-			Text(
-				"No items available",
-				color = MaterialTheme.colorScheme.onPrimary,
-				style = MaterialTheme.typography.titleMedium
-			)
-		}
-		return@Card
+	if (isEmpty()) return@Card Box(
+		Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
+		Alignment.Center,
+	) {
+		Text(
+			"No items available",
+			color = MaterialTheme.colorScheme.onPrimary,
+			style = MaterialTheme.typography.titleMedium
+		)
 	}
 
 	HorizontalPager(
-		rememberPagerState(pageCount = { items.size }),
+		rememberPagerState(pageCount = { size }),
 		Modifier.fillMaxSize()
 	) { page ->
 		KamelImage(
-			{ asyncPainterResource(items[page].urlImg ?: "https://placehold.co/512x256") },
-			items[page % items.size].itemName,
+			{ asyncPainterResource(this@ImageSlider[page].urlImg ?: "https://placehold.co/512x256") },
+			this@ImageSlider[page % size].itemName,
 			Modifier.fillMaxSize(),
 			contentScale = ContentScale.Crop,
 			onFailure = {
@@ -56,7 +52,7 @@ fun ImageSlider(
 					Alignment.Center,
 				) {
 					Text(
-						items[page].itemName,
+						this@ImageSlider[page].itemName,
 						color = MaterialTheme.colorScheme.onPrimary,
 						style = MaterialTheme.typography.titleMedium
 					)
@@ -67,29 +63,26 @@ fun ImageSlider(
 }
 
 @Composable
-fun MenuTags(tags: List<Tag>) = LazyRow(
-	Modifier.padding(8.dp, 0.dp),
-	horizontalArrangement = Arrangement.spacedBy(8.dp),
-) {
-	items(tags.size) { index ->
+fun List<Tag>.Row() = LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+	items(size) { index ->
 		FilterChip(
 			false,
 			{ /*TODO: Implement tag filtering*/ },
-			{ Text(tags[index].tagName) },
+			{ Text(this@Row[index].tagName) },
 		)
 	}
 }
 
 @Composable
-fun WideItemCard(item: BranchItem, modifier: Modifier = Modifier, onAddToCart: () -> Unit = {}) {
+fun BranchItem.WideCard(modifier: Modifier = Modifier, onAddToCart: () -> Unit = {}) {
 	val cardHeight = 128.dp
 
-	OutlinedCard(modifier.width(384.dp).height(cardHeight)) {
+	OutlinedCard(modifier.width(cardHeight * 3).height(cardHeight)) {
 		Box {
 			Row(Modifier.fillMaxWidth()) {
 				KamelImage(
 					resource = { asyncPainterResource("https://placehold.co/256x256") },
-					contentDescription = item.itemName,
+					contentDescription = itemName,
 					contentScale = ContentScale.Crop,
 					modifier = Modifier
 						.size(cardHeight)
@@ -104,25 +97,27 @@ fun WideItemCard(item: BranchItem, modifier: Modifier = Modifier, onAddToCart: (
 						) {}
 					}
 				)
-				ItemMetadata(item)
+				this@WideCard.Metadata()
 			}
 
 			// Add to cart button positioned at top-right
 			AddToCartButton(Modifier.align(Alignment.TopEnd), onAddToCart)
+
+			if (isOutOfStock()) OutOfStockOverlay()
 		}
 	}
 }
 
 @Composable
-fun TallItemCard(item: BranchItem, onAddToCart: () -> Unit = {}) {
+fun BranchItem.TallCard(onAddToCart: () -> Unit = {}) {
 	val cardWidth = 128.dp
 
-	OutlinedCard(Modifier.size(cardWidth, 256.dp)) {
+	OutlinedCard(Modifier.size(cardWidth, cardWidth * 2)) {
 		Box {
 			Column {
 				KamelImage(
 					resource = { asyncPainterResource("https://placehold.co/256x256") },
-					contentDescription = item.itemName,
+					contentDescription = itemName,
 					contentScale = ContentScale.Crop,
 					modifier = Modifier
 						.size(cardWidth)
@@ -139,11 +134,13 @@ fun TallItemCard(item: BranchItem, onAddToCart: () -> Unit = {}) {
 					}
 				)
 
-				ItemMetadata(item)
+				this@TallCard.Metadata()
 			}
 
 			// Add to cart button positioned at top-right
 			AddToCartButton(Modifier.align(Alignment.TopEnd), onAddToCart)
+
+			if (isOutOfStock()) OutOfStockOverlay()
 		}
 	}
 }
@@ -177,9 +174,9 @@ fun SelfCheckoutView(order: Order?) {
 	val amount = order?.finalAmount ?: 0
 	val currency = Currency.VND
 
-	val paymentCode = if (order == null || amount <= 0) "" else PaymentCodeBuilder()
-		.set(PaymentCodeBuilder.PIMethod.DYNAMIC)
-		.set(PaymentCodeBuilder.ServiceCode.TRANSFER_TO_ACCOUNT)
+	val paymentCode = if (order == null || amount <= 0) "" else PaymentCode.Builder()
+		.set(PaymentCode.PIMethod.DYNAMIC)
+		.set(PaymentCode.ServiceCode.TRANSFER_TO_ACCOUNT)
 		.setAccount(Bank.HDBank, "002704070021976")
 		.setCountryCode()
 		.setTransaction(amount, currency)
@@ -211,14 +208,27 @@ fun SelfCheckoutView(order: Order?) {
 }
 
 @Composable
-private fun ItemMetadata(item: BranchItem) = Column(Modifier.padding(8.dp)) {
+private fun OutOfStockOverlay() = Box(
+	Modifier.fillMaxSize().background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)),
+	Alignment.Center,
+) {
 	Text(
-		item.itemName,
+		"Out of Stock",
+		color = MaterialTheme.colorScheme.surface,
+		style = MaterialTheme.typography.titleMedium,
+		fontWeight = FontWeight.Bold,
+	)
+}
+
+@Composable
+private fun BranchItem.Metadata() = Column(Modifier.padding(8.dp)) {
+	Text(
+		itemName,
 		maxLines = 2,
 		overflow = TextOverflow.Ellipsis,
 		style = MaterialTheme.typography.titleMedium
 	)
-	item.itemDes?.let {
+	itemDes?.let {
 		Text(
 			it,
 			maxLines = 2,
@@ -226,7 +236,7 @@ private fun ItemMetadata(item: BranchItem) = Column(Modifier.padding(8.dp)) {
 			style = MaterialTheme.typography.bodyMedium
 		)
 	}
-	Text("${item.price} VND", style = MaterialTheme.typography.bodyLarge)
+	Text("$price VND", style = MaterialTheme.typography.bodyLarge)
 }
 
 @Preview(apiLevel = 35, showBackground = true)
@@ -235,24 +245,17 @@ private fun OrderPagePreview() = Column(
 	Modifier.padding(16.dp),
 	Arrangement.spacedBy(8.dp)
 ) {
-	ImageSlider(
-		listOf(
-			BranchItem.MOCK,
-			BranchItem.MOCK,
-			BranchItem.MOCK
-		),
-		Modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)
-	)
-
-	MenuTags(Tag.MOCKS)
+	listOf(BranchItem.MOCK, BranchItem.MOCK, BranchItem.MOCK).ImageSlider()
 
 	Row(Modifier, Arrangement.spacedBy(8.dp)) {
-		TallItemCard(BranchItem.MOCK)
-		TallItemCard(BranchItem.MOCK)
+		BranchItem.MOCK.TallCard()
+		BranchItem.MOCK.TallCard()
 	}
 
-	WideItemCard(BranchItem.MOCK)
-	WideItemCard(BranchItem.MOCK)
+	Tag.MOCKS.Row()
+
+	BranchItem.MOCK.WideCard()
+	BranchItem.MOCK.WideCard()
 }
 
 @Preview(showBackground = true)

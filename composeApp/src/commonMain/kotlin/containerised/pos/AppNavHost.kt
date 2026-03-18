@@ -16,7 +16,6 @@ import containerised.pos.components.AppTheme
 import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
 import containerised.pos.models.Order
-import containerised.pos.models.OrderStatus
 import containerised.pos.routes.StaffRoutes
 import containerised.pos.views.*
 import io.github.jan.supabase.realtime.PostgresAction
@@ -36,52 +35,17 @@ fun AppNavHost() {
 //		Staff-facing application, available on mobile and desktop
 		val currentRoute = navController
 			.currentBackStackEntryAsState()
-			.value?.destination?.route
-			.orEmpty()
+			.value?.destination?.route.orEmpty()
 
 		LaunchedEffect(Unit) {
-			OrderRealtimeManager.events.collect { action ->
+			RealtimeServiceController.start()
+			RealtimeManager.forOrders.start()
+			RealtimeManager.forOrders.events.collect { action ->
 				when (action) {
-					is PostgresAction.Insert -> {
-						val newOrder = action.decodeRecord<Order>()
-						println("Insert data: $newOrder")
-						NotificationService.showNotification(
-							title = "New Order",
-							message = "Order #${newOrder.orderNumber} received"
-						)
-					}
-
-					is PostgresAction.Update -> {
-						val updated = action.decodeRecord<Order>()
-						val old = action.decodeOldRecord<Order>()
-						if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
-							println("deleted data: $old")
-							NotificationService.showNotification(
-								title = "Order Updated",
-								message = "Order #${old.orderNumber} is done"
-							)
-						} else if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.CANCELED) {
-							println("deleted data: $old")
-							NotificationService.showNotification(
-								title = "Order Updated",
-								message = "Order #${old.orderNumber} is canceled"
-							)
-						} else if ((old.status == OrderStatus.FINISHED || old.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING) {
-							println("Insert data: $updated")
-						} else {
-							println("old data: $old")
-							println("Updated data: $updated")
-						}
-					}
-
-					is PostgresAction.Delete -> {
-						val old = action.decodeOldRecord<Order>()
-						println("Deleted → id=${old.orderId}")
-					}
-
-					is PostgresAction.Select -> {
-
-					}
+					is PostgresAction.Insert -> action.handle()
+					is PostgresAction.Update -> action.handle()
+					is PostgresAction.Delete -> action.handle()
+					is PostgresAction.Select -> {}
 				}
 			}
 		}
@@ -96,7 +60,8 @@ fun AppNavHost() {
 				composable<StaffRoutes.EditItem> { EditItemPage(navController) }
 				composable<StaffRoutes.EditTag> { EditTagPage(navController) }
 				composable<StaffRoutes.EditPromotion> { EditPromotionPage(navController) }
-				composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage(navController) }
+				composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage() }
+				composable<StaffRoutes.OrderConfirm> { OrderConfirmPage() }
 				composable<StaffRoutes.Inventory> { InventoryPage(navController) }
 				composable<StaffRoutes.IngredientDetail> { backStackEntry ->
 					val args = backStackEntry.toRoute<StaffRoutes.IngredientDetail>()
@@ -107,6 +72,50 @@ fun AppNavHost() {
 					StockHistoryPage(args)
 				}
 			}
+		}
+	}
+}
+
+private fun PostgresAction.Insert.handle() {
+	val new = this.decodeRecord<Order>()
+	println("Insert data: $new")
+
+	NotificationService.showNotification(
+		title = "New Order",
+		message = "Order #${new.orderNumber} received"
+	)
+}
+
+private fun PostgresAction.Delete.handle() {
+	println("Deleted → Order id=${decodeOldRecord<Order>().orderId}")
+}
+
+private fun PostgresAction.Update.handle() {
+	val new = this.decodeRecord<Order>()
+	val old = this.decodeOldRecord<Order>()
+	val (isPtoF, isPtoC, isFCtoP) = new.inferStatusChange(old)
+
+	when {
+		isPtoF -> {
+			println("Order #${old.orderNumber} is done")
+			NotificationService.showNotification(
+				"Order Updated",
+				"Order #${old.orderNumber} is done"
+			)
+		}
+
+		isPtoC -> {
+			println("Order #${old.orderNumber} is canceled")
+			NotificationService.showNotification(
+				"Order Updated",
+				"Order #${old.orderNumber} is canceled"
+			)
+		}
+
+		isFCtoP -> println("Order #${new.orderNumber} is back to preparing")
+		else -> {
+			println("old data: $old")
+			println("Updated data: $new")
 		}
 	}
 }

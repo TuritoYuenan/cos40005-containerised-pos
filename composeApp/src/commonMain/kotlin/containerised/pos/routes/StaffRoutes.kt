@@ -28,6 +28,9 @@ object StaffRoutes {
 	@Serializable @SerialName("edit-promotion")
 	object EditPromotion
 
+	@Serializable @SerialName("confirm-order")
+	object OrderConfirm
+
 	@Serializable @SerialName("kitchen-display")
 	object KitchenDisplay
 }

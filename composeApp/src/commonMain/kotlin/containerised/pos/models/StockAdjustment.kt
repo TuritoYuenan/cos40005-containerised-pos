@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class StockAdjustment(
-	@SerialName("id")
+	@SerialName("record_id")
 	val id: String,
 
 	@SerialName("ingredient_id")
@@ -33,15 +33,36 @@ data class StockAdjustment(
 	@SerialName("notes")
 	val notes: String? = null,
 
-	@SerialName("createdAt")
-	val createdAt: String,
+	@SerialName("timestamp")
+	val timestamp: String,
 ) {
 	enum class Type { DIRECT, INCREMENT, DECREMENT }
 
-	suspend fun insert(): String {
-		return SupabaseClient.db["stock_adjustments"]
-			.insert(this) { select(Columns.list("id")) }
-			.decodeSingle<String>()
+	@Serializable
+	class Insertable(
+		@SerialName("record_id")
+		val id: String,
+
+		@SerialName("ingredient_id")
+		val ingredientID: String,
+
+		@SerialName("staff_id")
+		val staffID: String,
+
+		@SerialName("adjustment_type")
+		val adjustmentType: Type,
+
+		@SerialName("quantity_before")
+		val quantityBefore: Double,
+
+		@SerialName("quantity_after")
+		val quantityAfter: Double,
+
+		@SerialName("notes")
+		val notes: String? = null
+	) {
+		suspend fun insert() = SupabaseClient.db["stock_adjustments"]
+			.insert(this) { select(Columns.ALL) }
 	}
 
 	companion object {
@@ -61,7 +82,7 @@ data class StockAdjustment(
 			quantityBefore = 10.0,
 			quantityAfter = 15.0,
 			notes = "Added 5 units",
-			createdAt = "2024-01-01T12:00:00Z"
+			timestamp = "2024-01-01T12:00:00Z"
 		)
 	}
 }

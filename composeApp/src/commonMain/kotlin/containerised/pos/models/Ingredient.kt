@@ -34,6 +34,40 @@ data class Ingredient(
 	@SerialName("is_active")
 	val isActive: Boolean? = null
 ) {
+	@Serializable
+	data class DecreaseStockParams(
+		@SerialName("id")
+		val id: String,
+
+		@SerialName("amount")
+		val amount: Double,
+
+		@SerialName("staff_id")
+		val staffID: String,
+
+		@SerialName("notes")
+		val notes: String? = null
+	)
+
+	suspend fun decreaseStock(amount: Double, notes: String? = null): Ingredient {
+		if (id == null) throw IllegalStateException("Cannot identify ingredient without ID")
+		val staffID = "37a7dccc-8a13-44ce-9981-efd5ed84d71c"
+
+		SupabaseClient.db.rpc(
+			"decrease_stock",
+			DecreaseStockParams(id, amount, staffID, notes)
+		)
+
+		// Cannot trust old current stock due to race conditions
+		return fetchByID(id) ?: throw IllegalStateException("Failed to fetch updated ingredient")
+	}
+
+	fun isLowStock(): Boolean {
+		val current = currentStock ?: return false
+		val min = minStockLevel ?: return false
+		return current < min
+	}
+
 	suspend fun update() {
 		if (id == null) throw IllegalStateException("Ingredient ID is required for update")
 		SupabaseClient.db["ingredients"]
@@ -66,23 +100,6 @@ data class Ingredient(
 				.select(Columns.ALL) {
 					filter { eq("ingredient_id", ingredientId) }
 				}.decodeSingleOrNull<Ingredient>()
-		}
-
-		@Serializable
-		data class DecreaseStockRequest(
-			val id: String,
-			val amount: Double
-		)
-
-		suspend fun decreaseStock(ingredientId: String, amount: Double) {
-			SupabaseClient.db
-				.rpc(
-					"decrease_stock",
-					DecreaseStockRequest(
-						id = ingredientId,
-						amount = amount
-					)
-				)
 		}
 
 		val MOCK = Ingredient(

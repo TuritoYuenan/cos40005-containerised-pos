@@ -1,8 +1,5 @@
 package containerised.pos
 
 expect object NotificationService {
-	fun showNotification(
-		title: String,
-		message: String
-	)
+	fun showNotification(title: String, message: String)
 }

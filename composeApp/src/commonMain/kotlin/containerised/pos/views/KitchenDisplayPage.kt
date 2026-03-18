@@ -1,6 +1,5 @@
 package containerised.pos.views
 
-import containerised.pos.RealtimeServiceController
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -17,14 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.navigation.NavController
-import containerised.pos.OrderRealtimeManager
-import containerised.pos.models.Ingredient
+import containerised.pos.RealtimeManager
+import containerised.pos.RealtimeServiceController
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
-import containerised.pos.models.OrderStatus
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
@@ -33,8 +31,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KitchenDisplayPage(navController: NavController) {
-	rememberCoroutineScope()
+fun KitchenDisplayPage() {
 	var orders by remember { mutableStateOf<List<Order>>(emptyList()) }
 	var selectedOrder by remember { mutableStateOf<Order?>(null) }
 	var selectedOrderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
@@ -49,335 +46,258 @@ fun KitchenDisplayPage(navController: NavController) {
 			println("Error: $error")
 		}
 	}
+
 	LaunchedEffect(Unit) {
 		println("Creating channel")
 		RealtimeServiceController.start()
-		OrderRealtimeManager.events.collect { action ->
+		RealtimeManager.forOrders.start()
+		RealtimeManager.forOrders.events.collect { action ->
 			when (action) {
-				is PostgresAction.Insert -> {
-					val newOrder = action.decodeRecord<Order>()
-//					println("Insert data: $newOrder")
-					orders = orders + newOrder
-				}
-
-				is PostgresAction.Update -> {
-					val updated = action.decodeRecord<Order>()
-					val old = action.decodeOldRecord<Order>()
-					if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.FINISHED) {
-						orders = orders.filterNot { it.orderId == old.orderId}
-//						println("deleted data: $old")
-					}
-					else if (old.status == OrderStatus.PREPARING && updated.status == OrderStatus.CANCELED) {
-						orders = orders.filterNot { it.orderId == old.orderId}
-//						println("deleted data: $old")
-					}
-					else if ((old.status == OrderStatus.FINISHED || old.status == OrderStatus.CANCELED) && updated.status == OrderStatus.PREPARING){
-						orders = orders + updated
-//						println("Insert data: $updated")
-					}
-					else{
-//						println("old data: $old")
-//						println("Updated data: $updated")
-						orders = orders.map {
-							if (it.orderId == updated.orderId) updated else it
-						}
-					}
-				}
-
-				is PostgresAction.Delete -> {
-					val old = action.decodeOldRecord<Order>()
-//					println("Deleted → id=${old.orderId}")
-					orders = orders.filterNot { it.orderId == old.orderId }
-				}
-				is PostgresAction.Select -> {
-
-				}
+				is PostgresAction.Insert -> orders = orders.onChange(action)
+				is PostgresAction.Update -> orders = orders.onChange(action)
+				is PostgresAction.Delete -> orders = orders.onChange(action)
+				is PostgresAction.Select -> {}
 			}
 		}
 	}
 
 	LazyColumn {
-		items(items = orders, key = { it.orderId }) { order ->
-			KitchenDisplayOrderItem(
-				order,
-				onClickOrder = { selectedOrder = order; },
-				onClickOrderItem = { selectedOrderItem -> selectedOrderItems = selectedOrderItem })
+		items(orders, { it.orderId }) { order ->
+			order.ItemCard(
+				{ selectedOrder = order; },
+				{ selectedOrderItems = it }
+			)
 		}
 	}
-	selectedOrder?.let { order ->
-		ExpandedOrderOverlay(
-			order = order,
-			orderItems = selectedOrderItems,
-			onDismiss = { selectedOrder = null }
-		)
-	}
+
+	selectedOrder?.ExpandedOverlay(selectedOrderItems) { selectedOrder = null }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KitchenDisplayOrderItem(
-	order: Order,
+private fun Order.ItemCard(
 	onClickOrder: () -> Unit,
 	onClickOrderItem: (List<OrderItem>) -> Unit
 ) {
 	val scope = rememberCoroutineScope()
 	var orderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
 	var itemMap by remember { mutableStateOf<Map<String, List<OrderItem?>>>(emptyMap()) }
-	var expandedItemId by remember { mutableStateOf<String?>(null) }
+	val expandedItemId = remember { mutableStateOf<String?>(null) }
 	var error by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		try {
-			orderItems = OrderItem.fetchAndJoinOrderItemByOrder(order.orderId)
+			orderItems = OrderItem.fetchByOrderWithJoins(orderId)
 			println("Fetched ${orderItems.size} order items:")
-			orderItems.forEach { item ->
-//				println(
-//					"• ${item.itemId}: ${item.quantity} (${item.subtotal})"
-//				)
-			}
+			orderItems.forEach { item -> println("• ${item.itemId}: ${item.quantity} (${item.subtotal})") }
+
 			itemMap = orderItems.groupBy { it.branchItem.category.categoryName }
 			println(itemMap)
-
 		} catch (e: Exception) {
 			error = e.message
 			println("Error: $error")
 		}
 	}
+
 	Card(
-		modifier = Modifier
+		Modifier
 			.fillMaxWidth()
 			.clip(RoundedCornerShape(8.dp))
-			.padding(vertical = 6.dp, horizontal = 12.dp)
+			.padding(12.dp, 6.dp)
 			.clickable { onClickOrder(); onClickOrderItem(orderItems) },
 	) {
-		Column {
-			Row(
-				modifier = Modifier
-					.fillMaxWidth()
-					.background(MaterialTheme.colorScheme.primary)
-			) {
-				Box {}
-				Column(
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(vertical = 6.dp, horizontal = 12.dp),
-				) {
-					Text(
-						text = "Order #${order.orderNumber}",
-						style = MaterialTheme.typography.titleMedium,
-						color = Color.White,
-					)
-					Text(
-						text = "Table No. ${order.tableNumber}",
-						color = Color.White,
-					)
-				}
-			}
-			itemMap.forEach { (category, itemsOfCategory) ->
-				Column(
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(vertical = 6.dp, horizontal = 12.dp),
-				) {
-					Text(
-						text = category,
-						style = MaterialTheme.typography.titleMedium,
-					)
-					itemsOfCategory.forEach { item ->
-						Text(
-							text = "${item?.quantity} x ${item?.branchItem?.itemName}",
-							modifier = Modifier
-								.clickable { expandedItemId = item?.itemId },
-						)
-						DropdownMenu(
-							expanded = expandedItemId == item?.itemId,
-							onDismissRequest = { expandedItemId = null }
-						) {
-							item?.branchItem?.itemIngredients?.forEach { itemIngredient ->
-								DropdownMenuItem(
-									text = { Text("${itemIngredient.quantity} (${itemIngredient.unit}) ${itemIngredient.ingredient.ingredientName}") },
-									onClick = {
-										expandedItemId = null
-										println("${itemIngredient.quantity} (${itemIngredient.unit}) ${itemIngredient.ingredient.ingredientName}")
-									}
-								)
-							}
-						}
-					}
-
-				}
-			}
-			KitchenDisplayOrderButtons(scope, order, orderItems)
-		}
+		Contents(itemMap, expandedItemId, scope, orderItems)
 	}
 }
 
+/**
+ * Action buttons for an order, allowing the user to mark the order as finished or cancelled.
+ * @param scope Coroutine scope to launch the actions.
+ * @param orderItems List of items associated with the order
+ * @param onDismiss A callback to invoke after the action is completed, typically used to close the order details view.
+ */
 @Composable
-fun KitchenDisplayOrderButtons(scope: CoroutineScope, order: Order, orderItems: List<OrderItem>, onDismiss: (() -> Unit) = {}){
-	Row(
-		horizontalArrangement = Arrangement.spacedBy(
-			10.dp,
-			Alignment.End
-		),
-		verticalAlignment = Alignment.CenterVertically,
-		modifier = Modifier
-			.fillMaxWidth()
-			.padding(vertical = 6.dp, horizontal = 12.dp),
+private fun Order.ActionButtons(
+	scope: CoroutineScope,
+	orderItems: List<OrderItem>,
+	onDismiss: () -> Unit = {}
+) = Row(
+	Modifier.fillMaxWidth().padding(12.dp, 6.dp),
+	Arrangement.spacedBy(10.dp, Alignment.End),
+	Alignment.CenterVertically,
+) {
+	var isCancelProcessing by remember { mutableStateOf(false) }
+	FilledTonalButton(
+		onClick = {
+			scope.launch {
+				isCancelProcessing = true
+				Order.markCancelled(orderId)
+				onDismiss()
+				isCancelProcessing = false
+			}
+		},
+		enabled = !isCancelProcessing,
+		shape = RoundedCornerShape(16.dp)
 	) {
-		Button(
-			onClick = {
-				scope.launch {
-					Order.markCancelled(order.orderId)
-					onDismiss()
+		Icon(Icons.Filled.Close, "Cancel")
+		Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+		Text("Cancel")
+	}
 
-
-				}
-			},
-			shape = RoundedCornerShape(16.dp),
-			colors = ButtonDefaults.buttonColors(
-				containerColor = MaterialTheme.colorScheme.outlineVariant,
-				contentColor = Color.Black
-			),
-			modifier = Modifier.height(40.dp)
-		) {
-			Icon(
-				Icons.Filled.Close,
-				contentDescription = "Cancel"
-			)
-			Text("Cancel", color = Color.Black)
-		}
-		Button(
-			onClick = {
-				scope.launch {
-					orderItems.forEach { orderItem ->
-						orderItem.branchItem.itemIngredients.forEach { itemIngredient ->
-							Ingredient.decreaseStock(itemIngredient.ingredientId, orderItem.quantity*(itemIngredient.quantity?: 0.0))
-							println("decrease ${orderItem.quantity*(itemIngredient.quantity?: 0.0)} from ${itemIngredient.ingredientId}")
-						}
-					}
-
-					Order.markFinished(order.orderId)
-					onDismiss()
-
-				}
-			},
-			shape = RoundedCornerShape(16.dp),
-			colors = ButtonDefaults.buttonColors(
-				containerColor = MaterialTheme.colorScheme.primary,
-				contentColor = Color.White
-			),
-			modifier = Modifier.height(40.dp)
-		) {
-			Icon(
-				Icons.Filled.Check,
-				contentDescription = "Done"
-			)
-			Text("Done", color = Color.White)
-		}
+	var isDoneProcessing by remember { mutableStateOf(false) }
+	Button(
+		onClick = {
+			scope.launch {
+				isDoneProcessing = true
+				orderItems.onComplete()
+				Order.markFinished(orderId)
+				onDismiss()
+				isDoneProcessing = false
+			}
+		},
+		enabled = !isDoneProcessing,
+		shape = RoundedCornerShape(16.dp),
+	) {
+		Icon(Icons.Filled.Check, "Done")
+		Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+		Text("Done")
 	}
 }
 
 @Composable
-fun ExpandedOrderOverlay(
-	order: Order,
+private fun Order.ExpandedOverlay(
 	orderItems: List<OrderItem>,
 	onDismiss: () -> Unit,
-) {
+) = Dialog(onDismissRequest = onDismiss) {
 	val scope = rememberCoroutineScope()
-	var itemMap by remember { mutableStateOf<Map<String, List<OrderItem?>>>(emptyMap()) }
-	var expandedItemId by remember { mutableStateOf<String?>(null) }
+	val itemMap = orderItems.groupBy { it.branchItem.category.categoryName }
+	val expandedItemId = remember { mutableStateOf<String?>(null) }
 
-	itemMap = orderItems.groupBy { it.branchItem.category.categoryName }
-	Dialog(
-		onDismissRequest = { onDismiss() },
+	Box(
+		Modifier.fillMaxSize().clickable(
+			remember { MutableInteractionSource() },
+			null,
+			onClick = onDismiss
+		),
+		Alignment.Center
 	) {
-		Box(
+		Card(
 			modifier = Modifier
-				.fillMaxSize()
+				.fillMaxWidth().fillMaxHeight(0.8f)
+				.clip(RoundedCornerShape(8.dp))
 				.clickable(
-					indication = null,
-					interactionSource = remember { MutableInteractionSource() }
-				) {
-					onDismiss()
-				},
-			contentAlignment = Alignment.Center
+					// consume click
+					remember { MutableInteractionSource() },
+					null,
+				) { },
+			elevation = CardDefaults.cardElevation(12.dp)
 		) {
+			Contents(
+				itemMap, expandedItemId, scope, orderItems,
+				Modifier.fillMaxHeight(), onDismiss
+			)
+		}
+	}
+}
 
-			Card(
-				modifier = Modifier
-					.fillMaxWidth()
-					.fillMaxHeight(0.8f)
-					.clip(RoundedCornerShape(8.dp))
-					.clickable( // consume click
-						indication = null,
-						interactionSource = remember { MutableInteractionSource() }
-					) { },
-				elevation = CardDefaults.cardElevation(12.dp)
-			) {
-				Column(
-					modifier = Modifier
-						.fillMaxHeight(),
+/**
+ * Common layout to display order details, used in both the order card and the expanded overlay.
+ */
+@Composable
+private fun Order.Contents(
+	itemMap: Map<String, List<OrderItem?>>,
+	expandedItemId: MutableState<String?>,
+	scope: CoroutineScope,
+	orderItems: List<OrderItem>,
+	modifier: Modifier = Modifier,
+	onDismiss: () -> Unit = { }
+) = Column(modifier) {
+	Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary)) {
+		Box {}
+		Column(Modifier.fillMaxWidth().padding(12.dp, 6.dp)) {
+			Text(
+				"Order #${orderNumber}",
+				style = MaterialTheme.typography.titleMedium,
+				color = Color.White,
+			)
+			Text("Table No. ${table?.tableCode}", color = Color.White)
+		}
+	}
+
+	itemMap.forEach { (category, itemsOfCategory) ->
+		Column(Modifier.fillMaxWidth().padding(12.dp, 6.dp)) {
+			Text(category, style = MaterialTheme.typography.titleMedium)
+			itemsOfCategory.forEach { item ->
+				Text(
+					"${item?.quantity} x ${item?.branchItem?.itemName}",
+					Modifier.clickable { expandedItemId.value = item?.itemId },
+				)
+				DropdownMenu(
+					expanded = expandedItemId.value == item?.itemId,
+					onDismissRequest = { expandedItemId.value = null }
 				) {
-					Row(
-						modifier = Modifier
-							.fillMaxWidth()
-							.background(MaterialTheme.colorScheme.primary)
-					) {
-						Box {}
-						Column(
-							modifier = Modifier
-								.fillMaxWidth()
-								.padding(vertical = 6.dp, horizontal = 12.dp),
-						) {
-							Text(
-								text = "Order #${order.orderNumber}",
-								style = MaterialTheme.typography.titleMedium,
-								color = Color.White,
-							)
-							Text(
-								text = "Table No. ${order.tableNumber}",
-								color = Color.White,
-							)
-						}
-					}
-					itemMap.forEach { (category, itemsOfCategory) ->
-						Column(
-							modifier = Modifier
-								.fillMaxWidth()
-								.padding(vertical = 6.dp, horizontal = 12.dp),
-						) {
-							Text(
-								text = category,
-								style = MaterialTheme.typography.titleMedium,
-							)
-							itemsOfCategory.forEach { item ->
-								Text(
-									text = "${item?.quantity} x ${item?.branchItem?.itemName}",
-									modifier = Modifier
-										.clickable { expandedItemId = item?.itemId },
-								)
-								DropdownMenu(
-									expanded = expandedItemId == item?.itemId,
-									onDismissRequest = { expandedItemId = null }
-								) {
-									item?.branchItem?.itemIngredients?.forEach { itemIngredient ->
-										DropdownMenuItem(
-											text = { Text("${itemIngredient.quantity} (${itemIngredient.unit}) ${itemIngredient.ingredient.ingredientName}") },
-											onClick = {
-												expandedItemId = null
-												println("${itemIngredient.quantity} (${itemIngredient.unit}) ${itemIngredient.ingredient.ingredientName}")
-											}
-										)
-									}
-								}
+					item?.branchItem?.itemIngredients?.forEach {
+						DropdownMenuItem(
+							text = { Text("${it.quantity} (${it.unit}) ${it.ingredient.ingredientName}") },
+							onClick = {
+								expandedItemId.value = null
+								println("${it.quantity} (${it.unit}) ${it.ingredient.ingredientName}")
 							}
-
-						}
+						)
 					}
-					Spacer(modifier = Modifier.weight(1f))
-					KitchenDisplayOrderButtons(scope, order, orderItems, onDismiss)
 				}
 			}
 		}
 	}
+
+	Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+	this@Contents.ActionButtons(scope, orderItems, onDismiss)
 }
+
+private suspend fun List<OrderItem>.onComplete() = forEach { orderItem ->
+	orderItem.branchItem.itemIngredients.forEach { itemIngredient ->
+		// No way quantity would have been null, right?
+		val unit = itemIngredient.ingredient.unit
+		val amount = itemIngredient.quantity
+			?: throw IllegalStateException("Ingredient quantity is required to complete order")
+
+		itemIngredient.ingredient = itemIngredient.ingredient.decreaseStock(
+			orderItem.quantity * amount,
+			"Used $amount $unit in order ${orderItem.orderId}"
+		)
+	}
+}
+
+private fun List<Order>.onChange(action: PostgresAction.Insert): List<Order> {
+	return this + action.decodeRecord<Order>()
+}
+
+private fun List<Order>.onChange(action: PostgresAction.Delete): List<Order> {
+	return this.filterNot { it.orderId == action.decodeOldRecord<Order>().orderId }
+}
+
+private fun List<Order>.onChange(action: PostgresAction.Update): List<Order> {
+	val new = action.decodeRecord<Order>()
+	val old = action.decodeOldRecord<Order>()
+	val (isPtoF, isPtoC, isFCtoP) = new.inferStatusChange(old)
+
+	return when {
+		// If the update is about status, add/remove the order accordingly
+		isFCtoP -> this + new
+		isPtoF || isPtoC -> this.filterNot { it.orderId == old.orderId }
+
+		// If the update is about something else, update the order in place
+		else -> this.map { if (it.orderId == new.orderId) new else it }
+	}
+}
+
+@Preview(apiLevel = 35)
+@Composable
+private fun OrderItemPreview() = Order.MOCK.ItemCard(
+	{}, {}
+)
+
+@Preview(apiLevel = 35)
+@Composable
+private fun ExpandedOrderOverlayPreview() = Order.MOCK.ExpandedOverlay(
+	OrderItem.MOCKS
+) {}

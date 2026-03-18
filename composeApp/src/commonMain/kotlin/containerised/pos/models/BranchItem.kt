@@ -41,7 +41,14 @@ data class BranchItem(
 
 	@SerialName("url_img")
 	val urlImg: String? = null,
+
+	val itemIngredients: List<ItemIngredientWithIngredient>? = null,
 ) {
+	fun isOutOfStock(): Boolean {
+		if (itemIngredients == null) throw IllegalStateException("Ingredients must be loaded to determine stock status.")
+		return itemIngredients.any { it.ingredient.isLowStock() }
+	}
+
 	companion object {
 		/**
 		 * Fetches all branch items from the database.
@@ -53,12 +60,6 @@ data class BranchItem(
 			return SupabaseClient.db["branch_items"].select().decodeList<BranchItem>()
 		}
 
-		suspend fun fetchFeatured(): List<BranchItem> {
-			return SupabaseClient.db["branch_items"]
-				.select { filter { eq("is_featured", true) } }
-				.decodeList<BranchItem>()
-		}
-
 		/**
 		 * Fetches branch items associated with a specific branch ID from the database.
 		 * @param branchId The ID of the branch for which to fetch items.
@@ -67,84 +68,21 @@ data class BranchItem(
 		 * @see BranchItem
 		 */
 		suspend fun fetchByBranch(branchId: String): List<BranchItem> {
-			val result = SupabaseClient.db["branch_items"]
-				.select {
-					filter {
-						eq("branch_id", branchId)
-					}
-				}
+			return SupabaseClient.db["branch_items"]
+				.select { filter { eq("branch_id", branchId) } }
 				.decodeList<BranchItem>()
-			return result
 		}
 
-		/**
-		 * Fetches a branch item by its item ID from the database.
-		 * @param itemId The ID of the item to fetch.
-		 * @return A [BranchItem] object representing the branch item with the specified item ID, or null if no such item exists.
-		 * @throws Exception if there is an error during the database query or data decoding process.
-		 * @see BranchItem
-		 */
-		suspend fun fetchById(itemId: String): BranchItem? {
-			val result = SupabaseClient.db["branch_items"]
-				.select {
-					filter {
-						eq("item_id", itemId)
-					}
-					limit(1)
-				}
+		suspend fun fetchByBranchWithIngredient(branchId: String): List<BranchItem> {
+			return SupabaseClient.db["branch_items"]
+				.select(
+					Columns.raw(
+						"""
+					*, ingredients: item_ingredients (*, ingredient: ingredients (*))
+				""".trimIndent()
+					)
+				) { filter { eq("branch_id", branchId) } }
 				.decodeList<BranchItem>()
-			return result.firstOrNull()
-		}
-
-		/**
-		 * Fetches branch items associated with a specific branch ID from the database, including related category information.
-		 * @param branchId The ID of the branch for which to fetch items.
-		 * @return A list of [BranchItem] objects representing the items associated with the specified branch ID, including related category information.
-		 * @throws Exception if there is an error during the database query or data decoding process.
-		 * @see BranchItem
-		 */
-		suspend fun fetchAndJoinByBranch(branchId: String): List<BranchItem> {
-			val result = SupabaseClient.db["branch_items"]
-				.select(
-					columns = Columns.raw(
-						"""
-						*,
-						category: categories (category_id, category_name, display_order)
-						"""
-					)
-				) {
-					filter {
-						eq("branch_id", branchId)
-					}
-				}.decodeList<BranchItem>()
-
-			return result
-		}
-
-		/**
-		 * Fetches a branch item by its item ID from the database, including related category information.
-		 * @param itemId The ID of the item to fetch.
-		 * @return A [BranchItem] object representing the branch item with the specified item ID, including related category information, or null if no such item exists.
-		 * @throws Exception if there is an error during the database query or data decoding process.
-		 * @see BranchItem
-		 */
-		suspend fun fetchAndJoinById(itemId: String): BranchItem? {
-			val result = SupabaseClient.db["branch_items"]
-				.select(
-					columns = Columns.raw(
-						"""
-						*,
-						category: categories (category_id, category_name, display_order)
-						"""
-					)
-				) {
-					filter {
-						eq("item_id", itemId)
-					}
-					limit(1)
-				}.decodeList<BranchItem>()
-
-			return result.firstOrNull()
 		}
 
 		/**
@@ -156,11 +94,7 @@ data class BranchItem(
 		 */
 		suspend fun update(itemId: String, updatedData: BranchItem) {
 			SupabaseClient.db["branch_items"]
-				.update(updatedData) {
-					filter {
-						eq("item_id", itemId)
-					}
-				}
+				.update(updatedData) { filter { eq("item_id", itemId) } }
 		}
 
 		val MOCK = BranchItem(
@@ -174,7 +108,31 @@ data class BranchItem(
 			estimatedPrep = "15 mins",
 			isAvailable = true,
 			isFeatured = true,
-			urlImg = null
+			urlImg = null,
+			itemIngredients = listOf(
+				ItemIngredientWithIngredient(
+					itemId = "0",
+					ingredientId = "1",
+					quantity = 1.1,
+					ingredient = Ingredient(
+						id = "1",
+						ingredientName = "Beef",
+						currentStock = 10.0,
+						minStockLevel = 15.0
+					)
+				),
+				ItemIngredientWithIngredient(
+					itemId = "0",
+					ingredientId = "2",
+					quantity = 1.1,
+					ingredient = Ingredient(
+						id = "2",
+						ingredientName = "Noodles",
+						currentStock = 10.0,
+						minStockLevel = 5.0
+					)
+				)
+			)
 		)
 	}
 }

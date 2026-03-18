@@ -19,9 +19,7 @@ actual object NotificationService {
 	}
 
 	private fun createChannel(context: Context) {
-
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
 			val channel = NotificationChannel(
 				CHANNEL_ID,
 				"Order Updates",
@@ -30,17 +28,14 @@ actual object NotificationService {
 				description = "Notifications for new or updated orders"
 			}
 
-			val manager =
-				context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+			val manager = context
+				.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
 			manager.createNotificationChannel(channel)
 		}
 	}
 
-	actual fun showNotification(
-		title: String,
-		message: String
-	) {
+	actual fun showNotification(title: String, message: String) {
 		val context = appContext ?: run {
 			Log.d("NOTIF", "Context is null")
 			return
@@ -54,11 +49,12 @@ actual object NotificationService {
 			.setPriority(NotificationCompat.PRIORITY_HIGH)
 			.setAutoCancel(true)
 
-		val manager =
-			context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+		val manager = context
+			.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
 		manager.notify(System.currentTimeMillis().toInt(), builder.build())
 	}
+
 	fun createForegroundNotification(title: String, text: String): Notification {
 		return NotificationCompat.Builder(appContext!!, CHANNEL_ID)
 			.setContentTitle(title)

@@ -4,7 +4,6 @@ import android.content.Intent
 import androidx.core.content.ContextCompat
 
 actual object RealtimeServiceController {
-
 	private var started = false
 
 	actual fun start() {

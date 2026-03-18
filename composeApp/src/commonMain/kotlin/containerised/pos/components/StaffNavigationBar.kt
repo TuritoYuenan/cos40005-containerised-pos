@@ -15,7 +15,7 @@ import containerised.pos.routes.StaffRoutes
 data class NavigationItem(val label: String, val route: Any, val icon: ImageVector)
 
 val navItems = listOf(
-	NavigationItem("Order", StaffRoutes.Login, Icons.AutoMirrored.Filled.Comment),
+	NavigationItem("Order", StaffRoutes.OrderConfirm, Icons.AutoMirrored.Filled.Comment),
 	NavigationItem("Menu", StaffRoutes.MenuEdit, Icons.AutoMirrored.Filled.MenuOpen),
 	NavigationItem("Kitchen", StaffRoutes.KitchenDisplay, Icons.Filled.Tab),
 	NavigationItem("Sales", StaffRoutes.Login, Icons.Filled.Inbox),

@@ -7,6 +7,11 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
+/**
+ * Custom theme for the POS application
+ * - Uses Material 3 theming
+ * - Supports dynamic color on Android 12+ if enabled
+ */
 @Composable
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -18,6 +23,9 @@ fun AppTheme(
     MaterialTheme(dynamicScheme ?: staticScheme, content = content)
 }
 
+/**
+ * Returns a dynamic [ColorScheme] if dynamic color is supported and enabled, or null otherwise.
+ */
 @Composable
 expect fun dynamicColorSchemeOrNull(
     darkTheme: Boolean,
