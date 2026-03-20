@@ -31,7 +31,7 @@ private val defaultPadding = 16.dp
  * - Loading states and error handling
  */
 @Composable
-fun EditIngredientPage(navController: NavController, args: StaffRoutes.IngredientDetail) {
+fun EditIngredientPage(navController: NavController, args: StaffRoutes.EditIngredient) {
 	val scope = rememberCoroutineScope()
 	var error by remember { mutableStateOf<String?>(null) }
 	var isLoading by remember { mutableStateOf(true) }
