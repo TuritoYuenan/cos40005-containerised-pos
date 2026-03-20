@@ -1,5 +1,6 @@
 package containerised.pos
 
+import containerised.pos.database.ChangeType
 import containerised.pos.database.DatabaseTableListener
 import io.github.jan.supabase.realtime.PostgresAction
 import kotlinx.coroutines.CoroutineScope
@@ -19,13 +20,13 @@ class RealtimeManager(
 
 	private var listener: DatabaseTableListener? = null
 
-	fun start() {
+	fun start(type: ChangeType = ChangeType.ALL) {
 		if (listener != null) return
 
 		listener = DatabaseTableListener(tableName, scope) { action ->
 			scope.launch { _events.emit(action) }
 		}
-		listener?.initialize()
+		listener?.initialize(type)
 		listener?.subscribe()
 	}
 
@@ -37,5 +38,6 @@ class RealtimeManager(
 	companion object {
 		val forOrders = RealtimeManager("orders")
 		val forIngredients = RealtimeManager("ingredients")
+		val forOrderItems = RealtimeManager("order_items")
 	}
 }

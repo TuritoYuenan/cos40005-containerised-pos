@@ -21,8 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import containerised.pos.RealtimeManager
 import containerised.pos.RealtimeServiceController
+import containerised.pos.database.ChangeType
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
+import containerised.pos.models.OrderStatus
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
@@ -49,8 +51,6 @@ fun KitchenDisplayPage() {
 
 	LaunchedEffect(Unit) {
 		println("Creating channel")
-		RealtimeServiceController.start()
-		RealtimeManager.forOrders.start()
 		RealtimeManager.forOrders.events.collect { action ->
 			when (action) {
 				is PostgresAction.Insert -> orders = orders.onChange(action)
@@ -85,12 +85,21 @@ private fun Order.ItemCard(
 	var error by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
+		RealtimeManager.forOrderItems.events.collect { action ->
+			when (action) {
+				is PostgresAction.Update -> { orderItems = orderItems.onOrderItemChange(action); itemMap = orderItems.groupBy { it.branchItem?.category?.categoryName ?: "" }}
+				else -> {}
+			}
+		}
+	}
+
+	LaunchedEffect(Unit) {
 		try {
 			orderItems = OrderItem.fetchByOrderWithJoins(orderId)
 			println("Fetched ${orderItems.size} order items:")
 			orderItems.forEach { item -> println("• ${item.itemId}: ${item.quantity} (${item.subtotal})") }
 
-			itemMap = orderItems.groupBy { it.branchItem.category.categoryName }
+			itemMap = orderItems.groupBy { it.branchItem?.category?.categoryName ?: "" }
 			println(itemMap)
 		} catch (e: Exception) {
 			error = e.message
@@ -162,14 +171,57 @@ private fun Order.ActionButtons(
 		Text("Done")
 	}
 }
+@Composable
+private fun OrderItem.ActionButtons(
+	scope: CoroutineScope,
+	orderItem: OrderItem,
+) = Row(
+	Modifier.fillMaxWidth().padding(12.dp, 6.dp),
+	Arrangement.spacedBy(10.dp, Alignment.End),
+	Alignment.CenterVertically,
+) {
+	var isCancelProcessing by remember { mutableStateOf(false) }
+	FilledTonalButton(
+		onClick = {
+			scope.launch {
+				isCancelProcessing = true
+				OrderItem.markCancelled(orderId, itemId)
+				isCancelProcessing = false
+			}
+		},
+		enabled = !isCancelProcessing,
+		shape = RoundedCornerShape(16.dp)
+	) {
+		Icon(Icons.Filled.Close, "Cancel")
+		Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+		Text("Cancel")
+	}
 
+	var isDoneProcessing by remember { mutableStateOf(false) }
+	Button(
+		onClick = {
+			scope.launch {
+				isDoneProcessing = true
+				orderItem.onCompleteOrderItem()
+				OrderItem.markFinished(orderId, itemId)
+				isDoneProcessing = false
+			}
+		},
+		enabled = !isDoneProcessing,
+		shape = RoundedCornerShape(16.dp),
+	) {
+		Icon(Icons.Filled.Check, "Done")
+		Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+		Text("Done")
+	}
+}
 @Composable
 private fun Order.ExpandedOverlay(
 	orderItems: List<OrderItem>,
 	onDismiss: () -> Unit,
 ) = Dialog(onDismissRequest = onDismiss) {
 	val scope = rememberCoroutineScope()
-	val itemMap = orderItems.groupBy { it.branchItem.category.categoryName }
+	val itemMap = orderItems.groupBy { it.branchItem?.category?.categoryName ?: "" }
 	val expandedItemId = remember { mutableStateOf<String?>(null) }
 
 	Box(
@@ -230,6 +282,7 @@ private fun Order.Contents(
 				Text(
 					"${item?.quantity} x ${item?.branchItem?.itemName}",
 					Modifier.clickable { expandedItemId.value = item?.itemId },
+					color = if (item?.itemStatus == OrderStatus.CANCELED) {Color.Red} else if (item?.itemStatus == OrderStatus.FINISHED) {Color.Blue} else {Color.Black}
 				)
 				DropdownMenu(
 					expanded = expandedItemId.value == item?.itemId,
@@ -244,6 +297,9 @@ private fun Order.Contents(
 							}
 						)
 					}
+					if (item?.itemStatus == OrderStatus.PREPARING) {
+						item.ActionButtons(scope, item)
+					}
 				}
 			}
 		}
@@ -254,7 +310,7 @@ private fun Order.Contents(
 }
 
 private suspend fun List<OrderItem>.onComplete() = forEach { orderItem ->
-	orderItem.branchItem.itemIngredients.forEach { itemIngredient ->
+	orderItem.branchItem?.itemIngredients?.forEach { itemIngredient ->
 		// No way quantity would have been null, right?
 		val unit = itemIngredient.ingredient.unit
 		val amount = itemIngredient.quantity
@@ -263,6 +319,19 @@ private suspend fun List<OrderItem>.onComplete() = forEach { orderItem ->
 		itemIngredient.ingredient = itemIngredient.ingredient.decreaseStock(
 			orderItem.quantity * amount,
 			"Used $amount $unit in order ${orderItem.orderId}"
+		)
+	}
+}
+private suspend fun OrderItem.onCompleteOrderItem() {
+	this.branchItem?.itemIngredients?.forEach { itemIngredient ->
+		// No way quantity would have been null, right?
+		val unit = itemIngredient.ingredient.unit
+		val amount = itemIngredient.quantity
+			?: throw IllegalStateException("Ingredient quantity is required to complete order")
+
+		itemIngredient.ingredient = itemIngredient.ingredient.decreaseStock(
+			this.quantity * amount,
+			"Used $amount $unit in order ${this.orderId}"
 		)
 	}
 }
@@ -287,6 +356,18 @@ private fun List<Order>.onChange(action: PostgresAction.Update): List<Order> {
 
 		// If the update is about something else, update the order in place
 		else -> this.map { if (it.orderId == new.orderId) new else it }
+	}
+}
+private fun List<OrderItem>.onOrderItemChange(action: PostgresAction.Update): List<OrderItem> {
+	val new = action.decodeRecord<OrderItem>()
+	println("new: $new")
+	return this.map {
+		if (it.orderId == new.orderId && it.itemId == new.itemId){
+			it.copy(
+				itemStatus = new.itemStatus
+			)
+		}
+		else it
 	}
 }
 

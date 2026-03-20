@@ -23,7 +23,7 @@
         </activity>
 
 		<service
-			android:name=".OrderRealtimeService"
+			android:name=".AndroidOrderRealtimeService"
 			android:foregroundServiceType="dataSync"
 			android:exported="false"/>
     </application>

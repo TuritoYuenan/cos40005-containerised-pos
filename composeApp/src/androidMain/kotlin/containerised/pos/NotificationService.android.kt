@@ -55,8 +55,8 @@ actual object NotificationService {
 		manager.notify(System.currentTimeMillis().toInt(), builder.build())
 	}
 
-	fun createForegroundNotification(title: String, text: String): Notification {
-		return NotificationCompat.Builder(appContext!!, CHANNEL_ID)
+	fun createForegroundNotification(context: Context, title: String, text: String): Notification {
+		return NotificationCompat.Builder(context, CHANNEL_ID)
 			.setContentTitle(title)
 			.setContentText(text)
 			.setSmallIcon(R.drawable.ic_launcher_foreground)

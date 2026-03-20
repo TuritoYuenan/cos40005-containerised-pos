@@ -50,8 +50,6 @@ fun InventoryPage(navController: NavController) {
 	}
 
 	LaunchedEffect(Unit) {
-		RealtimeServiceController.start()
-		RealtimeManager.forIngredients.start()
 		RealtimeManager.forIngredients.events.collect { action ->
 			when (action) {
 				is PostgresAction.Insert -> ingredients = ingredients.onChange(action)

@@ -35,14 +35,26 @@ class DatabaseTableListener(
 	private var channel: RealtimeChannel? = null
 	private var subscribed = false
 
-	fun initialize() {
+	fun initialize(type: ChangeType = ChangeType.ALL) {
 		channel = SupabaseClient.realtime.channel("$tableName-changes")
-		channel?.postgresChangeFlow<PostgresAction>(schema = "public") {
-			table = tableName
+		val flow = when (type) {
+			ChangeType.ALL -> channel?.postgresChangeFlow<PostgresAction>(schema = "public") {
+				table = tableName
+			}
+			ChangeType.INSERT -> channel?.postgresChangeFlow<PostgresAction.Insert>(schema = "public") {
+				table = tableName
+			}
+			ChangeType.UPDATE -> channel?.postgresChangeFlow<PostgresAction.Update>(schema = "public") {
+				table = tableName
+			}
+			ChangeType.DELETE -> channel?.postgresChangeFlow<PostgresAction.Delete>(schema = "public") {
+				table = tableName
+			}
 		}
+		flow
 			?.onEach { onChange(it) }
 			?.launchIn(scope)
-		println("Channel for $tableName created")
+		println("$type Channel for $tableName created")
 	}
 
 	fun subscribe() {
@@ -62,4 +74,7 @@ class DatabaseTableListener(
 		}
 		println("Channel for $tableName unsubscribed")
 	}
+}
+enum class ChangeType {
+	ALL, INSERT, DELETE, UPDATE
 }

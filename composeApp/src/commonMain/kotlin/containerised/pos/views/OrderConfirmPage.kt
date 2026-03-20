@@ -41,7 +41,6 @@ fun OrderConfirmPage() {
 	}
 
 	LaunchedEffect(Unit) {
-		RealtimeManager.forOrders.start()
 		RealtimeManager.forOrders.events.collect { action ->
 			when (action) {
 				is PostgresAction.Insert -> orders = orders.onChange(action)
