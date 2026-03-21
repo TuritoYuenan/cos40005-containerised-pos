@@ -151,10 +151,12 @@ private fun Ingredient.Card(onViewEdit: () -> Unit = {}, onViewHistory: () -> Un
 
 				Row(horizontalArrangement = Arrangement.spacedBy(ButtonDefaults.IconSpacing)) {
 					Icon(Icons.Default.LocalShipping, "Info")
-					Text(
-						ingredient.supplierInfo.formatSupplier(),
-						style = MaterialTheme.typography.bodyMedium
-					)
+					ingredient.supplierInfo?.formatSupplier()?.let {
+						Text(
+							it,
+							style = MaterialTheme.typography.bodyMedium
+						)
+					}
 				}
 			}
 

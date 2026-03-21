@@ -25,16 +25,16 @@ data class Ingredient(
 	val currentStock: Double,
 
 	@SerialName("min_stock_level")
-	val minStockLevel: Double,
+	val minStockLevel: Double = 0.0,
 
 	@SerialName("supplier_info")
-	val supplierInfo: JsonObject,
+	val supplierInfo: JsonObject = JsonObject(emptyMap()),
 
 	@SerialName("branch_id")
-	val branchId: String,
+	val branchId: String = "",
 
 	@SerialName("is_active")
-	val isActive: Boolean
+	val isActive: Boolean = true
 ) {
 	@Serializable
 	data class Insertable(

@@ -20,8 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import containerised.pos.RealtimeManager
-import containerised.pos.RealtimeServiceController
-import containerised.pos.database.ChangeType
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
 import containerised.pos.models.OrderStatus
@@ -87,7 +85,11 @@ private fun Order.ItemCard(
 	LaunchedEffect(Unit) {
 		RealtimeManager.forOrderItems.events.collect { action ->
 			when (action) {
-				is PostgresAction.Update -> { orderItems = orderItems.onOrderItemChange(action); itemMap = orderItems.groupBy { it.branchItem?.category?.categoryName ?: "" }}
+				is PostgresAction.Update -> {
+					orderItems = orderItems.onOrderItemChange(action); itemMap =
+						orderItems.groupBy { it.branchItem?.category?.categoryName ?: "" }
+				}
+
 				else -> {}
 			}
 		}
@@ -171,6 +173,7 @@ private fun Order.ActionButtons(
 		Text("Done")
 	}
 }
+
 @Composable
 private fun OrderItem.ActionButtons(
 	scope: CoroutineScope,
@@ -215,6 +218,7 @@ private fun OrderItem.ActionButtons(
 		Text("Done")
 	}
 }
+
 @Composable
 private fun Order.ExpandedOverlay(
 	orderItems: List<OrderItem>,
@@ -282,7 +286,11 @@ private fun Order.Contents(
 				Text(
 					"${item?.quantity} x ${item?.branchItem?.itemName}",
 					Modifier.clickable { expandedItemId.value = item?.itemId },
-					color = if (item?.itemStatus == OrderStatus.CANCELED) {Color.Red} else if (item?.itemStatus == OrderStatus.FINISHED) {Color.Blue} else {Color.Black}
+					color = when (item?.itemStatus) {
+						OrderStatus.CANCELED -> MaterialTheme.colorScheme.error
+						OrderStatus.FINISHED -> MaterialTheme.colorScheme.primary
+						else -> MaterialTheme.colorScheme.onSurface
+					}
 				)
 				DropdownMenu(
 					expanded = expandedItemId.value == item?.itemId,
@@ -322,6 +330,7 @@ private suspend fun List<OrderItem>.onComplete() = forEach { orderItem ->
 		)
 	}
 }
+
 private suspend fun OrderItem.onCompleteOrderItem() {
 	this.branchItem?.itemIngredients?.forEach { itemIngredient ->
 		// No way quantity would have been null, right?
@@ -358,16 +367,16 @@ private fun List<Order>.onChange(action: PostgresAction.Update): List<Order> {
 		else -> this.map { if (it.orderId == new.orderId) new else it }
 	}
 }
+
 private fun List<OrderItem>.onOrderItemChange(action: PostgresAction.Update): List<OrderItem> {
 	val new = action.decodeRecord<OrderItem>()
 	println("new: $new")
 	return this.map {
-		if (it.orderId == new.orderId && it.itemId == new.itemId){
+		if (it.orderId == new.orderId && it.itemId == new.itemId) {
 			it.copy(
 				itemStatus = new.itemStatus
 			)
-		}
-		else it
+		} else it
 	}
 }
 

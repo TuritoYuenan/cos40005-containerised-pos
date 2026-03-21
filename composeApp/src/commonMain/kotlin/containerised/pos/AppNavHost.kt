@@ -25,6 +25,7 @@ import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
@@ -36,8 +37,10 @@ fun AppNavHost() {
 		var userPermissions by remember { mutableStateOf<List<String>>(emptyList()) }
 		SupabaseClient.auth.currentSessionOrNull()
 
-		val currentRoute =
-			navController.currentBackStackEntryAsState().value?.destination?.route.orEmpty()
+		val currentRoute = navController
+			.currentBackStackEntryAsState()
+			.value?.destination?.route.orEmpty()
+
 		val isLogin = currentRoute == "login"
 
 		LaunchedEffect(Unit) {
@@ -51,45 +54,47 @@ fun AppNavHost() {
 				}
 			}
 		}
-		LaunchedEffect(Unit) {
-			SupabaseClient.auth.sessionStatus
-				.collectLatest { status ->
-					when (status) {
-						is SessionStatus.Authenticated -> {
-							val userId = SupabaseClient.auth.currentUserOrNull()?.id
-							if (userId != null) {
-								val permissions = fetchUserPermission(userId)
-								userPermissions = permissions
-								val route = getStartRoute(permissions)
-								navController.navigate(route) {
-									popUpTo(0) { inclusive = true }
-									launchSingleTop = true
-								}
-							}
-						}
 
-						is SessionStatus.NotAuthenticated -> {
-							navController.navigate(StaffRoutes.Login) {
-								popUpTo(0) { inclusive = true }
+		LaunchedEffect(navController) {
+			// Wait until NavHost has attached a graph/start destination
+			navController.currentBackStackEntryFlow.first()
+
+			SupabaseClient.auth.sessionStatus.collectLatest { status ->
+				when (status) {
+					is SessionStatus.Authenticated -> {
+						val userId = SupabaseClient.auth.currentUserOrNull()?.id
+						if (userId != null) {
+							val permissions = fetchUserPermission(userId)
+							userPermissions = permissions
+							val route = getStartRoute(permissions)
+							navController.navigate(route) {
+								popUpTo(navController.graph.id) { inclusive = true }
 								launchSingleTop = true
 							}
 						}
-
-						else -> Unit
 					}
+
+					is SessionStatus.NotAuthenticated -> {
+						navController.navigate(StaffRoutes.Login) {
+							popUpTo(navController.graph.id) { inclusive = true }
+							launchSingleTop = true
+						}
+					}
+
+					else -> Unit
 				}
+			}
 		}
 
 		Scaffold(
 			topBar = { StaffTopBar(navController, currentRoute) },
 			bottomBar = {
-				if (!isLogin) {
-					StaffNavigationBar(navController, userPermissions)
-				}
+				if (!isLogin) StaffNavigationBar(navController, userPermissions)
 			}
 		) { paddingValues ->
 			NavHost(
 				navController,
+				StaffRoutes.Login,
 				Modifier.padding(paddingValues)
 			) {
 				composable<StaffRoutes.Login> { LoginPage(navController) }
