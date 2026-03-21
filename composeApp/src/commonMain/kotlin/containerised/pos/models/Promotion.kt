@@ -6,31 +6,30 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Promotion(
-	@SerialName("promotion_id")
-	val promotionId: String,
 
-	@SerialName("name")
-	val name: String,
+    @SerialName("promotion_id")
+    val promotionId: String,
 
-	@SerialName("description")
-	val description: String? = null,
+    @SerialName("branch_id")
+    val branchId: String,
 
-	@SerialName("is_active")
-	val isActive: Boolean = true,
+    @SerialName("start_date")
+    val startDate: String? = null,
 
-	@SerialName("start_date")
-	val startDate: String? = null,
+    @SerialName("end_date")
+    val endDate: String? = null,
 
-	@SerialName("end_date")
-	val endDate: String? = null,
+    @SerialName("days_of_week")
+    val daysOfWeek: String? = null,
 
-	@SerialName("requires_manual_confirmation")
-	val requiresManualConfirmation: Boolean = false,
+    @SerialName("rules")
+    val rules: String? = null, // JSONB comes as String
 
-	@SerialName("notes")
-	val notes: String? = null
-){
+    @SerialName("is_active")
+    val isActive: Boolean = true
+) {
     companion object {
+
         suspend fun fetchById(promotionId: String): Promotion? {
             val result = SupabaseClient.db["promotions"]
                 .select {
@@ -45,14 +44,34 @@ data class Promotion(
         }
 
         suspend fun fetchByBranch(branchId: String): List<Promotion> {
-            val result = SupabaseClient.db["promotions"]
+            return SupabaseClient.db["promotions"]
                 .select {
                     filter {
                         eq("branch_id", branchId)
                     }
                 }
-                .decodeList<Promotion>()
-            return result
+                .decodeList()
+        }
+
+        suspend fun insert(
+            startDate: String?,
+            endDate: String?,
+            daysOfWeek: String,
+            rules: String,
+            isActive: Boolean
+        ) {
+            val newPromotion = mapOf(
+                "promotion_id" to "PRO",
+                "branch_id" to "BRA26011700",
+                "start_date" to startDate,
+                "end_date" to endDate,
+                "days_of_week" to daysOfWeek,
+                "rules" to rules,
+                "is_active" to isActive.toString() // 👈 important
+            )
+
+            SupabaseClient.db["promotions"]
+                .insert(newPromotion)
         }
     }
 }

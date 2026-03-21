@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import containerised.pos.components.menu_edit.MultiSelectDropdown
+import containerised.pos.components.menu_edit.SwitchField
 import containerised.pos.models.BranchItem
 import containerised.pos.models.BranchItem.Companion.update
 import io.kamel.image.KamelImage
@@ -36,7 +38,9 @@ private data class EditItemFormState(
     var name: String = "",
     var price: String = "0",
     var categoryId: String? = null,
-    var isFeatured: Boolean = false
+    var isFeatured: Boolean = false,
+    var selectedTagIds: Set<String> = setOf(),
+
 )
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -247,7 +251,6 @@ private fun FormSection(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
 
-            // 🔹 Name Field
             OutlinedTextField(
                 value = formState.name,
                 onValueChange = { onFormChange(formState.copy(name = it)) },
@@ -257,8 +260,6 @@ private fun FormSection(
                     Icon(Icons.Default.Edit, contentDescription = null)
                 }
             )
-
-            // 🔹 Price Field
             OutlinedTextField(
                 value = formState.price,
                 onValueChange = { onFormChange(formState.copy(price = it)) },
@@ -268,15 +269,12 @@ private fun FormSection(
                     Icon(Icons.Default.Edit, contentDescription = null)
                 }
             )
-
-            // 🔹 Category Dropdown (Single Select)
             ExposedDropdownMenuBox(
                 expanded = categoryExpanded,
                 onExpandedChange = { categoryExpanded = !categoryExpanded }
             ) {
                 val categoryName =
                     categories.find { it.categoryId == formState.categoryId }?.categoryName ?: ""
-
                 OutlinedTextField(
                     value = categoryName,
                     onValueChange = {},
@@ -289,7 +287,6 @@ private fun FormSection(
                         .menuAnchor()
                         .fillMaxWidth()
                 )
-
                 ExposedDropdownMenu(
                     expanded = categoryExpanded,
                     onDismissRequest = { categoryExpanded = false }
@@ -307,85 +304,23 @@ private fun FormSection(
                     }
                 }
             }
-
-            // 🔹 Tags Dropdown (Multi Select)
-            ExposedDropdownMenuBox(
-                expanded = tagExpanded,
-                onExpandedChange = { tagExpanded = !tagExpanded }
-            ) {
-                OutlinedTextField(
-                    value = selectedTagNames,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Tags") },
-                    placeholder = { Text("Select tags") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = tagExpanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = tagExpanded,
-                    onDismissRequest = { tagExpanded = false }
-                ) {
-                    tags.forEach { tag ->
-                        DropdownMenuItem(
-                            text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Checkbox(
-                                        checked = selectedTagIds.contains(tag.tagId),
-                                        onCheckedChange = null
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(tag.tagName)
-                                }
-                            },
-                            onClick = {
-                                val newSet =
-                                    if (selectedTagIds.contains(tag.tagId))
-                                        selectedTagIds - tag.tagId
-                                    else
-                                        selectedTagIds + tag.tagId
-
-                                onTagChange(newSet)
-                            }
-                        )
-                    }
+            MultiSelectDropdown(
+                label = "Tags",
+                items = tags.map { it.tagId to it.tagName },
+                selected = selectedTagIds.toList(),
+                onChange = { newList ->
+                    onTagChange(newList.toSet())
                 }
-            }
+            )
 
-            // 🔹 Featured Switch
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Featured Item",
-                        style = MaterialTheme.typography.titleSmall
-                    )
-
-                    Text(
-                        text = "Highlight this item on the menu",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            SwitchField(
+                title = "Featured Item",
+                description = "Highlight this item on the menu",
+                checked = formState.isFeatured,
+                onCheckedChange = {
+                    onFormChange(formState.copy(isFeatured = it))
                 }
-
-                Switch(
-                    checked = formState.isFeatured,
-                    onCheckedChange = {
-                        onFormChange(formState.copy(isFeatured = it))
-                    }
-                )
-            }
+            )
         }
     }
 }

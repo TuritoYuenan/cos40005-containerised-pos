@@ -192,7 +192,7 @@ fun PromotionsTab(
                         Column(Modifier
                             .weight(1f)
                             .padding(horizontal = 12.dp)) {
-                            Text(text = promotion.name)
+
                         }
                         IconButton(onClick = {onPromotionEdit(promotion)}) { Icon(Icons.Filled.Edit, contentDescription = "Edit") }
 
