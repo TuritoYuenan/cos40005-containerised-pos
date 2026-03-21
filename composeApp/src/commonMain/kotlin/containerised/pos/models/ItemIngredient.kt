@@ -37,7 +37,7 @@ data class ItemIngredientWithIngredient(
 	@SerialName("ingredient_id")
 	val ingredientId: String,
 
-	val ingredient: Ingredient,
+	var ingredient: Ingredient,
 
 	@SerialName("item_id")
 	val itemId: String,

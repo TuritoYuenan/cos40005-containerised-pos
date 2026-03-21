@@ -10,6 +10,12 @@ object StaffRoutes {
 	@Serializable @SerialName("inventory")
 	object Inventory
 
+	@Serializable @SerialName("ingredient-detail")
+	data class EditIngredient(val ingredientId: String)
+
+	@Serializable @SerialName("stock-history")
+	data class StockHistory(val ingredientId: String)
+
 	@Serializable @SerialName("menu-edit")
 	object MenuEdit
 
@@ -28,6 +34,9 @@ object StaffRoutes {
 	data class EditTag(
         val tagId: String? = null
     )
+
+	@Serializable @SerialName("confirm-order")
+	object OrderConfirm
 
 	@Serializable @SerialName("kitchen-display")
 	object KitchenDisplay
