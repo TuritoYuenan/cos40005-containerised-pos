@@ -62,7 +62,6 @@ fun AppNavHost() {
 				composable<StaffRoutes.EditTag> { backStackEntry ->
                         val args = backStackEntry.toRoute<StaffRoutes.EditTag>()
                         EditTagPage(navController, args.tagId)}
-                    }
 				composable<StaffRoutes.EditPromotion> { backStackEntry ->
                         val args = backStackEntry.toRoute<StaffRoutes.EditPromotion>()
                         EditPromotionPage(navController, args.promotionId)
