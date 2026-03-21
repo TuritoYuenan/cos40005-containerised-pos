@@ -36,7 +36,6 @@ fun AppNavHost() {
 		val currentRoute = navController
 			.currentBackStackEntryAsState()
 			.value?.destination?.route.orEmpty()
-
 		LaunchedEffect(Unit) {
 			RealtimeServiceController.start()
 			RealtimeManager.forOrders.events.collect { action ->
@@ -55,10 +54,19 @@ fun AppNavHost() {
 		) { paddingValues ->
 			NavHost(navController, startDestination, Modifier.padding(paddingValues)) {
 				composable<StaffRoutes.Login> { LoginPage() }
-				composable<StaffRoutes.MenuEdit> { MenuEditPage() }
-				composable<StaffRoutes.EditItem> { EditItemPage(navController) }
-				composable<StaffRoutes.EditTag> { EditTagPage(navController) }
-				composable<StaffRoutes.EditPromotion> { EditPromotionPage(navController) }
+				composable<StaffRoutes.MenuEdit> { MenuEditPage(navController) }
+				composable<StaffRoutes.EditItem> { backStackEntry ->
+                        val args = backStackEntry.toRoute<StaffRoutes.EditItem>()
+                        EditItemPage(navController, args.itemId)
+                    }
+				composable<StaffRoutes.EditTag> { backStackEntry ->
+                        val args = backStackEntry.toRoute<StaffRoutes.EditTag>()
+                        EditTagPage(navController, args.tagId)}
+                    }
+				composable<StaffRoutes.EditPromotion> { backStackEntry ->
+                        val args = backStackEntry.toRoute<StaffRoutes.EditPromotion>()
+                        EditPromotionPage(navController, args.promotionId)
+                    }
 				composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage() }
 				composable<StaffRoutes.OrderConfirm> { OrderConfirmPage() }
 				composable<StaffRoutes.Inventory> { InventoryPage(navController) }

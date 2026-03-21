@@ -4,11 +4,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,40 +22,68 @@ import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import containerised.pos.components.menu_edit.MultiSelectDropdown
+import containerised.pos.components.menu_edit.SwitchField
 import containerised.pos.models.BranchItem
+import containerised.pos.models.BranchItem.Companion.update
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import containerised.pos.models.Category
-// Dummy Category model for UI-only usage
+import containerised.pos.models.ItemTag
+import containerised.pos.models.Tag
+import containerised.pos.routes.StaffRoutes
+import kotlinx.coroutines.launch
 
+private data class EditItemFormState(
+    var name: String = "",
+    var price: String = "0",
+    var categoryId: String? = null,
+    var isFeatured: Boolean = false,
+    var selectedTagIds: Set<String> = setOf(),
+
+)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditItemPage(
-    navController: NavController?,
-    item: BranchItem? = null,
+    navController: NavController,
+    itemId: String? = null,
 ) {
-    // UI State Only
-    var name by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
-    var selectedCategoryName by remember { mutableStateOf("") }
-    var isFeatured by remember { mutableStateOf(false) }
-
     var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
     var imageUrl by remember { mutableStateOf<String?>(null) }
-
-
+    val scope = rememberCoroutineScope()
     var categories by remember { mutableStateOf(emptyList<Category>()) }
+    var tags by remember { mutableStateOf(emptyList<Tag>()) }
+    var formState by remember {mutableStateOf(EditItemFormState())}
+    var item by remember { mutableStateOf<BranchItem?>(null) }
+    var itemTags by remember { mutableStateOf(emptyList<ItemTag>()) }
+    var selectedTagIds by remember { mutableStateOf(setOf<String>()) }
     LaunchedEffect(Unit) {
         try {
             categories = Category.fetchAll()
+            tags = Tag.fetchAll()
+            println(tags)
+            if (itemId != null) {
+                item = BranchItem.fetchById(itemId)
+                itemTags = ItemTag.fetchByItemId(itemId)
+
+                selectedTagIds = itemTags.map { it.tagId }.toSet()
+            }
+            item?.let {
+                formState = EditItemFormState(
+                    name = it.itemName,
+                    price = it.price.toString(),
+                    categoryId = it.categoryId,
+                    isFeatured = it.isFeatured
+                )
+            }
         } catch (e: Exception) {
             println("Error fetching data: ${e.message}")
         }
     }
     LazyColumn {
         item {
-            EditItemTopBar {
-                navController?.popBackStack()
+            TopBar {
+                navController.popBackStack()
             }
             EditMenuImageSection(
                 imageBytes = imageBytes,
@@ -61,18 +91,14 @@ fun EditItemPage(
                 onUploadClick = {
                 }
             )
-            EditMenuFormSection(
-                name = name,
-                price = price,
-                selectedCategoryName = selectedCategoryName,
+
+            FormSection(
+                formState = formState,
+                onFormChange = { formState = it },
                 categories = categories,
-                isFeatured = isFeatured,
-                onNameChange = { name = it },
-                onPriceChange = { price = it },
-                onCategorySelected = {
-                    selectedCategoryName = it.categoryName
-                },
-                onFeaturedChange = { isFeatured = it }
+                tags = tags,
+                selectedTagIds = selectedTagIds,
+                onTagChange = { selectedTagIds = it }
             )
 
             Row(
@@ -81,10 +107,23 @@ fun EditItemPage(
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
             ) {
-                if (item == null) {CreateButton()}
+                if (itemId == null) {CreateButton(
+
+                )}
                     else {
-                        DeleteButton()
-                        UpdateButton()
+                        DeleteButton({navController.navigate(StaffRoutes.MenuEdit)})
+                        UpdateButton({
+                            item?.let { original ->
+                                val updated = original.copy(
+                                    itemName = formState.name,
+                                    price = formState.price.toInt(),
+                                    categoryId = formState.categoryId,
+                                    isFeatured = formState.isFeatured
+                                )
+                                scope.launch{BranchItem.update(itemId, updated)}
+                            }
+                            navController.navigate(StaffRoutes.MenuEdit)
+                        })
                     }
             }
         }
@@ -93,7 +132,7 @@ fun EditItemPage(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateButton(){
+private fun CreateButton(){
     Button(
         onClick = { },
         shape = RoundedCornerShape(8.dp),
@@ -111,9 +150,11 @@ fun CreateButton(){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UpdateButton(){
+private fun UpdateButton(
+    onClick: () -> Unit,
+){
     Button(
-        onClick = { },
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
@@ -129,9 +170,11 @@ fun UpdateButton(){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeleteButton(){
+private fun DeleteButton(
+    onClick: () -> Unit
+){
     Button(
-        onClick = { },
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.error,
@@ -147,7 +190,7 @@ fun DeleteButton(){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditItemTopBar(onBack: () -> Unit) {
+private fun TopBar(onBack: () -> Unit) {
     CenterAlignedTopAppBar(
         navigationIcon = {
             IconButton(onClick = onBack) {
@@ -164,94 +207,37 @@ fun EditMenuImageSection(
     imageUrl: String?,
     onUploadClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 12.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp, horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(60.dp)
-        ) {
 
-            when {
-                imageBytes != null -> {
-                    Image(
-                        bitmap = imageBytes.decodeToImageBitmap(),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                    )
-                }
-
-                imageUrl != null -> {
-                    KamelImage(
-                        resource = { asyncPainterResource(imageUrl) },
-                        contentDescription = "Menu image",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                    )
-                }
-
-                else -> {
-//                    Box(
-//                        modifier = Modifier
-//                            .size(120.dp)
-//                            .clip(RoundedCornerShape(8.dp))
-//                            .background(Color(0xFFACACAC)),
-//                        contentAlignment = Alignment.Center,
-//                        propagateMinConstraints = TODO(),
-//                        content =
-//                    )
-                }
-            }
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Button(
-                    onClick = onUploadClick,
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.height(40.dp)
-                ) {
-                    Text("Upload")
-                }
-
-                Text(
-                    text = "Supports PNG, JPEG, WEBP images below 5MB",
-                    color = Color.Black.copy(alpha = 0.5f),
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 12.sp
-                    )
-                )
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditMenuFormSection(
-    name: String,
-    price: String,
-    selectedCategoryName: String,
+private fun FormSection(
+    formState: EditItemFormState,
+    onFormChange: (EditItemFormState) -> Unit,
     categories: List<Category>,
-    isFeatured: Boolean,
-    onNameChange: (String) -> Unit,
-    onPriceChange: (String) -> Unit,
-    onCategorySelected: (Category) -> Unit,
-    onFeaturedChange: (Boolean) -> Unit
+    tags: List<Tag>,
+    selectedTagIds: Set<String>,
+    onTagChange: (Set<String>) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var categoryExpanded by remember { mutableStateOf(false) }
+    var tagExpanded by remember { mutableStateOf(false) }
+
+    // Build selected tag display text
+    val selectedTagNames = remember(selectedTagIds, tags) {
+        val selected = tags.filter { selectedTagIds.contains(it.tagId) }
+        if (selected.isEmpty()) {
+            ""
+        } else {
+            selected
+                .take(3)
+                .joinToString(", ") { it.tagName }
+                .let {
+                    if (selected.size > 3) "$it +${selected.size - 3} more"
+                    else it
+                }
+        }
+    }
 
     Card(
         modifier = Modifier
@@ -266,73 +252,75 @@ fun EditMenuFormSection(
         ) {
 
             OutlinedTextField(
-                value = name,
-                onValueChange = onNameChange,
+                value = formState.name,
+                onValueChange = { onFormChange(formState.copy(name = it)) },
                 label = { Text("Name") },
-                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    Icon(Icons.Outlined.Edit, contentDescription = null)
+                    Icon(Icons.Default.Edit, contentDescription = null)
                 }
             )
-
             OutlinedTextField(
-                value = price,
-                onValueChange = onPriceChange,
+                value = formState.price,
+                onValueChange = { onFormChange(formState.copy(price = it)) },
                 label = { Text("Price") },
-                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    Icon(Icons.Outlined.Edit, contentDescription = null)
+                    Icon(Icons.Default.Edit, contentDescription = null)
                 }
             )
-
             ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = !categoryExpanded }
             ) {
+                val categoryName =
+                    categories.find { it.categoryId == formState.categoryId }?.categoryName ?: ""
                 OutlinedTextField(
-                    value = selectedCategoryName,
+                    value = categoryName,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Category") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
+                    },
                     modifier = Modifier
                         .menuAnchor()
-                        .fillMaxWidth(),
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                    }
+                        .fillMaxWidth()
                 )
-
                 ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    expanded = categoryExpanded,
+                    onDismissRequest = { categoryExpanded = false }
                 ) {
-                    categories.forEach { item ->
+                    categories.forEach { category ->
                         DropdownMenuItem(
-                            text = { Text(item.categoryName) },
+                            text = { Text(category.categoryName) },
                             onClick = {
-                                onCategorySelected(item)
-                                expanded = false
+                                onFormChange(
+                                    formState.copy(categoryId = category.categoryId)
+                                )
+                                categoryExpanded = false
                             }
                         )
                     }
                 }
             }
+            MultiSelectDropdown(
+                label = "Tags",
+                items = tags.map { it.tagId to it.tagName },
+                selected = selectedTagIds.toList(),
+                onChange = { newList ->
+                    onTagChange(newList.toSet())
+                }
+            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Is featured",
-                    modifier = Modifier.weight(1f)
-                )
-                Switch(
-                    checked = isFeatured,
-                    onCheckedChange = onFeaturedChange
-                )
-            }
+            SwitchField(
+                title = "Featured Item",
+                description = "Highlight this item on the menu",
+                checked = formState.isFeatured,
+                onCheckedChange = {
+                    onFormChange(formState.copy(isFeatured = it))
+                }
+            )
         }
     }
 }
