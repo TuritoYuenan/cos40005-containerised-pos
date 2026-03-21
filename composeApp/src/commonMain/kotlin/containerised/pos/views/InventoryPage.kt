@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,28 +14,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import containerised.pos.NotificationService
+import containerised.pos.RealtimeManager
+import containerised.pos.RealtimeServiceController
+import containerised.pos.components.ErrorView
 import containerised.pos.components.LoadingView
 import containerised.pos.models.Ingredient
 import containerised.pos.routes.StaffRoutes
-import kotlinx.coroutines.launch
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.decodeOldRecord
+import io.github.jan.supabase.realtime.decodeRecord
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
+private const val CURRENT_BRANCH = "BRA26011700"
 private val defaultPadding = 16.dp
 
 @Composable
 fun InventoryPage(navController: NavController) {
-	val scope = rememberCoroutineScope()
 	var error by remember { mutableStateOf<String?>(null) }
 	var isLoading by remember { mutableStateOf(true) }
 	var ingredients by remember { mutableStateOf<List<Ingredient>>(emptyList()) }
 	var searchQuery by remember { mutableStateOf("") }
 
-	suspend fun refreshInventory() {
+	LaunchedEffect(Unit) {
 		try {
 			isLoading = true
-			ingredients = Ingredient.fetchByBranch("BRA26011700").sortedBy { it.id }
+			ingredients = Ingredient.fetchByBranch(CURRENT_BRANCH).sortedBy { it.id }
 			error = null
 		} catch (e: Exception) {
 			error = e.message
@@ -43,19 +49,14 @@ fun InventoryPage(navController: NavController) {
 		}
 	}
 
-	LaunchedEffect(Unit) { scope.launch { refreshInventory() } }
-
-//	Search
-	LaunchedEffect(searchQuery) {
-		ingredients = if (searchQuery.isBlank()) {
-			Ingredient.fetchByBranch("BRA26011700").sortedBy { it.id }
-		} else {
-			Ingredient.fetchByBranch("BRA26011700")
-				.filter { ingredient ->
-					ingredient.ingredientName?.contains(searchQuery, ignoreCase = true) == true ||
-						ingredient.unit?.contains(searchQuery, ignoreCase = true) == true
-				}
-				.sortedBy { it.id }
+	LaunchedEffect(Unit) {
+		RealtimeManager.forIngredients.events.collect { action ->
+			when (action) {
+				is PostgresAction.Insert -> ingredients = ingredients.onChange(action)
+				is PostgresAction.Update -> ingredients = ingredients.onChange(action)
+				is PostgresAction.Delete -> ingredients = ingredients.onChange(action)
+				is PostgresAction.Select -> {}
+			}
 		}
 	}
 
@@ -63,9 +64,10 @@ fun InventoryPage(navController: NavController) {
 		if (searchQuery.isBlank()) {
 			ingredients
 		} else {
-			ingredients.filter { ingredient ->
-				ingredient.ingredientName?.contains(searchQuery, ignoreCase = true) == true ||
-					ingredient.unit?.contains(searchQuery, ignoreCase = true) == true
+			ingredients.filter {
+				val matchesName = it.ingredientName.contains(searchQuery, true)
+				val matchesUnit = it.unit.contains(searchQuery, true)
+				matchesName.or(matchesUnit)
 			}
 		}
 	}
@@ -81,46 +83,37 @@ fun InventoryPage(navController: NavController) {
 			singleLine = true
 		)
 
-		if (isLoading) {
-			LoadingView(Modifier.fillMaxSize())
-			return
-		}
+		if (isLoading) return LoadingView(Modifier.fillMaxSize())
 
-		if (error != null) {
-			Column(
-				Modifier.fillMaxSize().padding(defaultPadding),
-				verticalArrangement = Arrangement.Center,
-				horizontalAlignment = Alignment.CenterHorizontally
-			) {
-				Text("Failed to load inventory items\n$error", color = MaterialTheme.colorScheme.error)
-			}
-			return
-		}
+		if (error != null) return ErrorView(
+			error ?: "Unknown error",
+			Modifier.fillMaxSize()
+		)
 
 		// Ingredients list
 		LazyColumn(
 			Modifier.padding(horizontal = defaultPadding),
 			verticalArrangement = Arrangement.spacedBy(defaultPadding)
 		) {
-			items(filteredIngredients.size) { index ->
-				IngredientCard(navController, filteredIngredients[index])
+			items(filteredIngredients.size) { i ->
+				val ingredientID = filteredIngredients[i].id
+				filteredIngredients[i].Card(
+					{ navController.navigate(StaffRoutes.EditIngredient(ingredientID)) },
+					{ navController.navigate(StaffRoutes.StockHistory(ingredientID)) }
+				)
 			}
 		}
 	}
 }
 
 @Composable
-fun IngredientCard(navController: NavController, ingredient: Ingredient) {
-	OutlinedCard(
-		onClick = { navController.navigate(StaffRoutes.IngredientDetail(ingredient.id ?: "")) },
-	) {
-		Column(
-			Modifier.padding(defaultPadding),
-			verticalArrangement = Arrangement.spacedBy(8.dp)
-		) {
+private fun Ingredient.Card(onViewEdit: () -> Unit = {}, onViewHistory: () -> Unit = {}) {
+	val ingredient = this
+	OutlinedCard {
+		Column(Modifier.padding(defaultPadding), Arrangement.spacedBy(8.dp)) {
 			Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 				Text(
-					"${ingredient.ingredientName}",
+					ingredient.ingredientName,
 					style = MaterialTheme.typography.headlineMedium
 				)
 
@@ -128,6 +121,21 @@ fun IngredientCard(navController: NavController, ingredient: Ingredient) {
 					"${ingredient.currentStock} ${ingredient.unit} in stock",
 					style = MaterialTheme.typography.titleMedium
 				)
+
+				if (ingredient.isLowStock()) {
+					Row(horizontalArrangement = Arrangement.spacedBy(ButtonDefaults.IconSpacing)) {
+						Icon(
+							Icons.Default.Warning,
+							"Low stock",
+							tint = MaterialTheme.colorScheme.error
+						)
+						Text(
+							"Low stock: below minimum level",
+							color = MaterialTheme.colorScheme.error,
+							style = MaterialTheme.typography.titleSmall
+						)
+					}
+				}
 			}
 
 			HorizontalDivider()
@@ -144,7 +152,7 @@ fun IngredientCard(navController: NavController, ingredient: Ingredient) {
 				Row(horizontalArrangement = Arrangement.spacedBy(ButtonDefaults.IconSpacing)) {
 					Icon(Icons.Default.LocalShipping, "Info")
 					Text(
-						formatSupplier(ingredient.supplierInfo),
+						ingredient.supplierInfo.formatSupplier(),
 						style = MaterialTheme.typography.bodyMedium
 					)
 				}
@@ -152,31 +160,52 @@ fun IngredientCard(navController: NavController, ingredient: Ingredient) {
 
 			HorizontalDivider()
 
-			Row(
-				Modifier.fillMaxWidth(),
-				horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-			) {
-				Button({
-					navController.navigate(StaffRoutes.StockHistory(ingredient.id ?: ""))
-				}) {
-					Text("View History")
-				}
+			Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp, Alignment.End)) {
+				Button(onViewEdit) { Text("Edit") }
+				Button(onViewHistory) { Text("View History") }
 			}
 		}
 	}
 }
 
-private fun formatSupplier(info: JsonObject?): String {
-	if (info == null) return "No supplier info"
+private fun List<Ingredient>.onChange(action: PostgresAction.Insert): List<Ingredient> {
+	val newOne = action.decodeRecord<Ingredient>()
+	if (newOne.branchId != CURRENT_BRANCH || !newOne.isActive) return this
+	return (this.filterNot { it.id == newOne.id } + newOne).sortedBy { it.id }
+}
 
-	val supplierName = info["supplier"]?.jsonPrimitive?.content ?: "Unknown Supplier"
-	val contact = info["contact"]?.jsonPrimitive?.content ?: "No contact info"
+private fun List<Ingredient>.onChange(action: PostgresAction.Delete): List<Ingredient> {
+	val oldOne = action.decodeOldRecord<Ingredient>()
+	if (oldOne.branchId != CURRENT_BRANCH) return this
+	return this.filterNot { it.id == oldOne.id }
+}
+
+private fun List<Ingredient>.onChange(action: PostgresAction.Update): List<Ingredient> {
+	val newOne = action.decodeRecord<Ingredient>()
+	val oldOne = action.decodeOldRecord<Ingredient>()
+
+	val areAllInBranch = listOf(newOne, oldOne).all { it.branchId == CURRENT_BRANCH }
+	val isRecentlyLowStock = newOne.isLowStock() && !oldOne.isLowStock()
+
+	if (areAllInBranch && isRecentlyLowStock) NotificationService.showNotification(
+		"Low Stock Alert",
+		"${newOne.ingredientName} is below minimum stock"
+	)
+
+	return if (newOne.branchId != CURRENT_BRANCH || !newOne.isActive) {
+		this.filterNot { it.id == newOne.id }
+	} else {
+		(this.filterNot { it.id == newOne.id } + newOne).sortedBy { it.id }
+	}
+}
+
+private fun JsonObject.formatSupplier(): String {
+	val supplierName = this["supplier"]?.jsonPrimitive?.content ?: "Unknown Supplier"
+	val contact = this["contact"]?.jsonPrimitive?.content ?: "No contact info"
 
 	return "Supplier: $supplierName ($contact)"
 }
 
 @Preview(apiLevel = 35)
 @Composable
-fun IngredientCardPreview() {
-	IngredientCard(rememberNavController(), Ingredient.MOCK)
-}
+private fun IngredientCardPreview() = Ingredient.MOCK.Card()

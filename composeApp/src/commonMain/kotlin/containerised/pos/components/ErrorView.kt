@@ -1,10 +1,6 @@
 package containerised.pos.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Icon
@@ -18,30 +14,21 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ErrorView(message: String, modifier: Modifier) {
+	val errorColour = MaterialTheme.colorScheme.error
+
 	Column(
 		modifier,
-		verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-		horizontalAlignment = Alignment.CenterHorizontally
+		Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+		Alignment.CenterHorizontally
 	) {
-		Icon(
-			Icons.Default.Error,
-			contentDescription = "Error",
-			tint = MaterialTheme.colorScheme.error,
-			modifier = Modifier.size(96.dp)
-		)
-		Text(
-			message,
-			color = MaterialTheme.colorScheme.error,
-			style = MaterialTheme.typography.headlineSmall
-		)
+		Icon(Icons.Default.Error, "Error", Modifier.size(96.dp), errorColour)
+		Text(message, color = errorColour, style = MaterialTheme.typography.headlineSmall)
 	}
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun ErrorViewPreview() {
-	ErrorView(
-		"This is an error message",
-		Modifier.fillMaxSize().padding(16.dp)
-	)
-}
+private fun ErrorViewPreview() = ErrorView(
+	"This is an error message",
+	Modifier.fillMaxSize().padding(16.dp)
+)

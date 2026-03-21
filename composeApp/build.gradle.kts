@@ -1,4 +1,3 @@
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -12,7 +11,7 @@ plugins {
 	alias(libs.plugins.composeMultiplatform)
 	alias(libs.plugins.composeCompiler)
 	alias(libs.plugins.composeHotReload)
-	alias(libs.plugins.buildkonfig)
+	alias(libs.plugins.buildConfig)
 }
 
 kotlin {
@@ -130,25 +129,21 @@ android {
 }
 
 // Load local.properties
-val localProperties = Properties().apply {
+val local = Properties().apply {
 	val localPropertiesFile = rootProject.file("local.properties")
 	if (localPropertiesFile.exists()) {
 		localPropertiesFile.inputStream().use { load(it) }
 	}
 }
 
-buildkonfig {
+buildConfig {
 	packageName = "containerised.pos"
-	defaultConfigs {
-		buildConfigField(
-			STRING, "SUPABASE_URL",
-			System.getenv("SUPABASE_URL") ?: localProperties.getProperty("supabase.url", "")
-		)
-		buildConfigField(
-			STRING, "SUPABASE_KEY",
-			System.getenv("SUPABASE_KEY") ?: localProperties.getProperty("supabase.key", "")
-		)
-	}
+
+	val url = System.getenv("SUPABASE_URL") ?: local.getProperty("supabase.url", "")
+	val key = System.getenv("SUPABASE_KEY") ?: local.getProperty("supabase.key", "")
+
+	buildConfigField("SUPABASE_URL", url)
+	buildConfigField("SUPABASE_KEY", key)
 }
 
 dependencies {
@@ -173,6 +168,8 @@ compose.desktop {
 			windows.iconFile = project.file("icons/icon.ico")
 			macOS.iconFile = project.file("icons/icon.icns")
 			linux.iconFile = project.file("icons/icon.png")
+
+			modules("jdk.accessibility")
 
 			windows {
 				menu = true

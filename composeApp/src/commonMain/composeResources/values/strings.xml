@@ -1,3 +1,23 @@
 <resources>
 	<string name="app_name" untranslatable="true">Containerised POS</string>
+
+	<!-- Button labels -->
+	<string name="btn_save">Save</string>
+	<string name="btn_cancel">Cancel</string>
+	<string name="btn_delete">Delete</string>
+
+	<!-- Form labels -->
+	<string name="fl_ingredient_name">Ingredient Name</string>
+	<string name="fl_unit">Unit</string>
+	<string name="fl_min_stock">Minimum Stock Level</string>
+	<string name="fl_stock">Current Stock Level</string>
+	<string name="fl_stock_inc">Increase Stock Level</string>
+	<string name="fl_stock_dec">Decrease Stock Level</string>
+
+	<!-- Validation errors -->
+	<string name="ve_ingredient_name">Ingredient name is required</string>
+	<string name="ve_unit">Unit is required</string>
+	<string name="ve_min_stock">Minimum stock is required</string>
+	<string name="ve_stock">Current stock is required</string>
+	<string name="ve_neg_stock">Stock must be positive</string>
 </resources>

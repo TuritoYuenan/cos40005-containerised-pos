@@ -1,18 +1,23 @@
 package containerised.pos
 
-actual object RealtimeServiceController {
+import containerised.pos.database.ChangeType
 
+actual object RealtimeServiceController {
 	private var started = false
 
 	actual fun start() {
 		if (started) return
 		started = true
 
-		OrderRealtimeManager.start()
+		RealtimeManager.forOrders.start(ChangeType.UPDATE)
+		RealtimeManager.forIngredients.start()
+		RealtimeManager.forOrderItems.start()
 	}
 
 	actual fun stop() {
-		OrderRealtimeManager.stop()
+		RealtimeManager.forOrders.stop()
+		RealtimeManager.forIngredients.stop()
+		RealtimeManager.forOrderItems.stop()
 		started = false
 	}
 }

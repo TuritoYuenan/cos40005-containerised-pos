@@ -4,7 +4,12 @@ import containerised.pos.database.SupabaseClient
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
+/**
+ * Represents a menu item available at a specific branch of a restaurant.
+ */
 @Serializable
 data class BranchItem(
 	@SerialName("branch_id")
@@ -38,7 +43,14 @@ data class BranchItem(
 
 	@SerialName("url_img")
 	val urlImg: String? = null,
+
+	val itemIngredients: List<ItemIngredientWithIngredient>? = null,
 ) {
+	fun isOutOfStock(): Boolean {
+		if (itemIngredients == null) throw IllegalStateException("Ingredients must be loaded to determine stock status.")
+		return itemIngredients.any { it.ingredient.isLowStock() }
+	}
+
 	companion object {
 		/**
 		 * Fetches all branch items from the database.
@@ -58,86 +70,33 @@ data class BranchItem(
 		 * @see BranchItem
 		 */
 		suspend fun fetchByBranch(branchId: String): List<BranchItem> {
-			val result = SupabaseClient.db["branch_items"]
-				.select {
-					filter {
-						eq("branch_id", branchId)
-					}
-				}
+			return SupabaseClient.db["branch_items"]
+				.select { filter { eq("branch_id", branchId) } }
 				.decodeList<BranchItem>()
-			return result
 		}
 
-		/**
-		 * Fetches a branch item by its item ID from the database.
-		 * @param itemId The ID of the item to fetch.
-		 * @return A [BranchItem] object representing the branch item with the specified item ID, or null if no such item exists.
-		 * @throws Exception if there is an error during the database query or data decoding process.
-		 * @see BranchItem
-		 */
-		suspend fun fetchById(itemId: String): BranchItem? {
-			val result = SupabaseClient.db["branch_items"]
-				.select {
-					filter {
-						eq("item_id", itemId)
-					}
-					limit(1)
-				}
+		suspend fun fetchByBranchWithIngredient(branchId: String): List<BranchItem> {
+			return SupabaseClient.db["branch_items"]
+				.select(
+					Columns.raw(
+						"""
+					*, ingredients: item_ingredients (*, ingredient: ingredients (*))
+				""".trimIndent()
+					)
+				) { filter { eq("branch_id", branchId) } }
 				.decodeList<BranchItem>()
-			return result.firstOrNull()
 		}
-
-		/**
-		 * Fetches branch items associated with a specific branch ID from the database, including related category information.
-		 * @param branchId The ID of the branch for which to fetch items.
-		 * @return A list of [BranchItem] objects representing the items associated with the specified branch ID, including related category information.
-		 * @throws Exception if there is an error during the database query or data decoding process.
-		 * @see BranchItem
-		 */
-		suspend fun fetchAndJoinByBranch(branchId: String): List<BranchItem> {
-			val result = SupabaseClient.db["branch_items"]
-				.select(
-					columns = Columns.raw(
-						"""
-						*,
-						category: categories (category_id, category_name, display_order)
-						"""
-					)
-				) {
-					filter {
-						eq("branch_id", branchId)
-					}
-				}.decodeList<BranchItem>()
-
-			return result
-		}
-
-		/**
-		 * Fetches a branch item by its item ID from the database, including related category information.
-		 * @param itemId The ID of the item to fetch.
-		 * @return A [BranchItem] object representing the branch item with the specified item ID, including related category information, or null if no such item exists.
-		 * @throws Exception if there is an error during the database query or data decoding process.
-		 * @see BranchItem
-		 */
-		suspend fun fetchAndJoinById(itemId: String): BranchItem? {
-			val result = SupabaseClient.db["branch_items"]
-				.select(
-					columns = Columns.raw(
-						"""
-						*,
-						category: categories (category_id, category_name, display_order)
-						"""
-					)
-				) {
-					filter {
-						eq("item_id", itemId)
-					}
-					limit(1)
-				}.decodeList<BranchItem>()
-
-			return result.firstOrNull()
-		}
-
+        suspend fun fetchById(id: String): BranchItem? {
+            val result = SupabaseClient.db["branch_items"]
+                .select {
+                    filter {
+                        eq("item_id", id)
+                    }
+                    limit(1)
+                }
+                .decodeList<BranchItem>()
+            return result.firstOrNull()
+        }
 		/**
 		 * Updates a branch item in the database with the specified item ID using the provided updated data.
 		 * @param itemId The ID of the item to update.
@@ -147,14 +106,71 @@ data class BranchItem(
 		 */
 		suspend fun update(itemId: String, updatedData: BranchItem) {
 			SupabaseClient.db["branch_items"]
-				.update(updatedData) {
-					filter {
-						eq("item_id", itemId)
-					}
-				}
+				.update(updatedData) { filter { eq("item_id", itemId) } }
 		}
+
+		val MOCK = BranchItem(
+			branchId = "1",
+			itemId = "1",
+			categoryId = "1",
+			category = Category(
+				categoryId = "1",
+				categoryName = "Main Course",
+				displayOrder = 1
+			),
+			itemName = "Pho Bo",
+			itemDes = "Vietnamese beef noodle soup",
+			price = 50000,
+			estimatedPrep = "15 mins",
+			isAvailable = true,
+			isFeatured = true,
+			urlImg = null,
+			itemIngredients = listOf(
+				ItemIngredientWithIngredient(
+					itemId = "0",
+					ingredientId = "1",
+					quantity = 1.1,
+					ingredient = Ingredient(
+						id = "1",
+						ingredientName = "Beef",
+						unit = "grams",
+						currentStock = 10.0,
+						minStockLevel = 15.0,
+						supplierInfo = JsonObject(
+							mapOf(
+								"contact" to JsonPrimitive("0929340783"),
+								"supplier" to JsonPrimitive("Supplier 1")
+							)
+						),
+						branchId = "1",
+						isActive = true
+					)
+				),
+				ItemIngredientWithIngredient(
+					itemId = "0",
+					ingredientId = "2",
+					quantity = 1.1,
+					ingredient = Ingredient(
+						id = "2",
+						ingredientName = "Noodles",
+						unit = "grams",
+						currentStock = 10.0,
+						minStockLevel = 5.0,
+						supplierInfo = JsonObject(
+							mapOf(
+								"contact" to JsonPrimitive("0929340783"),
+								"supplier" to JsonPrimitive("Supplier 2")
+							)
+						),
+						branchId = "1",
+						isActive = true
+					)
+				)
+			)
+		)
 	}
 }
+
 @Serializable
 data class BranchItemWithCatAndIng(
 	@SerialName("branch_id")
