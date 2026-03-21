@@ -4,6 +4,8 @@ import containerised.pos.database.SupabaseClient
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Represents a menu item available at a specific branch of a restaurant.
@@ -101,7 +103,11 @@ data class BranchItem(
 			branchId = "1",
 			itemId = "1",
 			categoryId = "1",
-			category = Category(categoryId = "1", categoryName = "Main Course", displayOrder = 1),
+			category = Category(
+				categoryId = "1",
+				categoryName = "Main Course",
+				displayOrder = 1
+			),
 			itemName = "Pho Bo",
 			itemDes = "Vietnamese beef noodle soup",
 			price = 50000,
@@ -117,8 +123,17 @@ data class BranchItem(
 					ingredient = Ingredient(
 						id = "1",
 						ingredientName = "Beef",
+						unit = "grams",
 						currentStock = 10.0,
-						minStockLevel = 15.0
+						minStockLevel = 15.0,
+						supplierInfo = JsonObject(
+							mapOf(
+								"contact" to JsonPrimitive("0929340783"),
+								"supplier" to JsonPrimitive("Supplier 1")
+							)
+						),
+						branchId = "1",
+						isActive = true
 					)
 				),
 				ItemIngredientWithIngredient(
@@ -128,8 +143,17 @@ data class BranchItem(
 					ingredient = Ingredient(
 						id = "2",
 						ingredientName = "Noodles",
+						unit = "grams",
 						currentStock = 10.0,
-						minStockLevel = 5.0
+						minStockLevel = 5.0,
+						supplierInfo = JsonObject(
+							mapOf(
+								"contact" to JsonPrimitive("0929340783"),
+								"supplier" to JsonPrimitive("Supplier 2")
+							)
+						),
+						branchId = "1",
+						isActive = true
 					)
 				)
 			)

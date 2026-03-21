@@ -67,8 +67,8 @@ fun InventoryPage(navController: NavController) {
 			ingredients
 		} else {
 			ingredients.filter {
-				val matchesName = it.ingredientName?.contains(searchQuery, ignoreCase = true) == true
-				val matchesUnit = it.unit?.contains(searchQuery, ignoreCase = true) == true
+				val matchesName = it.ingredientName.contains(searchQuery, true)
+				val matchesUnit = it.unit.contains(searchQuery, true)
 				matchesName.or(matchesUnit)
 			}
 		}
@@ -98,9 +98,9 @@ fun InventoryPage(navController: NavController) {
 			verticalArrangement = Arrangement.spacedBy(defaultPadding)
 		) {
 			items(filteredIngredients.size) { i ->
-				val ingredientID = filteredIngredients[i].id ?: return@items
+				val ingredientID = filteredIngredients[i].id
 				filteredIngredients[i].Card(
-					{ navController.navigate(StaffRoutes.IngredientDetail(ingredientID)) },
+					{ navController.navigate(StaffRoutes.EditIngredient(ingredientID)) },
 					{ navController.navigate(StaffRoutes.StockHistory(ingredientID)) }
 				)
 			}
@@ -115,7 +115,7 @@ private fun Ingredient.Card(onViewEdit: () -> Unit = {}, onViewHistory: () -> Un
 		Column(Modifier.padding(defaultPadding), Arrangement.spacedBy(8.dp)) {
 			Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 				Text(
-					"${ingredient.ingredientName}",
+					ingredient.ingredientName,
 					style = MaterialTheme.typography.headlineMedium
 				)
 
@@ -154,7 +154,7 @@ private fun Ingredient.Card(onViewEdit: () -> Unit = {}, onViewHistory: () -> Un
 				Row(horizontalArrangement = Arrangement.spacedBy(ButtonDefaults.IconSpacing)) {
 					Icon(Icons.Default.LocalShipping, "Info")
 					Text(
-						ingredient.supplierInfo?.formatSupplier() ?: "Supplier information not available",
+						ingredient.supplierInfo.formatSupplier(),
 						style = MaterialTheme.typography.bodyMedium
 					)
 				}
@@ -172,7 +172,7 @@ private fun Ingredient.Card(onViewEdit: () -> Unit = {}, onViewHistory: () -> Un
 
 private fun List<Ingredient>.onChange(action: PostgresAction.Insert): List<Ingredient> {
 	val newOne = action.decodeRecord<Ingredient>()
-	if (newOne.branchId != CURRENT_BRANCH || newOne.isActive != true) return this
+	if (newOne.branchId != CURRENT_BRANCH || !newOne.isActive) return this
 	return (this.filterNot { it.id == newOne.id } + newOne).sortedBy { it.id }
 }
 
@@ -191,10 +191,10 @@ private fun List<Ingredient>.onChange(action: PostgresAction.Update): List<Ingre
 
 	if (areAllInBranch && isRecentlyLowStock) NotificationService.showNotification(
 		"Low Stock Alert",
-		"${newOne.ingredientName ?: "Ingredient"} is below minimum stock"
+		"${newOne.ingredientName} is below minimum stock"
 	)
 
-	return if (newOne.branchId != CURRENT_BRANCH || newOne.isActive != true) {
+	return if (newOne.branchId != CURRENT_BRANCH || !newOne.isActive) {
 		this.filterNot { it.id == newOne.id }
 	} else {
 		(this.filterNot { it.id == newOne.id } + newOne).sortedBy { it.id }

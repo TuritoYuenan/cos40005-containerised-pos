@@ -11,7 +11,7 @@ object StaffRoutes {
 	object Inventory
 
 	@Serializable @SerialName("ingredient-detail")
-	data class IngredientDetail(val ingredientId: String)
+	data class EditIngredient(val ingredientId: String)
 
 	@Serializable @SerialName("stock-history")
 	data class StockHistory(val ingredientId: String)
