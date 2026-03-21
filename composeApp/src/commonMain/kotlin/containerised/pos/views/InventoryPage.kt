@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.NotificationService
 import containerised.pos.RealtimeManager
-import containerised.pos.RealtimeServiceController
 import containerised.pos.components.ErrorView
 import containerised.pos.components.LoadingView
 import containerised.pos.models.Ingredient

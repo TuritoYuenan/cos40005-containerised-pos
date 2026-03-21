@@ -12,16 +12,11 @@ data class ItemTag(
 	@SerialName("tag_id")
 	val tagId: String
 ) {
-   companion object {
-       suspend fun fetchByItemId(itemId: String): List<ItemTag> {
-           val result = SupabaseClient.db["item_tags"]
-               .select {
-                   filter {
-                       eq("item_id", itemId)
-                   }
-               }
-               .decodeList<ItemTag>()
-           return result
-       }
-   }
+	companion object {
+		suspend fun fetchByItemId(itemId: String): List<ItemTag> {
+			return SupabaseClient.db["item_tags"]
+				.select { filter { eq("item_id", itemId) } }
+				.decodeList<ItemTag>()
+		}
+	}
 }

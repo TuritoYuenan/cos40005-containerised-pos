@@ -63,14 +63,12 @@ fun AppNavHost() {
 				when (status) {
 					is SessionStatus.Authenticated -> {
 						val userId = SupabaseClient.auth.currentUserOrNull()?.id
-						if (userId != null) {
-							val permissions = fetchUserPermission(userId)
-							userPermissions = permissions
-							val route = getStartRoute(permissions)
-							navController.navigate(route) {
-								popUpTo(navController.graph.id) { inclusive = true }
-								launchSingleTop = true
-							}
+							?: return@collectLatest
+
+						userPermissions = fetchUserPermission(userId)
+						navController.navigate(getStartRoute(userPermissions)) {
+							popUpTo(navController.graph.id) { inclusive = true }
+							launchSingleTop = true
 						}
 					}
 
@@ -97,7 +95,7 @@ fun AppNavHost() {
 				StaffRoutes.Login,
 				Modifier.padding(paddingValues)
 			) {
-				composable<StaffRoutes.Login> { LoginPage(navController) }
+				composable<StaffRoutes.Login> { LoginPage() }
 				composable<StaffRoutes.MenuEdit> { MenuEditPage(navController) }
 				composable<StaffRoutes.EditItem> { backStackEntry ->
 					val args = backStackEntry.toRoute<StaffRoutes.EditItem>()
@@ -108,27 +106,21 @@ fun AppNavHost() {
 					EditTagPage(navController, args.tagId)
 				}
 				composable<StaffRoutes.EditPromotion> { backStackEntry ->
-					val args =
-						backStackEntry.toRoute<StaffRoutes.EditPromotion>()
+					val args = backStackEntry.toRoute<StaffRoutes.EditPromotion>()
 					EditPromotionPage(navController, args.promotionId)
 				}
 				composable<StaffRoutes.KitchenDisplay> { KitchenDisplayPage() }
 				composable<StaffRoutes.OrderConfirm> { OrderConfirmPage() }
-				composable<StaffRoutes.Inventory> {
-					InventoryPage(
-						navController
-					)
-				}
+				composable<StaffRoutes.Inventory> { InventoryPage(navController) }
 				composable<StaffRoutes.EditIngredient> { backStackEntry ->
-					val args =
-						backStackEntry.toRoute<StaffRoutes.EditIngredient>()
+					val args = backStackEntry.toRoute<StaffRoutes.EditIngredient>()
 					EditIngredientPage(navController, args)
 				}
 				composable<StaffRoutes.StockHistory> { backStackEntry ->
-					val args =
-						backStackEntry.toRoute<StaffRoutes.StockHistory>()
+					val args = backStackEntry.toRoute<StaffRoutes.StockHistory>()
 					StockHistoryPage(args)
 				}
+				composable<StaffRoutes.Setting> { SettingPage() }
 			}
 		}
 	}

@@ -56,22 +56,28 @@ class PaymentCode {
 		field38.append("00").append(guid.length.toString().padStart(2, '0')).append(guid)
 
 		val field3801 = StringBuilder()
-		field3801.append("00").append(acquirerID.length.toString().padStart(2, '0')).append(acquirerID)
-		field3801.append("01").append(merchantID.length.toString().padStart(2, '0')).append(merchantID)
+		field3801.append("00").append(acquirerID.length.toString().padStart(2, '0'))
+			.append(acquirerID)
+		field3801.append("01").append(merchantID.length.toString().padStart(2, '0'))
+			.append(merchantID)
 		field38.append("01").append(field3801.length.toString().padStart(2, '0'))
 			.append(field3801.toString())
 
-		field38.append("02").append(serviceCode.length.toString().padStart(2, '0')).append(serviceCode)
+		field38.append("02").append(serviceCode.length.toString().padStart(2, '0'))
+			.append(serviceCode)
 		payload.append("38").append(field38.length.toString().padStart(2, '0'))
 			.append(field38.toString())
 
 		payload.append("53").append("03").append(transactionCurrency)
-		payload.append("54").append(transactionAmount.length.toString().padStart(2, '0')).append(transactionAmount)
+		payload.append("54").append(transactionAmount.length.toString().padStart(2, '0'))
+			.append(transactionAmount)
 		payload.append("58").append("02").append(countryCode)
 
 		val additionalDataField = StringBuilder()
-		additionalDataField.append("08").append(purpose.length.toString().padStart(2, '0')).append(purpose)
-		payload.append("62").append(additionalDataField.length.toString().padStart(2, '0'))
+		additionalDataField.append("08")
+			.append(purpose.length.toString().padStart(2, '0')).append(purpose)
+		payload.append("62")
+			.append(additionalDataField.length.toString().padStart(2, '0'))
 			.append(additionalDataField.toString())
 
 		// Calculate CRC

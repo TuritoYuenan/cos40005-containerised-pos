@@ -19,34 +19,27 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import containerised.pos.components.getStartRoute
-import containerised.pos.database.SupabaseClient
 import containerised.pos.database.SupabaseClient.auth
-import containerised.pos.models.UserRole.Companion.fetchUserPermission
-import containerised.pos.routes.StaffRoutes
 import io.github.jan.supabase.auth.providers.builtin.Email
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
+private val defaultPadding = 16.dp
+
 @Composable
-@Preview
-fun LoginPage(navController: NavController) {
+fun LoginPage() {
 	val scope = rememberCoroutineScope()
-	val padding = 16.dp
 	val emailAddress = rememberTextFieldState("")
 	var password by remember { mutableStateOf("") }
 	var passwordVisible by remember { mutableStateOf(false) }
 
 	Column(
-		verticalArrangement = Arrangement.spacedBy(16.dp),
-		horizontalAlignment = Alignment.CenterHorizontally,
-		modifier = Modifier
+		Modifier
 			.fillMaxSize()
-			.padding(padding)
+			.padding(defaultPadding)
 			.verticalScroll(rememberScrollState()),
+		Arrangement.spacedBy(16.dp),
+		Alignment.CenterHorizontally,
 	) {
 		Box(
 			modifier = Modifier
@@ -56,7 +49,7 @@ fun LoginPage(navController: NavController) {
 		) { }
 
 		TextField(
-			state = emailAddress,
+			emailAddress,
 			label = { Text("Email address") }
 		)
 
@@ -68,10 +61,12 @@ fun LoginPage(navController: NavController) {
 			visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
 			keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
 			trailingIcon = {
-				val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+				val image =
+					if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
 
 				// Localized description for accessibility services
-				val description = if (passwordVisible) "Hide password" else "Show password"
+				val description =
+					if (passwordVisible) "Hide password" else "Show password"
 
 				// Toggle button to hide or display password
 				IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -85,30 +80,28 @@ fun LoginPage(navController: NavController) {
 			horizontalArrangement = Arrangement.spacedBy(8.dp)
 		) {
 			Button(onClick = {
-				scope.launch{
+				scope.launch {
 					try {
 						println("Email: '${emailAddress.text}'")
 						println("Password length: ${password.length}")
 						login(emailAddress.text.toString(), password)
-					}catch (e: Exception) {
+					} catch (e: Exception) {
 						println("Login failed: ${e.message}")
 					}
-
 				}
 			}) {
-				Icon(imageVector = Icons.Filled.AccountCircle, "Login Icon")
+				Icon(Icons.Filled.AccountCircle, "Login Icon")
 				Text("Login")
 			}
 
-			TextButton(onClick = { /* Handle login action */ }) {
+			TextButton(onClick = { /* TODO: Handle login action */ }) {
 				Text("Forget your password?")
 			}
 		}
 	}
 }
-suspend fun login(email: String, password: String) {
-	auth.signInWith(Email) {
-		this.email = email
-		this.password = password
-	}
+
+suspend fun login(email: String, password: String) = auth.signInWith(Email) {
+	this.email = email
+	this.password = password
 }

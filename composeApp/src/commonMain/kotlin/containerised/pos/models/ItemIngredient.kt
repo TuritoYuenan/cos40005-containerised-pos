@@ -17,7 +17,7 @@ data class ItemIngredient(
 
 	@SerialName("unit")
 	val unit: String? = null
-){
+) {
 	companion object {
 		suspend fun fetchItemIngredientByItemId(itemId: String): List<ItemIngredient> {
 			val result = SupabaseClient.db["item_ingredients"]

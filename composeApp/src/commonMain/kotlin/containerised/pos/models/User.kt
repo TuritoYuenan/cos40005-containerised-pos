@@ -4,9 +4,11 @@ import containerised.pos.database.SupabaseClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Represents a user in the POS system.
+ */
 @Serializable
 data class User(
-
 	@SerialName("user_id")
 	val userId: String,
 
@@ -32,15 +34,8 @@ data class User(
 	val updatedAt: String? = null
 ) {
 	companion object {
-		suspend fun fetchById(userId: String): User? {
-			val result = SupabaseClient.db["users"]
-				.select {
-					filter {
-						eq("user_id", userId)
-					}
-				}
-				.decodeList<User>()
-			return result.firstOrNull()
-		}
+		suspend fun fetchById(userId: String): User? = SupabaseClient.db["users"]
+			.select { filter { eq("user_id", userId) } }
+			.decodeList<User>().firstOrNull()
 	}
 }

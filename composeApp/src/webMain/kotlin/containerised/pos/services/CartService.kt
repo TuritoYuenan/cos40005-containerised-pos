@@ -1,7 +1,7 @@
 package containerised.pos.services
 
 import containerised.pos.models.BranchItem
-import containerised.pos.models.OrderItemInsert
+import containerised.pos.models.OrderItem
 import containerised.pos.models.OrderStatus
 import kotlinx.browser.window
 import kotlinx.serialization.Serializable
@@ -20,7 +20,7 @@ object CartService {
 		/**
 		 * Convert to Order Item table schema
 		 */
-		fun toOrderItem(orderID: String): OrderItemInsert = OrderItemInsert(
+		fun toOrderItem(orderID: String): OrderItem.Insertable = OrderItem.Insertable(
 			orderId = orderID,
 			itemId = branchItem.itemId,
 			quantity = count,

@@ -86,17 +86,14 @@ data class BranchItem(
 				) { filter { eq("branch_id", branchId) } }
 				.decodeList<BranchItem>()
 		}
-        suspend fun fetchById(id: String): BranchItem? {
-            val result = SupabaseClient.db["branch_items"]
-                .select {
-                    filter {
-                        eq("item_id", id)
-                    }
-                    limit(1)
-                }
-                .decodeList<BranchItem>()
-            return result.firstOrNull()
-        }
+
+		suspend fun fetchById(id: String): BranchItem? = SupabaseClient.db["branch_items"]
+			.select {
+				filter { eq("item_id", id) }
+				limit(1)
+			}
+			.decodeList<BranchItem>().firstOrNull()
+
 		/**
 		 * Updates a branch item in the database with the specified item ID using the provided updated data.
 		 * @param itemId The ID of the item to update.

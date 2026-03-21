@@ -19,27 +19,21 @@ object StaffRoutes {
 	@Serializable @SerialName("menu-edit")
 	object MenuEdit
 
-    @Serializable
-    @SerialName("edit-item")
-    data class EditItem(
-        val itemId: String? = null
-    )
+    @Serializable @SerialName("edit-item")
+    data class EditItem(val itemId: String? = null)
 
     @Serializable @SerialName("edit-promotion")
-    data class EditPromotion(
-        val promotionId: String? = null,
-    )
+    data class EditPromotion(val promotionId: String? = null, )
 
 	@Serializable @SerialName("edit-tag")
-	data class EditTag(
-        val tagId: String? = null
-    )
+	data class EditTag(val tagId: String? = null)
 
 	@Serializable @SerialName("confirm-order")
 	object OrderConfirm
 
 	@Serializable @SerialName("kitchen-display")
 	object KitchenDisplay
+
 	@Serializable @SerialName("setting")
 	object Setting
 }

@@ -4,7 +4,6 @@ import containerised.pos.database.SupabaseClient
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class UserRole(
@@ -16,7 +15,7 @@ data class UserRole(
 	val roleId: String,
 
 	val role: Role
-){
+) {
 	companion object {
 		suspend fun fetchUserPermission(userId: String): List<String> {
 

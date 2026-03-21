@@ -1,407 +1,392 @@
 package containerised.pos.views
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import containerised.pos.models.BranchItem
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.window.Popup
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.AppNavHost
+import containerised.pos.models.BranchItem
 import containerised.pos.models.Promotion
 import containerised.pos.models.Tag
 import containerised.pos.routes.StaffRoutes
 
 @Composable
 fun MenuEditPage(navController: NavController) {
-    val branchId = "BRA26011700"
-    //Promotion Fetching
+	val branchId = "BRA26011700"
+	//Promotion Fetching
 
-    //Item Fetching
-    var items by remember {mutableStateOf<Map<String, List<BranchItem>>>(emptyMap())}
-    var promotions by remember { mutableStateOf<List<Promotion>>(emptyList()) }
-    var tags by remember { mutableStateOf<List<Tag>>(emptyList()) }
-    LaunchedEffect(Unit) {
-        try {
-            items = BranchItem.fetchByBranch(branchId)
-                .sortedBy { it.itemId }
-                .groupBy { it.categoryId ?: "Uncategorized" }
-            promotions = Promotion.fetchByBranch(branchId)
-            tags = Tag.fetchAll()
-        } catch (e: Exception) {
-            println("Error fetching data: ${e.message}")
-        }
-    }
+	//Item Fetching
+	var items by remember { mutableStateOf<Map<String, List<BranchItem>>>(emptyMap()) }
+	var promotions by remember { mutableStateOf<List<Promotion>>(emptyList()) }
+	var tags by remember { mutableStateOf<List<Tag>>(emptyList()) }
+	LaunchedEffect(Unit) {
+		try {
+			items = BranchItem.fetchByBranch(branchId)
+				.sortedBy { it.itemId }
+				.groupBy { it.categoryId ?: "Uncategorized" }
+			promotions = Promotion.fetchByBranch(branchId)
+			tags = Tag.fetchAll()
+		} catch (e: Exception) {
+			println("Error fetching data: ${e.message}")
+		}
+	}
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        //Tab Set Up
-        var selectedTabIndex by remember { mutableStateOf(0) }
-        val tabs = listOf("Promotions", "Tags", "Items")
+	Box(modifier = Modifier.fillMaxSize()) {
+		//Tab Set Up
+		var selectedTabIndex by remember { mutableStateOf(0) }
+		val tabs = listOf("Promotions", "Tags", "Items")
 
-        Column {
-            TabRow(selectedTabIndex = selectedTabIndex) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
-                    )
-                }
-            }
-            when (selectedTabIndex) {
-                0 -> PromotionsTab(
-                    promotions = promotions,
-                    onPromotionEdit = { promotion ->
-                        navController.navigate(
-                            StaffRoutes.EditPromotion(promotionId = promotion.promotionId)
-                        )
-                    },
-                )
-                1 -> TagsTab(
-                    tags = tags,
-                    onTagEdit = { tag ->
-                        navController.navigate(
-                            StaffRoutes.EditTag(tagId = tag.tagId)
-                        )
-                    }
-                )
-                2 -> ItemsTab(
-                    groupedItems = items,
-                    onEditItem = { item ->
-                        navController.navigate(
-                            StaffRoutes.EditItem(itemId = item.itemId)
-                        )
-                    }
-                )
-            }
-        }
+		Column {
+			TabRow(selectedTabIndex = selectedTabIndex) {
+				tabs.forEachIndexed { index, title ->
+					Tab(
+						selected = selectedTabIndex == index,
+						onClick = { selectedTabIndex = index },
+						text = { Text(title) }
+					)
+				}
+			}
+			when (selectedTabIndex) {
+				0 -> PromotionsTab(
+					promotions = promotions,
+					onPromotionEdit = { promotion ->
+						navController.navigate(
+							StaffRoutes.EditPromotion(promotionId = promotion.promotionId)
+						)
+					},
+				)
 
-        var expanded by remember { mutableStateOf(false) }
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.BottomEnd
-        ) {
-            Box {
-                FloatingActionButton(
-                    onClick = { expanded = !expanded }
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add")
-                }
+				1 -> TagsTab(
+					tags = tags,
+					onTagEdit = { tag ->
+						navController.navigate(
+							StaffRoutes.EditTag(tagId = tag.tagId)
+						)
+					}
+				)
 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("New Promotion") },
-                        onClick = {
-                            navController.navigate(
-                                StaffRoutes.EditPromotion(promotionId = null)
-                            )
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("New Tag") },
-                        onClick = {
-                            navController.navigate(
-                                StaffRoutes.EditTag(tagId = null)
-                            )
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("New Item") },
-                        onClick = {
-                            navController.navigate(
-                                StaffRoutes.EditItem(itemId = null)
-                            )
-                        }
-                    )
-                }
-            }
-        }
-    }
+				2 -> ItemsTab(
+					groupedItems = items,
+					onEditItem = { item ->
+						navController.navigate(
+							StaffRoutes.EditItem(itemId = item.itemId)
+						)
+					}
+				)
+			}
+		}
+
+		var expanded by remember { mutableStateOf(false) }
+		Box(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(16.dp),
+			contentAlignment = Alignment.BottomEnd
+		) {
+			Box {
+				FloatingActionButton(
+					onClick = { expanded = !expanded }
+				) {
+					Icon(Icons.Filled.Add, contentDescription = "Add")
+				}
+
+				DropdownMenu(
+					expanded = expanded,
+					onDismissRequest = { expanded = false }
+				) {
+					DropdownMenuItem(
+						text = { Text("New Promotion") },
+						onClick = {
+							navController.navigate(
+								StaffRoutes.EditPromotion(promotionId = null)
+							)
+						}
+					)
+					DropdownMenuItem(
+						text = { Text("New Tag") },
+						onClick = {
+							navController.navigate(
+								StaffRoutes.EditTag(tagId = null)
+							)
+						}
+					)
+					DropdownMenuItem(
+						text = { Text("New Item") },
+						onClick = {
+							navController.navigate(
+								StaffRoutes.EditItem(itemId = null)
+							)
+						}
+					)
+				}
+			}
+		}
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PromotionsTab(
-    promotions: List<Promotion>,
-    onPromotionEdit: (promotion: Promotion) -> Unit,
+	promotions: List<Promotion>,
+	onPromotionEdit: (promotion: Promotion) -> Unit,
 ) {
-    Box(Modifier
-        .fillMaxWidth()
-        .padding(16.dp)
-        .clip(RoundedCornerShape(10.dp))
-        .background(MaterialTheme.colorScheme.surfaceContainerLowest))
-    {
-        Text(text = "Promotions")
-        LazyColumn(Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-        ) {
-            items(promotions){ promotion ->
-                val backgroundColor = when (promotion.isActive) {
-                    true -> MaterialTheme.colorScheme.primaryContainer
-                    false -> MaterialTheme.colorScheme.outlineVariant
-                }
-                Box(Modifier
-                    .fillMaxWidth()
-                    .padding(all = 4.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(backgroundColor)) {
-                    Row {
-                        Column(Modifier
-                            .weight(1f)
-                            .padding(horizontal = 12.dp)) {
+	Box(
+		Modifier
+			.fillMaxWidth()
+			.padding(16.dp)
+			.clip(RoundedCornerShape(10.dp))
+			.background(MaterialTheme.colorScheme.surfaceContainerLowest)
+	)
+	{
+		Text(text = "Promotions")
+		LazyColumn(
+			Modifier
+				.fillMaxWidth()
+				.padding(16.dp)
+		) {
+			items(promotions) { promotion ->
+				val backgroundColor = when (promotion.isActive) {
+					true -> MaterialTheme.colorScheme.primaryContainer
+					false -> MaterialTheme.colorScheme.outlineVariant
+				}
+				Box(
+					Modifier
+						.fillMaxWidth()
+						.padding(all = 4.dp)
+						.clip(RoundedCornerShape(4.dp))
+						.background(backgroundColor)
+				) {
+					Row {
+						Column(
+							Modifier
+								.weight(1f)
+								.padding(horizontal = 12.dp)
+						) {
 
-                        }
-                        IconButton(onClick = {onPromotionEdit(promotion)}) { Icon(Icons.Filled.Edit, contentDescription = "Edit") }
+						}
+						IconButton(onClick = { onPromotionEdit(promotion) }) {
+							Icon(
+								Icons.Filled.Edit,
+								contentDescription = "Edit"
+							)
+						}
 
-                    }
-                }
-            }
-        }
-    }
+					}
+				}
+			}
+		}
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagsTab(
-    tags: List<Tag>,
-    onTagEdit: (Tag) -> Unit,
+	tags: List<Tag>,
+	onTagEdit: (Tag) -> Unit,
 ) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
+	Column(
+		Modifier
+			.fillMaxWidth()
+			.padding(16.dp)
+	) {
 
-        Text(
-            text = "Tags",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
+		Text(
+			text = "Tags",
+			style = MaterialTheme.typography.titleMedium,
+			modifier = Modifier.padding(bottom = 12.dp)
+		)
 
-        Card(
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-            )
-        ) {
+		Card(
+			shape = RoundedCornerShape(12.dp),
+			colors = CardDefaults.cardColors(
+				containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+			)
+		) {
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(vertical = 8.dp)
-            ) {
+			LazyColumn(
+				modifier = Modifier.fillMaxWidth(),
+				contentPadding = PaddingValues(vertical = 8.dp)
+			) {
 
-                items(tags) { tag ->
+				items(tags) { tag ->
 
-                    TagRow(tag, onTagEdit)
+					TagRow(tag, onTagEdit)
 
-                }
-            }
-        }
-    }
+				}
+			}
+		}
+	}
 }
 
 @Composable
 fun TagRow(
-    tag: Tag,
-    onTagEdit: (Tag) -> Unit
+	tag: Tag,
+	onTagEdit: (Tag) -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
+	Card(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(horizontal = 12.dp, vertical = 6.dp),
+		shape = RoundedCornerShape(10.dp),
+		colors = CardDefaults.cardColors(
+			containerColor = MaterialTheme.colorScheme.primaryContainer
+		)
+	) {
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                //Name Row
-                Text(
-                    text = tag.tagName,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                //Description Row
-                val description = tag.tagDes ?: "There's no description for this."
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            //Button to Edit
-            IconButton(
-                onClick = { onTagEdit(tag) }
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "Edit Tag"
-                )
-            }
-        }
-    }
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(14.dp),
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			Column(
+				modifier = Modifier.weight(1f)
+			) {
+				//Name Row
+				Text(
+					text = tag.tagName,
+					style = MaterialTheme.typography.titleSmall
+				)
+				//Description Row
+				val description = tag.tagDes ?: "There's no description for this."
+				Spacer(Modifier.height(2.dp))
+				Text(
+					text = description,
+					style = MaterialTheme.typography.bodySmall,
+					color = MaterialTheme.colorScheme.onSurfaceVariant
+				)
+			}
+			//Button to Edit
+			IconButton(
+				onClick = { onTagEdit(tag) }
+			) {
+				Icon(
+					imageVector = Icons.Filled.Edit,
+					contentDescription = "Edit Tag"
+				)
+			}
+		}
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemsTab(
-    groupedItems: Map<String, List<BranchItem>>,
-    onEditItem: (BranchItem) -> Unit
+	groupedItems: Map<String, List<BranchItem>>,
+	onEditItem: (BranchItem) -> Unit
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        groupedItems.forEach { (categoryId, branchItems) ->
+	LazyColumn(
+		modifier = Modifier.fillMaxSize(),
+		verticalArrangement = Arrangement.spacedBy(12.dp),
+		contentPadding = PaddingValues(16.dp)
+	) {
+		groupedItems.forEach { (categoryId, branchItems) ->
 
-            item {
-                Text(
-                    text = categoryId,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
+			item {
+				Text(
+					text = categoryId,
+					style = MaterialTheme.typography.titleMedium,
+					modifier = Modifier.padding(vertical = 8.dp)
+				)
+			}
 
-            items(
-                items = branchItems,
-                key = { it.itemId }
-            ) { item ->
-                ItemCard(
-                    item = item,
-                    onEdit = {onEditItem(item)}
-                )
-            }
-        }
-    }
+			items(
+				items = branchItems,
+				key = { it.itemId }
+			) { item ->
+				ItemCard(
+					item = item,
+					onEdit = { onEditItem(item) }
+				)
+			}
+		}
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemCard(
-    item: BranchItem,
-    onEdit: () -> Unit
-){
-    Card(
-        modifier = Modifier,
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        )
-    )   {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ){
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surface),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🖼")
-            }
+	item: BranchItem,
+	onEdit: () -> Unit
+) {
+	Card(
+		modifier = Modifier,
+		shape = RoundedCornerShape(8.dp),
+		colors = CardDefaults.cardColors(
+			containerColor = MaterialTheme.colorScheme.surfaceVariant,
+		)
+	) {
+		Row(
+			modifier = Modifier.fillMaxWidth().padding(12.dp),
+			verticalAlignment = Alignment.CenterVertically,
+		) {
+			Box(
+				modifier = Modifier
+					.size(56.dp)
+					.clip(RoundedCornerShape(8.dp))
+					.background(MaterialTheme.colorScheme.surface),
+				contentAlignment = Alignment.Center
+			) {
+				Text("🖼")
+			}
 
-            Spacer(modifier = Modifier.width(12.dp))
+			Spacer(modifier = Modifier.width(12.dp))
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = item.itemName,
-                    style = MaterialTheme.typography.titleSmall
-                )
+			Column(
+				modifier = Modifier.weight(1f)
+			) {
+				Text(
+					text = item.itemName,
+					style = MaterialTheme.typography.titleSmall
+				)
 
-                item.itemDes?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+				item.itemDes?.let {
+					Text(
+						text = it,
+						style = MaterialTheme.typography.bodySmall,
+						color = MaterialTheme.colorScheme.onSurfaceVariant
+					)
+				}
 
-                Spacer(modifier = Modifier.height(4.dp))
+				Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = "$${item.price}",
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-            Box{
-                var expanded by remember { mutableStateOf(false) }
-                IconButton(onClick = onEdit) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Item"
-                    )
-                }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ){
-                    DropdownMenuItem(
-                        text = { Text("Edit") },
-                        onClick = {}
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Delete") },
-                        onClick = {}
-                    )
-                }
-            }
-        }
-    }
+				Text(
+					text = "$${item.price}",
+					style = MaterialTheme.typography.labelMedium
+				)
+			}
+			Box {
+				var expanded by remember { mutableStateOf(false) }
+				IconButton(onClick = onEdit) {
+					Icon(
+						imageVector = Icons.Default.Edit,
+						contentDescription = "Edit Item"
+					)
+				}
+				DropdownMenu(
+					expanded = expanded,
+					onDismissRequest = { expanded = false }
+				) {
+					DropdownMenuItem(
+						text = { Text("Edit") },
+						onClick = {}
+					)
+					DropdownMenuItem(
+						text = { Text("Delete") },
+						onClick = {}
+					)
+				}
+			}
+		}
+	}
 }

@@ -44,7 +44,9 @@ fun OrderConfirmPage() {
 		RealtimeManager.forOrders.events.collect { action ->
 			when (action) {
 				is PostgresAction.Insert -> orders = orders.onChange(action)
-				is PostgresAction.Update -> { /* TODO: Implement live order update */}
+				is PostgresAction.Update -> { /* TODO: Implement live order update */
+				}
+
 				is PostgresAction.Delete -> orders = orders.onChange(action)
 				is PostgresAction.Select -> {}
 			}
@@ -73,7 +75,10 @@ private fun Order.Card(modifier: Modifier = Modifier) {
 		) {
 			Row(Modifier.fillMaxWidth()) {
 				Column {
-					Text("Order #$orderNumber", style = MaterialTheme.typography.headlineMedium)
+					Text(
+						"Order #$orderNumber",
+						style = MaterialTheme.typography.headlineMedium
+					)
 
 					Row(verticalAlignment = Alignment.CenterVertically) {
 						Icon(Icons.Default.TableRestaurant, "Table")

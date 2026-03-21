@@ -48,7 +48,7 @@ data class OrderInsert(
 		.insert(this) { select() }
 		.decodeSingle<Order>().orderId
 
-	suspend fun addWithItems(items: List<OrderItemInsert>): String {
+	suspend fun addWithItems(items: List<OrderItem.Insertable>): String {
 		val orderID = add()
 		items.forEach { it.add() }
 		return orderID
@@ -101,19 +101,23 @@ data class Order(
 
 		val isPtoF = old.status == preparing && this.status == finished
 		val isPtoC = old.status == preparing && this.status == canceled
-		val isFCtoP = (old.status == finished || old.status == canceled) && this.status == preparing
+		val isFCtoP =
+			(old.status == finished || old.status == canceled) && this.status == preparing
 
 		return Triple(isPtoF, isPtoC, isFCtoP)
 	}
 
 	companion object {
-		suspend fun fetchByBranch(branchID: String): List<Order> = SupabaseClient.db["orders"]
-			.select(Columns.raw("*, table:tables (*)")) { filter { eq("branch_id", branchID) } }
-			.decodeList<Order>()
+		suspend fun fetchByBranch(branchID: String): List<Order> =
+			SupabaseClient.db["orders"]
+				.select(Columns.raw("*, table:tables (*)")) {
+					filter { eq("branch_id", branchID) }
+				}.decodeList<Order>()
 
 		suspend fun fetchPreparing(): List<Order> = SupabaseClient.db["orders"]
-			.select(Columns.raw("*, table:tables (*)")) { filter { eq("status", OrderStatus.PREPARING) } }
-			.decodeList<Order>()
+			.select(Columns.raw("*, table:tables (*)")) {
+				filter { eq("status", OrderStatus.PREPARING) }
+			}.decodeList<Order>()
 
 		suspend fun markFinished(orderId: String) = SupabaseClient.db["orders"]
 			.update({ set("status", OrderStatus.FINISHED) }) {

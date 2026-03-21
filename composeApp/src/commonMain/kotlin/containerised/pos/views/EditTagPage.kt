@@ -1,6 +1,5 @@
 package containerised.pos.views
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,223 +8,189 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import containerised.pos.models.Tag
 import containerised.pos.routes.StaffRoutes
 import kotlinx.coroutines.launch
 
 private data class EditTagFormState(
-    var name: String = "",
-    var description: String? = null
+	var name: String = "",
+	var description: String? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditTagPage(
-    navController: NavController?,
-    tagId: String? = null
+fun EditTagPage(navController: NavController?, tagId: String? = null) {
+	val scope = rememberCoroutineScope()
+	var formState by remember { mutableStateOf(EditTagFormState()) }
+	var tag by remember { mutableStateOf<Tag?>(null) }
+
+	LaunchedEffect(Unit) {
+		try {
+			if (tagId != null) {
+				tag = Tag.fetchById(tagId)
+			}
+			println(tagId)
+
+			tag?.let {
+				formState = EditTagFormState(
+					name = it.tagName,
+					description = it.tagDes ?: ""
+				)
+			}
+
+		} catch (e: Exception) {
+			println("Error fetching tag: ${e.message}")
+		}
+	}
+
+	LazyColumn {
+		item {
+			TopBar {
+				navController?.popBackStack()
+			}
+			TagFormSection(
+				formState = formState,
+				onFormChange = { formState = it }
+			)
+			Row(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(12.dp),
+				horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
+			) {
+				if (tagId == null) {
+
+					CreateButton {
+						scope.launch {
+							Tag.create(
+								name = formState.name,
+								description = formState.description
+							)
+							navController?.navigate(StaffRoutes.MenuEdit)
+						}
+					}
+				} else {
+					DeleteButton {
+						scope.launch {
+							Tag.deleteById(tagId)
+							navController?.navigate(StaffRoutes.MenuEdit)
+						}
+					}
+					UpdateButton {
+						scope.launch {
+							Tag.updateById(
+								id = tagId,
+								name = formState.name,
+								description = formState.description
+							)
+							navController?.navigate(StaffRoutes.MenuEdit)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
+	title = { Text("Item edit") },
+	navigationIcon = {
+		IconButton(onClick = onBack) {
+			Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+		}
+	}
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CreateButton(onClick: () -> Unit) = Button(
+	onClick = onClick,
+	shape = RoundedCornerShape(8.dp),
+	colors = ButtonDefaults.buttonColors(
+		containerColor = MaterialTheme.colorScheme.primary,
+		contentColor = Color.White
+	),
+	modifier = Modifier.height(40.dp)
 ) {
-
-    val scope = rememberCoroutineScope()
-
-    var formState by remember { mutableStateOf(EditTagFormState()) }
-    var tag by remember { mutableStateOf<Tag?>(null) }
-
-    LaunchedEffect(Unit) {
-        try {
-            if (tagId != null) {
-                tag = Tag.fetchById(tagId)
-            }
-            println(tagId)
-
-            tag?.let {
-                formState = EditTagFormState(
-                    name = it.tagName,
-                    description = it.tagDes ?: ""
-                )
-            }
-
-        } catch (e: Exception) {
-            println("Error fetching tag: ${e.message}")
-        }
-    }
-
-    LazyColumn {
-        item {
-            TopBar {
-                navController?.popBackStack()
-            }
-            TagFormSection(
-                formState = formState,
-                onFormChange = { formState = it }
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
-            ) {
-                if (tagId == null) {
-
-                    CreateButton {
-                        scope.launch {
-                            Tag.create(
-                                name = formState.name,
-                                description = formState.description
-                            )
-                            navController?.navigate(StaffRoutes.MenuEdit)
-                        }
-                    }
-                } else {
-                    DeleteButton {
-                        scope.launch {
-                            Tag.deleteById(tagId)
-                            navController?.navigate(StaffRoutes.MenuEdit)
-                        }
-                    }
-                    UpdateButton {
-                        scope.launch {
-                            Tag.updateById(
-                                id = tagId,
-                                name = formState.name,
-                                description = formState.description
-                            )
-                            navController?.navigate(StaffRoutes.MenuEdit)
-                        }
-                    }
-                }
-            }
-        }
-    }
+	Icon(Icons.Filled.Check, contentDescription = null)
+	Spacer(Modifier.width(6.dp))
+	Text("Create")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopBar(onBack: () -> Unit) {
-    CenterAlignedTopAppBar(
-        navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-            }
-        },
-        title = { Text("Item edit") }
-    )
+private fun UpdateButton(onClick: () -> Unit) = Button(
+	onClick = onClick,
+	shape = RoundedCornerShape(8.dp),
+	colors = ButtonDefaults.buttonColors(
+		containerColor = MaterialTheme.colorScheme.primary,
+		contentColor = Color.White
+	),
+	modifier = Modifier.height(40.dp)
+) {
+	Icon(Icons.Filled.Check, contentDescription = null)
+	Spacer(Modifier.width(6.dp))
+	Text("Update")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CreateButton(
-    onClick: () -> Unit
-){
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White
-        ),
-        modifier = Modifier.height(40.dp)
-    ) {
-        Icon(Icons.Filled.Check, contentDescription = null)
-        Spacer(Modifier.width(6.dp))
-        Text("Create")
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun UpdateButton(
-    onClick: () -> Unit,
-){
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White
-        ),
-        modifier = Modifier.height(40.dp)
-    ) {
-        Icon(Icons.Filled.Check, contentDescription = null)
-        Spacer(Modifier.width(6.dp))
-        Text("Update")
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DeleteButton(
-    onClick: () -> Unit
-){
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.error,
-            contentColor = Color.White
-        ),
-        modifier = Modifier.height(40.dp)
-    ) {
-        Icon(Icons.Filled.Delete, contentDescription = null)
-        Spacer(Modifier.width(6.dp))
-        Text("Delete")
-    }
+private fun DeleteButton(onClick: () -> Unit) = Button(
+	onClick = onClick,
+	shape = RoundedCornerShape(8.dp),
+	colors = ButtonDefaults.buttonColors(
+		containerColor = MaterialTheme.colorScheme.error,
+		contentColor = Color.White
+	),
+	modifier = Modifier.height(40.dp)
+) {
+	Icon(Icons.Filled.Delete, contentDescription = null)
+	Spacer(Modifier.width(6.dp))
+	Text("Delete")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TagFormSection(
-    formState: EditTagFormState,
-    onFormChange: (EditTagFormState) -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 12.dp)
-    ) {
+	formState: EditTagFormState,
+	onFormChange: (EditTagFormState) -> Unit
+) = Card(Modifier.fillMaxWidth().padding(12.dp, 6.dp)) {
+	Column(
+		Modifier.fillMaxWidth().padding(12.dp),
+		Arrangement.spacedBy(10.dp)
+	) {
+		// Tag Name
+		OutlinedTextField(
+			value = formState.name,
+			onValueChange = { onFormChange(formState.copy(name = it)) },
+			label = { Text("Tag Name") },
+			modifier = Modifier.fillMaxWidth(),
+			trailingIcon = {
+				Icon(Icons.Default.Edit, "Edit Tag Name")
+			}
+		)
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-
-            // Tag Name
-            OutlinedTextField(
-                value = formState.name,
-                onValueChange = {
-                    onFormChange(formState.copy(name = it))
-                },
-                label = { Text("Tag Name") },
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    Icon(Icons.Default.Edit, contentDescription = null)
-                }
-            )
-
-            // Tag Description
-            OutlinedTextField(
-                value = formState.description ?: "",
-                onValueChange = {
-                    onFormChange(formState.copy(description = it))
-                },
-                label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    Icon(Icons.Default.Edit, contentDescription = null)
-                },
-                minLines = 2
-            )
-        }
-    }
+		// Tag Description
+		OutlinedTextField(
+			value = formState.description ?: "",
+			onValueChange = {
+				onFormChange(formState.copy(description = it))
+			},
+			label = { Text("Description") },
+			modifier = Modifier.fillMaxWidth(),
+			trailingIcon = {
+				Icon(Icons.Default.Edit, "Edit Tag Description")
+			},
+			minLines = 2
+		)
+	}
 }
