@@ -38,7 +38,7 @@ data class OrderItem(
 	@SerialName("item_id")
 	val itemId: String,
 
-	val branchItem: BranchItemWithCatAndIng,
+	val branchItem: BranchItemWithCatAndIng? = null,
 
 	@SerialName("quantity")
 	val quantity: Int,
@@ -84,6 +84,23 @@ data class OrderItem(
 				.select(Columns.raw(query)) { filter { eq("order_id", orderId) } }
 				.decodeList<OrderItem>()
 		}
+		suspend fun markFinished(orderId: String, itemId: String) = SupabaseClient.db["order_items"]
+			.update({ set("item_status", OrderStatus.FINISHED) }) {
+				filter {
+					eq("order_id", orderId)
+					eq("item_id", itemId)
+					eq("item_status", OrderStatus.PREPARING)
+				}
+			}
+
+		suspend fun markCancelled(orderId: String, itemId: String) = SupabaseClient.db["order_items"]
+			.update({ set("item_status", OrderStatus.CANCELED) }) {
+				filter {
+					eq("order_id", orderId)
+					eq("item_id", itemId)
+					eq("item_status", OrderStatus.PREPARING)
+				}
+			}
 
 		val MOCKS = listOf(
 			OrderItem(

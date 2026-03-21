@@ -11,14 +11,14 @@ actual object RealtimeServiceController {
 		started = true
 
 		val context = AppContextHolder.context
-		val intent = Intent(context, OrderRealtimeService::class.java)
+		val intent = Intent(context, AndroidOrderRealtimeService::class.java)
 
 		ContextCompat.startForegroundService(context, intent)
 	}
 
 	actual fun stop() {
 		val context = AppContextHolder.context
-		context.stopService(Intent(context, OrderRealtimeService::class.java))
+		context.stopService(Intent(context, AndroidOrderRealtimeService::class.java))
 		started = false
 	}
 }

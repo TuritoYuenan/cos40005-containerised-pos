@@ -29,7 +29,7 @@ fun AppNavHost() {
 	val navController = rememberNavController()
 
 //	Must change "order" to "login" when auth is implemented
-	val startDestination = StaffRoutes.Inventory
+	val startDestination = StaffRoutes.KitchenDisplay
 
 	AppTheme {
 //		Staff-facing application, available on mobile and desktop
@@ -39,7 +39,6 @@ fun AppNavHost() {
 
 		LaunchedEffect(Unit) {
 			RealtimeServiceController.start()
-			RealtimeManager.forOrders.start()
 			RealtimeManager.forOrders.events.collect { action ->
 				when (action) {
 					is PostgresAction.Insert -> action.handle()
