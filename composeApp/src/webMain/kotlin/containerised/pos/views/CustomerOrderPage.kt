@@ -43,6 +43,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 
 	//	Data fetching state
 	var isLoading by remember { mutableStateOf(true) }
+	var error by remember { mutableStateOf<String?>(null) }
 	val scope = rememberCoroutineScope()
 
 	fun refreshCart() {
@@ -65,11 +66,10 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 		scope.launch {
 			try {
 				tags = Tag.fetchAll()
-				allItems = BranchItem.fetchAll()
+				allItems = BranchItem.fetchByBranchWithIngredient(args.branchID)
 				featuredItems = allItems.filter { it.isFeatured }
 			} catch (e: Exception) {
-				// Handle error - you might want to show an error message
-				println("Error fetching data: ${e.message}")
+				error = e.message.also { println(it) }
 			} finally {
 				isLoading = false
 			}
@@ -79,7 +79,11 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 	Scaffold(
 		topBar = {
 			OrderSearchBar(textFieldState, Modifier, searchResults) {
-				/*TODO: Implement search logic here*/
+				// Implement search logic here, updating searchResults based on the query
+				// For example, you could filter allItems by itemName containing the query
+				searchResults = allItems.filter {
+					it.itemName.contains(it.itemName, true)
+				}.map { it.itemName }
 			}
 		},
 		bottomBar = {
@@ -92,16 +96,20 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 				val (itemCount, totalPrice) = cartItems.cartInfo()
 				CartStatusBar(itemCount, totalPrice) {
 					navController?.navigate(
-						CustomerRoutes.Checkout(args.branchID, args.tableNumber)
+						CustomerRoutes.Checkout(args.branchID, args.tableID)
 					)
 				}
 			}
 		}
 	) { paddingValues ->
-		if (isLoading) {
-			LoadingView(Modifier.fillMaxSize().padding(paddingValues))
-			return@Scaffold
-		}
+		if (isLoading) return@Scaffold LoadingView(
+			Modifier.fillMaxSize().padding(paddingValues)
+		)
+
+		if (error != null) return@Scaffold ErrorView(
+			error!!,
+			Modifier.fillMaxSize().padding(paddingValues)
+		)
 
 		LazyColumn(
 			Modifier.padding(paddingValues),
@@ -110,7 +118,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 			// Table Info
 			item {
 				Text(
-					"Ordering for Table ${args.tableNumber}",
+					"Ordering for Table ${args.tableID}",
 					Modifier.padding(8.dp).fillMaxWidth(),
 					style = MaterialTheme.typography.bodyLarge,
 					textAlign = TextAlign.Center

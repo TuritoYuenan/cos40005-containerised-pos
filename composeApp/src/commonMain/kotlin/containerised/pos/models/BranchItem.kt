@@ -47,7 +47,7 @@ data class BranchItem(
 	val itemIngredients: List<ItemIngredientWithIngredient>? = null,
 ) {
 	fun isOutOfStock(): Boolean {
-		if (itemIngredients == null) throw IllegalStateException("Ingredients must be loaded to determine stock status.")
+		if (itemIngredients == null) throw IllegalStateException("Must fetch ingredients to determine stock status.")
 		return itemIngredients.any { it.ingredient.isLowStock() }
 	}
 
@@ -58,9 +58,9 @@ data class BranchItem(
 		 * @throws Exception if there is an error during the database query or data decoding process.
 		 * @see BranchItem
 		 */
-		suspend fun fetchAll(): List<BranchItem> {
-			return SupabaseClient.db["branch_items"].select().decodeList<BranchItem>()
-		}
+		suspend fun fetchAll(): List<BranchItem> = SupabaseClient.db["branch_items"]
+			.select()
+			.decodeList<BranchItem>()
 
 		/**
 		 * Fetches branch items associated with a specific branch ID from the database.
@@ -76,23 +76,20 @@ data class BranchItem(
 		}
 
 		suspend fun fetchByBranchWithIngredient(branchId: String): List<BranchItem> {
+			val query =
+				"*, itemIngredients: item_ingredients (*, ingredient: ingredients (*))"
+
 			return SupabaseClient.db["branch_items"]
-				.select(
-					Columns.raw(
-						"""
-					*, ingredients: item_ingredients (*, ingredient: ingredients (*))
-				""".trimIndent()
-					)
-				) { filter { eq("branch_id", branchId) } }
-				.decodeList<BranchItem>()
+				.select(Columns.raw(query)) {
+					filter { eq("branch_id", branchId) }
+				}.decodeList<BranchItem>()
 		}
 
 		suspend fun fetchById(id: String): BranchItem? = SupabaseClient.db["branch_items"]
 			.select {
 				filter { eq("item_id", id) }
 				limit(1)
-			}
-			.decodeList<BranchItem>().firstOrNull()
+			}.decodeList<BranchItem>().firstOrNull()
 
 		/**
 		 * Updates a branch item in the database with the specified item ID using the provided updated data.

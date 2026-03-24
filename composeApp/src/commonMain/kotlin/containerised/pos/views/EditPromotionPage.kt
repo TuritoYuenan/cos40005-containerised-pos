@@ -150,6 +150,7 @@ private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
 	title = { Text("Promotion Edit") },
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FormSection(
 	formState: EditPromotionFormState,
@@ -512,7 +513,7 @@ fun SimpleDropdown(
 				ExposedDropdownMenuDefaults.TrailingIcon(expanded)
 			},
 			modifier = Modifier
-				.menuAnchor()
+				.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
 				.fillMaxWidth()
 		)
 

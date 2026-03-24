@@ -57,7 +57,7 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 			orderId = generatedOrderId,
 			orderNumber = "001",
 			orderType = "DINE_IN",
-			tableNumber = args.tableNumber,
+			tableNumber = args.tableID,
 			status = OrderStatus.PREPARING,
 			branchId = args.branchID,
 			taxAmount = taxAmount,
@@ -72,7 +72,7 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 		refreshCart()
 
 //		Navigate to payment page
-		val route = CustomerRoutes.Payment(args.branchID, args.tableNumber, orderID, isPayingAtCounter)
+		val route = CustomerRoutes.Payment(args.branchID, args.tableID, orderID, isPayingAtCounter)
 		navController?.navigate(route)
 	}
 
@@ -116,7 +116,7 @@ private fun CartView(
 			Row {
 				Icon(Icons.Filled.RoomService, "RoomService")
 				Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-				Text("Order for Table ${args.tableNumber}", style = MaterialTheme.typography.titleMedium)
+				Text("Order for Table ${args.tableID}", style = MaterialTheme.typography.titleMedium)
 			}
 
 			checkoutItems.forEach { CheckoutMenuItem(it.branchItem, it.count, onRefresh) }

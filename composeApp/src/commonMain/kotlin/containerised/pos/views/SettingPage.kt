@@ -1,21 +1,17 @@
 package containerised.pos.views
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import containerised.pos.database.SupabaseClient
 import containerised.pos.models.User
 import kotlinx.coroutines.launch
+
+private val defaultPadding = 16.dp
 
 private suspend fun logout() {
 	try {
@@ -42,32 +38,19 @@ fun SettingPage() {
 		}
 	}
 
-	Column {
-		Text(
-			"Name: ${user?.fullName}",
-			color = Color.Black,
-			style = MaterialTheme.typography.titleMedium,
-		)
-
-		Text(
-			"Email: $email",
-			color = Color.Black,
-			style = MaterialTheme.typography.titleMedium,
-		)
+	Column(
+		Modifier.padding(defaultPadding, 0.dp),
+		Arrangement.spacedBy(defaultPadding)
+	) {
+		Text("User information", style = MaterialTheme.typography.headlineMedium)
+		Text("Name: ${user?.fullName}", style = MaterialTheme.typography.titleMedium)
+		Text("Email: $email", style = MaterialTheme.typography.titleMedium)
 
 		Row {
-			Button(
-				onClick = { scope.launch { logout() } },
-				modifier = Modifier.height(40.dp),
-				shape = RoundedCornerShape(16.dp),
-				colors = ButtonDefaults.buttonColors(
-					containerColor = MaterialTheme.colorScheme.outlineVariant,
-					contentColor = Color.Black
-				)
-			) {
+			FilledTonalButton({ scope.launch { logout() } }) {
 				Icon(Icons.AutoMirrored.Filled.Logout, "Logout")
 				Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-				Text("Logout", color = Color.Black)
+				Text("Logout")
 			}
 		}
 	}

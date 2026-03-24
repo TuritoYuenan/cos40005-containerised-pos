@@ -47,7 +47,7 @@ fun MenuEditPage(navController: NavController) {
 		val tabs = listOf("Promotions", "Tags", "Items")
 
 		Column {
-			TabRow(selectedTabIndex = selectedTabIndex) {
+			PrimaryTabRow(selectedTabIndex) {
 				tabs.forEachIndexed { index, title ->
 					Tab(
 						selected = selectedTabIndex == index,

@@ -150,7 +150,7 @@ private fun Ingredient.Card(onViewEdit: () -> Unit = {}, onViewHistory: () -> Un
 
 				Row(horizontalArrangement = Arrangement.spacedBy(ButtonDefaults.IconSpacing)) {
 					Icon(Icons.Default.LocalShipping, "Info")
-					ingredient.supplierInfo?.formatSupplier()?.let {
+					ingredient.supplierInfo.formatSupplier().let {
 						Text(
 							it,
 							style = MaterialTheme.typography.bodyMedium

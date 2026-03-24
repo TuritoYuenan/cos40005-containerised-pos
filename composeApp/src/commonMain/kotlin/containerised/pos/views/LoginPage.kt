@@ -42,7 +42,7 @@ fun LoginPage() {
 		Alignment.CenterHorizontally,
 	) {
 		Box(
-			modifier = Modifier
+			Modifier
 				.size(196.dp)
 				.clip(CircleShape)
 				.background(MaterialTheme.colorScheme.primary)
@@ -76,32 +76,29 @@ fun LoginPage() {
 		)
 
 		Row(
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.spacedBy(8.dp)
+			horizontalArrangement = Arrangement.spacedBy(8.dp),
+			verticalAlignment = Alignment.CenterVertically
 		) {
-			Button(onClick = {
-				scope.launch {
-					try {
-						println("Email: '${emailAddress.text}'")
-						println("Password length: ${password.length}")
-						login(emailAddress.text.toString(), password)
-					} catch (e: Exception) {
-						println("Login failed: ${e.message}")
-					}
-				}
-			}) {
+			Button({ scope.launch { login(emailAddress.text.toString(), password) } }) {
 				Icon(Icons.Filled.AccountCircle, "Login Icon")
+				Spacer(Modifier.size(ButtonDefaults.IconSpacing))
 				Text("Login")
 			}
 
-			TextButton(onClick = { /* TODO: Handle login action */ }) {
+			TextButton({ /* TODO: Handle password reset */ }) {
 				Text("Forget your password?")
 			}
 		}
 	}
 }
 
-suspend fun login(email: String, password: String) = auth.signInWith(Email) {
-	this.email = email
-	this.password = password
+suspend fun login(email: String, password: String) = try {
+	println("Email: '${email}'")
+	println("Password length: ${password.length}")
+	auth.signInWith(Email) {
+		this.email = email
+		this.password = password
+	}
+} catch (e: Exception) {
+	println("Login failed: ${e.message}")
 }
