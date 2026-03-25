@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.modelTests
 
 import containerised.pos.models.Bank
 import containerised.pos.models.Currency
