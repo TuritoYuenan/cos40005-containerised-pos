@@ -10,7 +10,9 @@ data class ItemTag(
 	val itemId: String,
 
 	@SerialName("tag_id")
-	val tagId: String
+	val tagId: String,
+
+	val tag: Tag? = null
 ) {
 	companion object {
 		suspend fun fetchByItemId(itemId: String): List<ItemTag> {
@@ -18,5 +20,15 @@ data class ItemTag(
 				.select { filter { eq("item_id", itemId) } }
 				.decodeList<ItemTag>()
 		}
+
+		val MOCK = ItemTag(
+			itemId = "item123",
+			tagId = "tag456",
+			tag = Tag(
+				tagId = "tag456",
+				tagName = "Bestseller",
+				tagDes = "Top-selling item"
+			)
+		)
 	}
 }

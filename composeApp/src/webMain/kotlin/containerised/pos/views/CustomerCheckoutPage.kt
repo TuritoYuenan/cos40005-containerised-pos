@@ -20,8 +20,7 @@ import androidx.navigation.NavController
 import containerised.pos.components.CheckoutTopBar
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
-import containerised.pos.models.OrderInsert
-import containerised.pos.models.OrderStatus
+import containerised.pos.models.Order
 import containerised.pos.routes.CustomerRoutes
 import containerised.pos.services.CartService
 import containerised.pos.services.CartService.getFinalAmount
@@ -53,12 +52,12 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 		// Generate a unique order ID client-side to avoid database function permission issues
 		val generatedOrderId = "ORD${Clock.System.now().toEpochMilliseconds()}"
 
-		val order = OrderInsert(
+		val order = Order.Insertable(
 			orderId = generatedOrderId,
 			orderNumber = "001",
 			orderType = "DINE_IN",
 			tableNumber = args.tableID,
-			status = OrderStatus.PREPARING,
+			status = Order.Status.PREPARING,
 			branchId = args.branchID,
 			taxAmount = taxAmount,
 			finalAmount = checkoutItems.getFinalAmount(taxAmount)

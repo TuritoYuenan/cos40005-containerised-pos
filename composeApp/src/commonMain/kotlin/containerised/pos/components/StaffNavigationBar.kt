@@ -9,10 +9,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tab
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import containerised.pos.routes.StaffRoutes
 
 data class NavigationItem(val label: String, val route: Any, val icon: ImageVector)
@@ -57,6 +55,7 @@ fun StaffNavigationBar(navController: NavController, userPermissions: List<Strin
 		}
 	}
 }
+
 fun getStartRoute(permissions: List<String>): Any {
 	val allowedNavItems = navItems.filter { it.label in permissions }
 	return allowedNavItems.firstOrNull()?.route ?: StaffRoutes.Login

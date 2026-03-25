@@ -22,7 +22,6 @@ import androidx.compose.ui.window.Dialog
 import containerised.pos.RealtimeManager
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
-import containerised.pos.models.OrderStatus
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
@@ -287,8 +286,8 @@ private fun Order.Contents(
 					"${item?.quantity} x ${item?.branchItem?.itemName}",
 					Modifier.clickable { expandedItemId.value = item?.itemId },
 					color = when (item?.itemStatus) {
-						OrderStatus.CANCELED -> MaterialTheme.colorScheme.error
-						OrderStatus.FINISHED -> MaterialTheme.colorScheme.primary
+						Order.Status.CANCELED -> MaterialTheme.colorScheme.error
+						Order.Status.FINISHED -> MaterialTheme.colorScheme.primary
 						else -> MaterialTheme.colorScheme.onSurface
 					}
 				)
@@ -305,7 +304,7 @@ private fun Order.Contents(
 							}
 						)
 					}
-					if (item?.itemStatus == OrderStatus.PREPARING) {
+					if (item?.itemStatus == Order.Status.PREPARING) {
 						item.ActionButtons(scope, item)
 					}
 				}

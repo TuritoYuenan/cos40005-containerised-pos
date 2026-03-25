@@ -45,9 +45,10 @@ data class BranchItem(
 	val urlImg: String? = null,
 
 	val itemIngredients: List<ItemIngredientWithIngredient>? = null,
+	val itemTags: List<ItemTag>? = null
 ) {
 	fun isOutOfStock(): Boolean {
-		if (itemIngredients == null) throw IllegalStateException("Must fetch ingredients to determine stock status.")
+		checkNotNull(itemIngredients) { "Must fetch ingredients to determine stock status." }
 		return itemIngredients.any { it.ingredient.isLowStock() }
 	}
 
@@ -75,9 +76,12 @@ data class BranchItem(
 				.decodeList<BranchItem>()
 		}
 
-		suspend fun fetchByBranchWithIngredient(branchId: String): List<BranchItem> {
-			val query =
-				"*, itemIngredients: item_ingredients (*, ingredient: ingredients (*))"
+		suspend fun fetchByBranchWithDetails(branchId: String): List<BranchItem> {
+			val query = """
+				*,
+				itemIngredients: item_ingredients (*, ingredient: ingredients (*)),
+				tags: item_tags (*, tag: tags (*)),
+			""".trimIndent()
 
 			return SupabaseClient.db["branch_items"]
 				.select(Columns.raw(query)) {
