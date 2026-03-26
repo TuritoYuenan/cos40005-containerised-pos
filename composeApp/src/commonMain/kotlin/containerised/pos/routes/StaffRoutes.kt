@@ -34,6 +34,9 @@ object StaffRoutes {
 	@Serializable @SerialName("kitchen-display")
 	object KitchenDisplay
 
+	@Serializable @SerialName("employee-management")
+	object EmployeeManagement
+
 	@Serializable @SerialName("setting")
 	object Setting
 }
