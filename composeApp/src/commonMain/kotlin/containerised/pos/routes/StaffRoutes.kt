@@ -44,6 +44,14 @@ object StaffRoutes {
 	@SerialName("kitchen-display")
 	object KitchenDisplay
 
+	@Serializable
+	@SerialName("sales")
+	object Sales
+
+	@Serializable
+	@SerialName("sales-report")
+	data class SalesReport(val reportId: String)
+
 	@Serializable @SerialName("employee-management")
 	object EmployeeManagement
 
