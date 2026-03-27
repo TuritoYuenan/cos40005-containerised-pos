@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -193,7 +194,7 @@ fun SelfCheckoutView(order: Order?) {
 	val paymentQRCode = rememberQrCodePainter(paymentCode)
 
 	Card(
-		Modifier.fillMaxWidth(),
+		Modifier.fillMaxWidth().testTag("selfCheckoutView"),
 		elevation = CardDefaults.cardElevation(4.dp)
 	) {
 		Column(
@@ -201,18 +202,27 @@ fun SelfCheckoutView(order: Order?) {
 			Arrangement.spacedBy(8.dp),
 			Alignment.CenterHorizontally,
 		) {
-			Text("Self-checkout", style = MaterialTheme.typography.titleMedium)
+			Text(
+				"Self-checkout",
+				Modifier.testTag("checkoutTitle"),
+				style = MaterialTheme.typography.titleMedium
+			)
 			Text(
 				"$amount $currency",
+				Modifier.testTag("orderAmount"),
 				color = MaterialTheme.colorScheme.primary,
 				style = MaterialTheme.typography.displaySmall,
 				fontWeight = FontWeight.Bold,
 			)
 			Text(
 				"We accept VietQR bank transfer",
+				Modifier.testTag("paymentMethodInfo"),
 				style = MaterialTheme.typography.titleMedium
 			)
-			Image(paymentQRCode, "Payment QR Code")
+			Image(
+				paymentQRCode, "Payment QR Code",
+				Modifier.testTag("paymentQRCode")
+			)
 		}
 	}
 }
