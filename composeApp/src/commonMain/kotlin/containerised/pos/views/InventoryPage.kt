@@ -54,7 +54,7 @@ fun InventoryPage(navController: NavController) {
 				is PostgresAction.Insert -> ingredients = ingredients.onChange(action)
 				is PostgresAction.Update -> ingredients = ingredients.onChange(action)
 				is PostgresAction.Delete -> ingredients = ingredients.onChange(action)
-				is PostgresAction.Select -> {}
+				is PostgresAction.Select -> Unit
 			}
 		}
 	}

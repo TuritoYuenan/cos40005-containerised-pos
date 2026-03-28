@@ -45,23 +45,14 @@ data class BranchItem(
 	val urlImg: String? = null,
 
 	val itemIngredients: List<ItemIngredientWithIngredient>? = null,
+	val itemTags: List<ItemTag>? = null
 ) {
 	fun isOutOfStock(): Boolean {
-		if (itemIngredients == null) throw IllegalStateException("Must fetch ingredients to determine stock status.")
+		checkNotNull(itemIngredients) { "Must fetch ingredients to determine stock status." }
 		return itemIngredients.any { it.ingredient.isLowStock() }
 	}
 
 	companion object {
-		/**
-		 * Fetches all branch items from the database.
-		 * @return A list of [BranchItem] objects representing all branch items in the database.
-		 * @throws Exception if there is an error during the database query or data decoding process.
-		 * @see BranchItem
-		 */
-		suspend fun fetchAll(): List<BranchItem> = SupabaseClient.db["branch_items"]
-			.select()
-			.decodeList<BranchItem>()
-
 		/**
 		 * Fetches branch items associated with a specific branch ID from the database.
 		 * @param branchId The ID of the branch for which to fetch items.
@@ -75,9 +66,12 @@ data class BranchItem(
 				.decodeList<BranchItem>()
 		}
 
-		suspend fun fetchByBranchWithIngredient(branchId: String): List<BranchItem> {
-			val query =
-				"*, itemIngredients: item_ingredients (*, ingredient: ingredients (*))"
+		suspend fun fetchByBranchWithDetails(branchId: String): List<BranchItem> {
+			val query = """
+				*,
+				itemIngredients: item_ingredients (*, ingredient: ingredients (*)),
+				tags: item_tags (*, tag: tags (*)),
+			""".trimIndent()
 
 			return SupabaseClient.db["branch_items"]
 				.select(Columns.raw(query)) {
@@ -104,11 +98,11 @@ data class BranchItem(
 		}
 
 		val MOCK = BranchItem(
-			branchId = "1",
-			itemId = "1",
-			categoryId = "1",
+			branchId = "branch123",
+			itemId = "item123",
+			categoryId = "cat123",
 			category = Category(
-				categoryId = "1",
+				categoryId = "cat123",
 				categoryName = "Main Course",
 				displayOrder = 1
 			),
@@ -121,7 +115,7 @@ data class BranchItem(
 			urlImg = null,
 			itemIngredients = listOf(
 				ItemIngredientWithIngredient(
-					itemId = "0",
+					itemId = "item123",
 					ingredientId = "1",
 					quantity = 1.1,
 					ingredient = Ingredient(
@@ -136,12 +130,12 @@ data class BranchItem(
 								"supplier" to JsonPrimitive("Supplier 1")
 							)
 						),
-						branchId = "1",
+						branchId = "branch123",
 						isActive = true
 					)
 				),
 				ItemIngredientWithIngredient(
-					itemId = "0",
+					itemId = "item123",
 					ingredientId = "2",
 					quantity = 1.1,
 					ingredient = Ingredient(
@@ -156,7 +150,7 @@ data class BranchItem(
 								"supplier" to JsonPrimitive("Supplier 2")
 							)
 						),
-						branchId = "1",
+						branchId = "branch123",
 						isActive = true
 					)
 				)

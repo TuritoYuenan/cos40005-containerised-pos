@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,7 +43,11 @@ fun List<BranchItem>.ImageSlider(
 		Modifier.fillMaxSize()
 	) { page ->
 		KamelImage(
-			{ asyncPainterResource(this@ImageSlider[page].urlImg ?: "https://placehold.co/512x256") },
+			{
+				asyncPainterResource(
+					this@ImageSlider[page].urlImg ?: "https://placehold.co/512x256"
+				)
+			},
 			this@ImageSlider[page % size].itemName,
 			Modifier.fillMaxSize(),
 			contentScale = ContentScale.Crop,
@@ -63,11 +68,14 @@ fun List<BranchItem>.ImageSlider(
 }
 
 @Composable
-fun List<Tag>.Row() = LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+fun List<Tag>.Row(
+	modifier: Modifier = Modifier,
+	onFilter: (String) -> Unit = { },
+) = LazyRow(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 	items(size) { index ->
 		FilterChip(
 			false,
-			{ /*TODO: Implement tag filtering*/ },
+			{ onFilter(this@Row[index].tagName) },
 			{ Text(this@Row[index].tagName) },
 		)
 	}
@@ -128,7 +136,7 @@ fun BranchItem.TallCard(onAddToCart: () -> Unit = {}) {
 							contentAlignment = Alignment.Center,
 							modifier = Modifier
 								.size(cardWidth)
-								.clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+								.clip(RoundedCornerShape(8.dp))
 								.background(MaterialTheme.colorScheme.primary),
 						) {}
 					}
@@ -186,7 +194,7 @@ fun SelfCheckoutView(order: Order?) {
 	val paymentQRCode = rememberQrCodePainter(paymentCode)
 
 	Card(
-		Modifier.fillMaxWidth(),
+		Modifier.fillMaxWidth().testTag("selfCheckoutView"),
 		elevation = CardDefaults.cardElevation(4.dp)
 	) {
 		Column(
@@ -194,22 +202,35 @@ fun SelfCheckoutView(order: Order?) {
 			Arrangement.spacedBy(8.dp),
 			Alignment.CenterHorizontally,
 		) {
-			Text("Self-checkout", style = MaterialTheme.typography.titleMedium)
+			Text(
+				"Self-checkout",
+				Modifier.testTag("checkoutTitle"),
+				style = MaterialTheme.typography.titleMedium
+			)
 			Text(
 				"$amount $currency",
+				Modifier.testTag("orderAmount"),
 				color = MaterialTheme.colorScheme.primary,
 				style = MaterialTheme.typography.displaySmall,
 				fontWeight = FontWeight.Bold,
 			)
-			Text("We accept VietQR bank transfer", style = MaterialTheme.typography.titleMedium)
-			Image(paymentQRCode, "Payment QR Code")
+			Text(
+				"We accept VietQR bank transfer",
+				Modifier.testTag("paymentMethodInfo"),
+				style = MaterialTheme.typography.titleMedium
+			)
+			Image(
+				paymentQRCode, "Payment QR Code",
+				Modifier.testTag("paymentQRCode")
+			)
 		}
 	}
 }
 
 @Composable
 private fun OutOfStockOverlay() = Box(
-	Modifier.fillMaxSize().background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)),
+	Modifier.fillMaxSize()
+		.background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)),
 	Alignment.Center,
 ) {
 	Text(

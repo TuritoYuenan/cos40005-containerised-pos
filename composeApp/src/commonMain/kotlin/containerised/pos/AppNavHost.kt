@@ -50,7 +50,7 @@ fun AppNavHost() {
 					is PostgresAction.Insert -> action.handle()
 					is PostgresAction.Update -> action.handle()
 					is PostgresAction.Delete -> action.handle()
-					is PostgresAction.Select -> {}
+					is PostgresAction.Select -> Unit
 				}
 			}
 		}

@@ -1,8 +1,8 @@
 package containerised.pos.services
 
 import containerised.pos.models.BranchItem
+import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
-import containerised.pos.models.OrderStatus
 import kotlinx.browser.window
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -26,7 +26,7 @@ object CartService {
 			quantity = count,
 			subtotal = branchItem.price * count,
 			specialNotes = specialNotes,
-			itemStatus = OrderStatus.PREPARING
+			itemStatus = Order.Status.PREPARING
 		)
 	}
 
