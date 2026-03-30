@@ -137,7 +137,7 @@ data class Ingredient(
 
 	fun isLowStock(): Boolean = currentStock < minStockLevel
 
-	suspend fun markActive(isActive: Boolean?) = SupabaseClient.db["ingredients"]
+	suspend fun markActive(isActive: Boolean) = SupabaseClient.db["ingredients"]
 		.update(mapOf("is_active" to isActive)) {
 			filter { eq("ingredient_id", id) }
 		}

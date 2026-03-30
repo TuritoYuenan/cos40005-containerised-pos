@@ -25,32 +25,34 @@ val navItems = listOf(
 @Composable
 fun StaffNavigationBar(navController: NavController, userPermissions: List<String>) {
 	var selectedDestination by remember { mutableStateOf(getStartRoute(userPermissions)) }
-
 	val allowedNavItems = navItems.filter { item ->
-		item.label == "Employee" || item.label == "Setting" || userPermissions.contains(
-			item.label
-		)
+		item.label == "Employee"
+			|| item.label == "Setting"
+			|| userPermissions.contains(item.label)
 	}
-	NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-		for (item in allowedNavItems) {
-			NavigationBarItem(
-				selected = selectedDestination == item.route,
-				label = { Text(item.label) },
-				icon = { Icon(item.icon, item.label) },
-				onClick = {
-					try {
-						navController.navigate(item.route) {
-							launchSingleTop = true
-							restoreState = true
-							popUpTo(navController.graph.startDestinationId) {
-								saveState = true
-							}
-						}
-						selectedDestination = item.route
-					} catch (e: Exception) {
-						println("Navigation to ${item.route} failed: ${e.message}")
-					}
+
+	fun NavigationItem.goTo() {
+		try {
+			navController.navigate(route) {
+				launchSingleTop = true
+				restoreState = true
+				popUpTo(navController.graph.startDestinationId) {
+					saveState = true
 				}
+			}
+			selectedDestination = route
+		} catch (e: Exception) {
+			println("Navigation to $route failed: ${e.message}")
+		}
+	}
+
+	NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
+		allowedNavItems.forEach {
+			NavigationBarItem(
+				selected = selectedDestination == it.route,
+				onClick = { it.goTo() },
+				icon = { Icon(it.icon, it.label) },
+				label = { Text(it.label) },
 			)
 		}
 	}

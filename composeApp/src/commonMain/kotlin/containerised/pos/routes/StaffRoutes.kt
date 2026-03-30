@@ -50,7 +50,7 @@ object StaffRoutes {
 
 	@Serializable
 	@SerialName("sales-report")
-	data class SalesReport(val reportId: String)
+	data class SalesReport(val id: String)
 
 	@Serializable @SerialName("employee-management")
 	object EmployeeManagement

@@ -68,9 +68,8 @@ data class BranchItem(
 
 		suspend fun fetchByBranchWithDetails(branchId: String): List<BranchItem> {
 			val query = """
-				*,
+				*, tags: item_tags (*, tag: tags (*)),
 				itemIngredients: item_ingredients (*, ingredient: ingredients (*)),
-				tags: item_tags (*, tag: tags (*)),
 			""".trimIndent()
 
 			return SupabaseClient.db["branch_items"]
