@@ -116,26 +116,29 @@ fun EditIngredientPage(navController: NavController, args: StaffRoutes.EditIngre
 			.verticalScroll(rememberScrollState()),
 		Arrangement.spacedBy(defaultPadding)
 	) {
-		if (isLoading) return LoadingView(Modifier.fillMaxSize())
+		when (val state = toUIState(isLoading, error, ingredient)) {
+			UIState.Loading -> LoadingView(Modifier.fillMaxSize())
 
-		if (!error.isNullOrBlank()) return ErrorView(
-			error!!,
-			Modifier.fillMaxSize()
-		)
+			is UIState.Error -> ErrorView(
+				state.message,
+				Modifier.fillMaxSize()
+			)
 
-		if (ingredient == null) return ErrorView(
-			"Ingredient not found",
-			Modifier.fillMaxSize()
-		)
+			UIState.NotFound -> ErrorView(
+				"Ingredient not found",
+				Modifier.fillMaxSize()
+			)
 
-		formData.EditForm(formErrors) { formData = it }
-
-		ActionButtons(
-			onDelete = { onDelete() },
-			onSave = { onUpdate() },
-			onCancel = { navController.popBackStack() },
-			isSavable = formData.isSavable(ingredient, formErrors)
-		)
+			is UIState.Ready -> {
+				formData.EditForm(formErrors) { formData = it }
+				ActionButtons(
+					onDelete = { onDelete() },
+					onSave = { onUpdate() },
+					onCancel = { navController.popBackStack() },
+					isSavable = formData.isSavable(state.ingredient, formErrors)
+				)
+			}
+		}
 	}
 }
 
@@ -147,16 +150,7 @@ fun EditIngredientPage(navController: NavController, args: StaffRoutes.EditIngre
 private fun Ingredient.Insertable.isSavable(
 	original: Ingredient?,
 	errors: Map<String, String?>
-): Boolean {
-	// If there are validation errors, form is not savable
-	if (errors.isNotEmpty()) return false
-
-	// If ingredient data is not loaded yet, form is not savable
-	if (original == null) return false
-
-	// Check if form data has changes compared to original ingredient data
-	return hasChanged(original)
-}
+): Boolean = original != null && errors.isEmpty() && hasChanged(original)
 
 @Composable
 private fun Ingredient.Insertable.EditForm(
@@ -378,6 +372,24 @@ private fun ActionButtons(
 			)
 		}
 	}
+}
+
+private sealed interface UIState {
+	data object Loading : UIState
+	data object NotFound : UIState
+	data class Error(val message: String) : UIState
+	data class Ready(val ingredient: Ingredient) : UIState
+}
+
+private fun toUIState(
+	isLoading: Boolean,
+	error: String?,
+	ingredient: Ingredient?
+): UIState = when {
+	isLoading -> UIState.Loading
+	ingredient == null -> UIState.NotFound
+	!error.isNullOrBlank() -> UIState.Error(error)
+	else -> UIState.Ready(ingredient)
 }
 
 @Preview(showBackground = true, showSystemUi = true)

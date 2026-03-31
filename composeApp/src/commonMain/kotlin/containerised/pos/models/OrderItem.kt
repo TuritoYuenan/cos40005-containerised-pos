@@ -25,7 +25,7 @@ data class OrderItem(
 	val specialNotes: String? = null,
 
 	@SerialName("item_status")
-	val itemStatus: OrderStatus? = null
+	val itemStatus: Order.Status? = null
 ) {
 	@Serializable
 	data class Insertable(
@@ -45,7 +45,7 @@ data class OrderItem(
 		val specialNotes: String? = null,
 
 		@SerialName("item_status")
-		val itemStatus: OrderStatus? = null
+		val itemStatus: Order.Status? = null
 	) {
 		suspend fun add() = SupabaseClient.db["order_items"].insert(this)
 	}
@@ -85,21 +85,21 @@ data class OrderItem(
 
 		suspend fun markFinished(orderId: String, itemId: String) =
 			SupabaseClient.db["order_items"]
-				.update({ set("item_status", OrderStatus.FINISHED) }) {
+				.update({ set("item_status", Order.Status.FINISHED) }) {
 					filter {
 						eq("order_id", orderId)
 						eq("item_id", itemId)
-						eq("item_status", OrderStatus.PREPARING)
+						eq("item_status", Order.Status.PREPARING)
 					}
 				}
 
 		suspend fun markCancelled(orderId: String, itemId: String) =
 			SupabaseClient.db["order_items"]
-				.update({ set("item_status", OrderStatus.CANCELED) }) {
+				.update({ set("item_status", Order.Status.CANCELED) }) {
 					filter {
 						eq("order_id", orderId)
 						eq("item_id", itemId)
-						eq("item_status", OrderStatus.PREPARING)
+						eq("item_status", Order.Status.PREPARING)
 					}
 				}
 
@@ -136,7 +136,7 @@ data class OrderItem(
 				quantity = 2,
 				subtotal = 600,
 				specialNotes = "Less water, please.",
-				itemStatus = OrderStatus.PREPARING
+				itemStatus = Order.Status.PREPARING
 			)
 		)
 	}

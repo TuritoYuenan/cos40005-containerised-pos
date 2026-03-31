@@ -12,6 +12,7 @@ plugins {
 	alias(libs.plugins.composeCompiler)
 	alias(libs.plugins.composeHotReload)
 	alias(libs.plugins.buildConfig)
+	id("jacoco")
 }
 
 kotlin {
@@ -97,7 +98,8 @@ kotlin {
 			implementation(libs.qrose)
 		}
 		commonTest.dependencies {
-			implementation(libs.kotlin.test)
+			implementation(libs.ui.test)
+			implementation(kotlin("test"))
 		}
 		jvmMain.dependencies {
 			implementation(compose.desktop.currentOs)
@@ -125,6 +127,17 @@ android {
 	compileOptions {
 		sourceCompatibility = JavaVersion.VERSION_11
 		targetCompatibility = JavaVersion.VERSION_11
+	}
+
+	buildTypes {
+		release {
+			isMinifyEnabled = true
+			isShrinkResources = true
+			proguardFiles(
+				getDefaultProguardFile("proguard-android-optimize.txt"),
+				"proguard-rules.pro"
+			)
+		}
 	}
 }
 
@@ -185,4 +198,27 @@ sqldelight {
 			packageName.set("containerised.pos.database")
 		}
 	}
+}
+
+tasks.register("jacocoTestReport", JacocoReport::class) {
+	description = "Generates Jacoco coverage reports for the JVM tests."
+	group = JavaBasePlugin.VERIFICATION_GROUP
+	dependsOn("jvmTest")
+
+	reports {
+		xml.required.set(true)
+		csv.required.set(false)
+		html.required.set(true)
+	}
+
+	sourceDirectories.setFrom(files("src/jvmMain/kotlin"))
+	classDirectories.setFrom(files("build/classes/kotlin/jvm/main"))
+	executionData.setFrom(fileTree(layout.buildDirectory) {
+		include("jacoco/jvmTest.exec")
+		include("**/*.exec")
+	})
+}
+
+tasks.named<Test>("jvmTest") {
+	finalizedBy("jacocoTestReport")
 }

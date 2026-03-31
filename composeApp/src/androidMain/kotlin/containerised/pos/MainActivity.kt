@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+
 class MainActivity : ComponentActivity() {
 	private val requestPermissionLauncher =
 		registerForActivityResult(
@@ -17,9 +18,9 @@ class MainActivity : ComponentActivity() {
 			}
 		}
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
-        super.onCreate(savedInstanceState)
+	override fun onCreate(savedInstanceState: Bundle?) {
+		enableEdgeToEdge()
+		super.onCreate(savedInstanceState)
 		AppContextHolder.context = applicationContext
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 			requestPermissionLauncher.launch(
@@ -28,11 +29,12 @@ class MainActivity : ComponentActivity() {
 		}
 		NotificationService.initialize(this)
 
-        setContent {
+		setContent {
 			AppNavHost()
-        }
-    }
+		}
+	}
 }
+
 object AppContextHolder {
 	lateinit var context: Context
 }

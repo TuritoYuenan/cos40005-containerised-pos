@@ -47,7 +47,7 @@ data class BranchItem(
 	val itemIngredients: List<ItemIngredient>? = null,
 ) {
 	fun isOutOfStock(): Boolean {
-		if (itemIngredients == null) throw IllegalStateException("Must fetch ingredients to determine stock status.")
+		checkNotNull(itemIngredients) { "Must fetch ingredients to determine stock status." }
 		return itemIngredients.any { it.ingredient.isLowStock() }
 	}
 
@@ -65,9 +65,12 @@ data class BranchItem(
 				.decodeList<BranchItem>()
 		}
 
-		suspend fun fetchByBranchWithIngredient(branchId: String): List<BranchItem> {
-			val query =
-				"*, itemIngredients: item_ingredients (*, ingredient: ingredients (*))"
+		suspend fun fetchByBranchWithDetails(branchId: String): List<BranchItem> {
+			val query = """
+				*,
+				itemIngredients: item_ingredients (*, ingredient: ingredients (*)),
+				tags: item_tags (*, tag: tags (*)),
+			""".trimIndent()
 
 			return SupabaseClient.db["branch_items"]
 				.select(Columns.raw(query)) {
@@ -94,11 +97,11 @@ data class BranchItem(
 		}
 
 		val MOCK = BranchItem(
-			branchId = "1",
-			itemId = "1",
-			categoryId = "1",
+			branchId = "branch123",
+			itemId = "item123",
+			categoryId = "cat123",
 			category = Category(
-				categoryId = "1",
+				categoryId = "cat123",
 				categoryName = "Main Course",
 				displayOrder = 1
 			),
@@ -126,7 +129,7 @@ data class BranchItem(
 								"supplier" to JsonPrimitive("Supplier 1")
 							)
 						),
-						branchId = "1",
+						branchId = "branch123",
 						isActive = true
 					)
 				),
@@ -146,7 +149,7 @@ data class BranchItem(
 								"supplier" to JsonPrimitive("Supplier 2")
 							)
 						),
-						branchId = "1",
+						branchId = "branch123",
 						isActive = true
 					)
 				)

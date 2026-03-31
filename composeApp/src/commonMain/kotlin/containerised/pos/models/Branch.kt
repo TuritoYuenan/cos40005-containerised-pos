@@ -35,5 +35,15 @@ data class Branch(
 		suspend fun fetchAll(): List<Branch> {
 			return SupabaseClient.db["branches"].select().decodeList<Branch>()
 		}
+
+		val MOCK = Branch(
+			branchId = "branch123",
+			branchName = "Main Branch",
+			address = "123 Main St",
+			phoneNumber = "555-1234",
+			email = "branch@business.com",
+			isActive = true,
+			createdAt = "2024-01-01T00:00:00Z",
+		)
 	}
 }
