@@ -17,6 +17,7 @@ fun StaffTopBar(navController: NavController, currentRoute: String) {
 		currentRoute == "inventory" -> InventoryTopBar()
 		currentRoute.startsWith("ingredient-detail") -> IngredientDetailTopBar(navController)
 		currentRoute.startsWith("stock-history") -> StockHistoryTopBar(navController)
+		currentRoute.startsWith("employee-management") -> {}
 		else -> GenericStaffTopBar()
 	}
 }

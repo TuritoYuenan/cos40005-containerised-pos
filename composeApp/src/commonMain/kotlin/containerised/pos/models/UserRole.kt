@@ -11,6 +11,8 @@ data class UserRole(
 	@SerialName("user_id")
 	val userId: String,
 
+	val user: User? = null,
+
 	@SerialName("role_id")
 	val roleId: String,
 
@@ -31,6 +33,21 @@ data class UserRole(
 				.decodeList<UserRole>()
 
 			return result.flatMap { it.role.permission }
+		}
+		suspend fun fetchAndJoin(userId: String): UserRole? {
+
+			val result = SupabaseClient.db
+				.from("user_roles")
+				.select(
+					Columns.raw("*, user:users(*), role:roles(*)")
+				) {
+					filter {
+						eq("user_id", userId)
+					}
+				}
+				.decodeList<UserRole>()
+
+			return result.firstOrNull()
 		}
 	}
 }

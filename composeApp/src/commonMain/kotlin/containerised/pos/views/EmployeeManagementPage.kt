@@ -1,45 +1,231 @@
 package containerised.pos.views
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import containerised.pos.database.SupabaseClient
-import containerised.pos.models.User
+import containerised.pos.models.DayOfWeek
+import containerised.pos.models.EmployeeShift
+import containerised.pos.models.EmployeeShift.Companion.isInShift
+import containerised.pos.models.UserRole
+import containerised.pos.models.days
+import containerised.pos.models.hours
 
-private val defaultPadding = 16.dp
 
 @Composable
 fun EmployeeManagementPage() {
 	val scope = rememberCoroutineScope()
-	var user by remember { mutableStateOf<User?>(null) }
 	val userId = SupabaseClient.auth.currentUserOrNull()?.id
-	val email = SupabaseClient.auth.currentUserOrNull()?.email
+	var userRole by remember { mutableStateOf<UserRole?>(null) }
+	var shifts by remember { mutableStateOf<List<EmployeeShift>>(emptyList()) }
 
 	LaunchedEffect(Unit) {
 		try {
-			user = User.fetchById(userId ?: "")
+			userRole = UserRole.fetchAndJoin(userId?: "")
+			shifts = EmployeeShift.fetchById(userId?: "")
 		} catch (e: Exception) {
 			val error = e.message
 			println("Error: $error")
 		}
 	}
 
+	LazyColumn(
+		verticalArrangement = Arrangement.spacedBy(12.dp)
+	){
+		item {
+			userRole?.EmployeeCard()
+		}
+		item{
+			userRole?.DetailCard()
+		}
+		item{
+			shifts.Timetable()
+		}
+	}
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UserRole.EmployeeCard(){
+	TopAppBar(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clip(
+			RoundedCornerShape(
+					bottomStart = 10.dp,
+					bottomEnd = 10.dp
+				)
+			),
+		title = {
+			Text(
+				text = user?.fullName ?: "",
+				style = MaterialTheme.typography.titleLarge,
+				color = Color.White
+			)
+		},
+		colors = TopAppBarDefaults.topAppBarColors(
+			containerColor = MaterialTheme.colorScheme.primary,
+			titleContentColor = Color.White
+		)
+	)
+}
+
+@Composable
+fun UserRole.DetailCard(){
+	OutlinedCard(
+		Modifier
+			.fillMaxWidth()
+			.padding(12.dp, 6.dp),
+		) {
+		Row(
+			Modifier
+				.fillMaxWidth()
+				.padding(12.dp, 6.dp),
+		) {
+			Column(
+				modifier = Modifier.weight(1f)
+			) {
+				Text("DEPARTMENT", style = MaterialTheme.typography.bodyMedium)
+				Text(role.roleName, style = MaterialTheme.typography.titleMedium)
+			}
+
+			Column(
+				modifier = Modifier.weight(1f)
+			) {
+				Text("STATUS", style = MaterialTheme.typography.bodyMedium)
+
+				Row(verticalAlignment = Alignment.CenterVertically) {
+					val isActive = user?.isActive == true
+					Box(
+						modifier = Modifier
+							.size(10.dp)
+							.background(
+								color = if (isActive) Color(0xFF4CAF50) else Color(0xFFF44336),
+								shape = CircleShape
+							)
+					)
+
+					Spacer(modifier = Modifier.width(6.dp))
+
+					Text(
+						text = if (isActive) "Active" else "Inactive",
+						style = MaterialTheme.typography.titleMedium
+					)
+				}
+			}
+		}
+	}
+	OutlinedCard(
+		Modifier
+			.fillMaxWidth()
+			.padding(12.dp, 6.dp),
+		) {
+		Column(
+			Modifier
+				.fillMaxWidth()
+				.padding(12.dp, 6.dp),
+			verticalArrangement = Arrangement.spacedBy(8.dp)
+		) {
+			Row() {
+				Icon(Icons.Filled.Mail, "Mail")
+				Column() {
+					Text("EMAIL", style = MaterialTheme.typography.bodyMedium)
+					Text(
+						user?.email ?: "null",
+						style = MaterialTheme.typography.bodyMedium
+					)
+				}
+			}
+			if (user?.phone != null) {
+				Row() {
+					Icon(Icons.Filled.Phone, "Phone")
+					Column() {
+						Text("PHONE", style = MaterialTheme.typography.bodyMedium)
+						Text(user.phone, style = MaterialTheme.typography.bodyMedium)
+					}
+				}
+			}
+			Row() {
+				Icon(Icons.Filled.AccessTime, "clock")
+				Column() {
+					Text("JOINED", style = MaterialTheme.typography.bodyMedium)
+					Text(
+						user?.createdAt?.take(10) ?: "null",
+						style = MaterialTheme.typography.bodyMedium
+					)
+
+				}
+			}
+		}
+	}
+}
+@Composable
+fun List<EmployeeShift>.Timetable() {
 	Column(
-		Modifier.padding(defaultPadding, 0.dp),
-		Arrangement.spacedBy(defaultPadding)
+		Modifier
+			.fillMaxWidth()
+			.padding(12.dp, 6.dp),
 	) {
-		Text("User information", style = MaterialTheme.typography.headlineMedium)
-		Text("Name: ${user?.fullName}", style = MaterialTheme.typography.titleMedium)
-		Text("Email: $email", style = MaterialTheme.typography.titleMedium)
-
+		// Header row (days)
 		Row {
+			Spacer(modifier = Modifier.width(40.dp)) // space for hour labels
 
+			days.forEach { day ->
+				Box(
+					modifier = Modifier
+						.weight(1f)
+						.padding(4.dp),
+					contentAlignment = Alignment.Center
+				) {
+					Text(day, style = MaterialTheme.typography.bodyMedium)
+				}
+			}
+		}
+
+		// Time rows
+		hours.forEachIndexed { index, hour ->
+			Row {
+				// Hour label
+				Box(
+					modifier = Modifier
+						.width(40.dp)
+						.padding(4.dp),
+					contentAlignment = Alignment.CenterStart
+				) {
+					Text(hour, style = MaterialTheme.typography.bodySmall)
+				}
+
+				// Cells
+				days.forEach { day ->
+					val hasShift = any { shift ->
+						shift.date.toString() == day && isInShift(index, shift)
+					}
+
+					Box(
+						modifier = Modifier
+							.weight(1f)
+							.height(24.dp)
+							.padding(2.dp)
+							.background(
+								if (hasShift) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+								else MaterialTheme.colorScheme.surfaceVariant
+							)
+					)
+				}
+			}
 		}
 	}
 }

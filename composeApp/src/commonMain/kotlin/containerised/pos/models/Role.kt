@@ -1,5 +1,6 @@
 package containerised.pos.models
 
+import containerised.pos.database.SupabaseClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -16,4 +17,10 @@ data class Role(
 
 	@SerialName("permission")
 	val permission: List<String>
-)
+){
+	companion object {
+		suspend fun fetchById(roleId: String): User? = SupabaseClient.db["roles"]
+			.select { filter { eq("role_id", roleId) } }
+			.decodeList<User>().firstOrNull()
+	}
+}

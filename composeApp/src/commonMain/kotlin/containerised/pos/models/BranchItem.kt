@@ -44,8 +44,7 @@ data class BranchItem(
 	@SerialName("url_img")
 	val urlImg: String? = null,
 
-	val itemIngredients: List<ItemIngredientWithIngredient>? = null,
-	val itemTags: List<ItemTag>? = null
+	val itemIngredients: List<ItemIngredient>? = null,
 ) {
 	fun isOutOfStock(): Boolean {
 		checkNotNull(itemIngredients) { "Must fetch ingredients to determine stock status." }
@@ -114,8 +113,8 @@ data class BranchItem(
 			isFeatured = true,
 			urlImg = null,
 			itemIngredients = listOf(
-				ItemIngredientWithIngredient(
-					itemId = "item123",
+				ItemIngredient(
+					itemId = "0",
 					ingredientId = "1",
 					quantity = 1.1,
 					ingredient = Ingredient(
@@ -134,8 +133,8 @@ data class BranchItem(
 						isActive = true
 					)
 				),
-				ItemIngredientWithIngredient(
-					itemId = "item123",
+				ItemIngredient(
+					itemId = "0",
 					ingredientId = "2",
 					quantity = 1.1,
 					ingredient = Ingredient(
@@ -172,7 +171,7 @@ data class BranchItemWithCatAndIng(
 
 	val category: Category,
 
-	val itemIngredients: List<ItemIngredientWithIngredient>,
+	val itemIngredients: List<ItemIngredient>,
 
 	@SerialName("item_name")
 	val itemName: String,
