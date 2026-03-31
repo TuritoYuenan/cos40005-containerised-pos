@@ -44,7 +44,7 @@ data class BranchItem(
 	@SerialName("url_img")
 	val urlImg: String? = null,
 
-	val itemIngredients: List<ItemIngredientWithIngredient>? = null,
+	val itemIngredients: List<ItemIngredient>? = null,
 ) {
 	fun isOutOfStock(): Boolean {
 		if (itemIngredients == null) throw IllegalStateException("Must fetch ingredients to determine stock status.")
@@ -52,16 +52,6 @@ data class BranchItem(
 	}
 
 	companion object {
-		/**
-		 * Fetches all branch items from the database.
-		 * @return A list of [BranchItem] objects representing all branch items in the database.
-		 * @throws Exception if there is an error during the database query or data decoding process.
-		 * @see BranchItem
-		 */
-		suspend fun fetchAll(): List<BranchItem> = SupabaseClient.db["branch_items"]
-			.select()
-			.decodeList<BranchItem>()
-
 		/**
 		 * Fetches branch items associated with a specific branch ID from the database.
 		 * @param branchId The ID of the branch for which to fetch items.
@@ -120,7 +110,7 @@ data class BranchItem(
 			isFeatured = true,
 			urlImg = null,
 			itemIngredients = listOf(
-				ItemIngredientWithIngredient(
+				ItemIngredient(
 					itemId = "0",
 					ingredientId = "1",
 					quantity = 1.1,
@@ -140,7 +130,7 @@ data class BranchItem(
 						isActive = true
 					)
 				),
-				ItemIngredientWithIngredient(
+				ItemIngredient(
 					itemId = "0",
 					ingredientId = "2",
 					quantity = 1.1,
@@ -178,7 +168,7 @@ data class BranchItemWithCatAndIng(
 
 	val category: Category,
 
-	val itemIngredients: List<ItemIngredientWithIngredient>,
+	val itemIngredients: List<ItemIngredient>,
 
 	@SerialName("item_name")
 	val itemName: String,

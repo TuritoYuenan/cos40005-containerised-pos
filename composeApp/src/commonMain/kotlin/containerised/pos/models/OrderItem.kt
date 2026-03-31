@@ -113,14 +113,14 @@ data class OrderItem(
 					categoryId = "cat1",
 					category = Category("cat1", "Beverages"),
 					itemIngredients = listOf(
-						ItemIngredientWithIngredient(
+						ItemIngredient(
 							ingredientId = "ing1",
 							ingredient = Ingredient.MOCK,
 							itemId = "item1",
 							quantity = 0.5,
 							unit = "liters"
 						),
-						ItemIngredientWithIngredient(
+						ItemIngredient(
 							ingredientId = "ing2",
 							ingredient = Ingredient.MOCK,
 							itemId = "item1",

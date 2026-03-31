@@ -29,6 +29,7 @@ import io.github.jan.supabase.realtime.decodeRecord
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+private const val CURRENT_BRANCH = "BRA26011700"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KitchenDisplayPage() {
@@ -39,7 +40,7 @@ fun KitchenDisplayPage() {
 
 	LaunchedEffect(Unit) {
 		try {
-			orders = Order.fetchPreparing()
+			orders = Order.fetchPreparingByBranch(CURRENT_BRANCH)
 			println("Fetched ${orders.size} orders:")
 		} catch (e: Exception) {
 			error = e.message

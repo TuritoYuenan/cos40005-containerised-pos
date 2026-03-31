@@ -114,9 +114,12 @@ data class Order(
 					filter { eq("branch_id", branchID) }
 				}.decodeList<Order>()
 
-		suspend fun fetchPreparing(): List<Order> = SupabaseClient.db["orders"]
+		suspend fun fetchPreparingByBranch(branchID: String): List<Order> = SupabaseClient.db["orders"]
 			.select(Columns.raw("*, table:tables (*)")) {
-				filter { eq("status", OrderStatus.PREPARING) }
+				filter {
+					eq("status", OrderStatus.PREPARING)
+					eq("branch_id", branchID)
+				}
 			}.decodeList<Order>()
 
 		suspend fun markFinished(orderId: String) = SupabaseClient.db["orders"]
