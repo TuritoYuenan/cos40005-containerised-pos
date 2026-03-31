@@ -1,6 +1,7 @@
 package containerised.pos.views
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -14,7 +15,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import containerised.pos.database.SupabaseClient
 import containerised.pos.models.DayOfWeek
@@ -174,20 +178,39 @@ fun UserRole.DetailCard(){
 }
 @Composable
 fun List<EmployeeShift>.Timetable() {
+	val borderColor = MaterialTheme.colorScheme.outline
+	val hourSpace = 40.dp
 	Column(
 		Modifier
 			.fillMaxWidth()
-			.padding(12.dp, 6.dp),
+			.padding(12.dp, 6.dp)
+			.border(1.dp, borderColor)
+			.drawBehind {
+				val hourWidthPx = hourSpace.toPx()
+				val remainingWidth = size.width - hourWidthPx
+				val dayColumnWidth = remainingWidth / days.size
+
+				repeat(days.size) { index ->
+					val x = hourWidthPx + (dayColumnWidth * index)
+
+					drawLine(
+						color = borderColor,
+						start = Offset(x, 0f),
+						end = Offset(x, size.height),
+						strokeWidth = 1.dp.toPx()
+					)
+				}
+			}
 	) {
 		// Header row (days)
 		Row {
-			Spacer(modifier = Modifier.width(40.dp)) // space for hour labels
+			Spacer(modifier = Modifier.width(hourSpace)) // space for hour labels
 
 			days.forEach { day ->
 				Box(
 					modifier = Modifier
 						.weight(1f)
-						.padding(4.dp),
+						.padding(2.dp),
 					contentAlignment = Alignment.Center
 				) {
 					Text(day, style = MaterialTheme.typography.bodyMedium)
@@ -201,7 +224,7 @@ fun List<EmployeeShift>.Timetable() {
 				// Hour label
 				Box(
 					modifier = Modifier
-						.width(40.dp)
+						.width(hourSpace)
 						.padding(4.dp),
 					contentAlignment = Alignment.CenterStart
 				) {
