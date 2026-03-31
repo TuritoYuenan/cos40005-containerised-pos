@@ -113,7 +113,7 @@ data class Order(
 		suspend fun fetchPreparingByBranch(branchID: String): List<Order> = SupabaseClient.db["orders"]
 			.select(Columns.raw("*, table:tables (*)")) {
 				filter {
-					eq("status", OrderStatus.PREPARING)
+					eq("status", Status.PREPARING)
 					eq("branch_id", branchID)
 				}
 			}.decodeList<Order>()
