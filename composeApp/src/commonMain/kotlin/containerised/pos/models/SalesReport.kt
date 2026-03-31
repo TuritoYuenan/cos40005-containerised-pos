@@ -33,6 +33,11 @@ data class SalesReport(
 			.select()
 			.decodeList<SalesReport>()
 
+		suspend fun fetchByID(id: String): SalesReport =
+			SupabaseClient.db["sales_reports"]
+				.select { filter { eq("id", id) } }
+				.decodeSingle<SalesReport>()
+
 		val MOCK = SalesReport(
 			id = "report_123",
 			granularity = Granularity.DAILY,
