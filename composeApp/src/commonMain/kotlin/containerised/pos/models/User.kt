@@ -25,7 +25,7 @@ data class User(
 	val branchId: String,
 
 	@SerialName("is_active")
-	val isActive: Boolean? = null,
+	val isActive: Boolean = false,
 
 	@SerialName("created_at")
 	val createdAt: String,

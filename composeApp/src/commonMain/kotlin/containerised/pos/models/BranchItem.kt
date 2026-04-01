@@ -44,7 +44,7 @@ data class BranchItem(
 	@SerialName("url_img")
 	val urlImg: String? = null,
 
-	val itemIngredients: List<ItemIngredientWithIngredient>? = null,
+	val itemIngredients: List<ItemIngredient>? = null,
 	val itemTags: List<ItemTag>? = null
 ) {
 	fun isOutOfStock(): Boolean {
@@ -68,8 +68,8 @@ data class BranchItem(
 
 		suspend fun fetchByBranchWithDetails(branchId: String): List<BranchItem> {
 			val query = """
-				*, tags: item_tags (*, tag: tags (*)),
-				itemIngredients: item_ingredients (*, ingredient: ingredients (*)),
+				*, itemTags: item_tags (*, tag: tags (*)),
+				itemIngredients: item_ingredients (*, ingredient: ingredients (*))
 			""".trimIndent()
 
 			return SupabaseClient.db["branch_items"]
@@ -113,8 +113,8 @@ data class BranchItem(
 			isFeatured = true,
 			urlImg = null,
 			itemIngredients = listOf(
-				ItemIngredientWithIngredient(
-					itemId = "item123",
+				ItemIngredient(
+					itemId = "0",
 					ingredientId = "1",
 					quantity = 1.1,
 					ingredient = Ingredient(
@@ -133,8 +133,8 @@ data class BranchItem(
 						isActive = true
 					)
 				),
-				ItemIngredientWithIngredient(
-					itemId = "item123",
+				ItemIngredient(
+					itemId = "0",
 					ingredientId = "2",
 					quantity = 1.1,
 					ingredient = Ingredient(
@@ -171,7 +171,7 @@ data class BranchItemWithCatAndIng(
 
 	val category: Category,
 
-	val itemIngredients: List<ItemIngredientWithIngredient>,
+	val itemIngredients: List<ItemIngredient>,
 
 	@SerialName("item_name")
 	val itemName: String,
