@@ -45,6 +45,7 @@ data class BranchItem(
 	val urlImg: String? = null,
 
 	val itemIngredients: List<ItemIngredient>? = null,
+	val itemTags: List<ItemTag>? = null
 ) {
 	fun isOutOfStock(): Boolean {
 		checkNotNull(itemIngredients) { "Must fetch ingredients to determine stock status." }
@@ -67,9 +68,8 @@ data class BranchItem(
 
 		suspend fun fetchByBranchWithDetails(branchId: String): List<BranchItem> {
 			val query = """
-				*,
-				itemIngredients: item_ingredients (*, ingredient: ingredients (*)),
-				tags: item_tags (*, tag: tags (*)),
+				*, itemTags: item_tags (*, tag: tags (*)),
+				itemIngredients: item_ingredients (*, ingredient: ingredients (*))
 			""".trimIndent()
 
 			return SupabaseClient.db["branch_items"]
