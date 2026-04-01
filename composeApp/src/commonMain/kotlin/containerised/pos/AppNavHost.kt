@@ -12,6 +12,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import containerised.pos.components.AppTheme
+import containerised.pos.components.LoadingView
 import containerised.pos.components.StaffNavigationBar
 import containerised.pos.components.StaffTopBar
 import containerised.pos.components.getStartRoute
@@ -85,16 +86,17 @@ fun AppNavHost() {
 		}
 
 		Scaffold(
-			topBar = { StaffTopBar(navController, currentRoute) },
+			topBar = { if (!isLogin) StaffTopBar(navController, currentRoute) },
 			bottomBar = {
 				if (!isLogin) StaffNavigationBar(navController, userPermissions)
 			}
 		) { paddingValues ->
 			NavHost(
 				navController,
-				StaffRoutes.Login,
+				StaffRoutes.Loading,
 				Modifier.padding(paddingValues)
 			) {
+				composable<StaffRoutes.Loading> { LoadingView() }
 				composable<StaffRoutes.Login> { LoginPage() }
 				composable<StaffRoutes.MenuEdit> { MenuEditPage(navController) }
 				composable<StaffRoutes.EditItem> { backStackEntry ->

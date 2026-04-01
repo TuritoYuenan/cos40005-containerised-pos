@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 
 object StaffRoutes {
 	@Serializable
+	@SerialName("loading")
+	object Loading
+	@Serializable
 	@SerialName("login")
 	object Login
 
