@@ -168,7 +168,7 @@ compose.desktop {
 		mainClass = "containerised.pos.MainKt"
 
 		nativeDistributions {
-			targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+			targetFormats(TargetFormat.Exe, TargetFormat.Deb)
 
 //			Package metadata
 			packageName = "containerised.pos"

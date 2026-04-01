@@ -1,0 +1,72 @@
+name: Release desktop/mobile app versions for staff
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-windows-exe:
+    permissions:
+      contents: write
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'oracle'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-read-only: true
+
+      - name: Build Windows EXE
+        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: .\\gradlew.bat :composeApp:packageReleaseExe
+
+      - name: Upload EXE to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            composeApp/build/compose/binaries/main-release/exe/*.exe
+
+  build-linux-deb-apk:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'oracle'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-read-only: true
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build Linux DEB and Android APK
+        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: ./gradlew :composeApp:packageReleaseDeb :composeApp:assembleRelease
+
+      - name: Upload DEB and APK to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            composeApp/build/compose/binaries/main-release/deb/*.deb
+            composeApp/build/outputs/apk/release/*.apk
