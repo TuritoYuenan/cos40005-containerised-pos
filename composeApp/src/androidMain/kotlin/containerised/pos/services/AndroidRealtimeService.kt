@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.IBinder
 import containerised.pos.database.ChangeType
 
-class AndroidOrderRealtimeService : Service() {
+class AndroidRealtimeService : Service() {
 	override fun onCreate() {
 		super.onCreate()
 
@@ -13,8 +13,8 @@ class AndroidOrderRealtimeService : Service() {
 			1,
 			AndroidNotificationService.createForegroundNotification(
 				this,
-				"Order Listener",
-				"Listening for new orders"
+				"Realtime Service",
+				"Listening for real-time updates..."
 			)
 		)
 
