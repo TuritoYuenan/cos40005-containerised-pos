@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.services
 
 object WebNotificationService : NotificationService {
 	override fun showNotification(title: String, message: String) {

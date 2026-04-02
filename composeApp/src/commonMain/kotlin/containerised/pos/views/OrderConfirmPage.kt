@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import containerised.pos.RealtimeManager
+import containerised.pos.services.RealtimeManager
 import containerised.pos.components.ErrorView
 import containerised.pos.components.LoadingView
 import containerised.pos.models.Order

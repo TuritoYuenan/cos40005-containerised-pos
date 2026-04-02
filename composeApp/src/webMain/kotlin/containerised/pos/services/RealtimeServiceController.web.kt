@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.services
 
 object WebRealtimeServiceController: RealtimeServiceController {
 	override fun start() {}

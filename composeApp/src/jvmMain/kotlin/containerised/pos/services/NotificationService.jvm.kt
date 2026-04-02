@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.services
 
 import java.awt.SystemTray
 import java.awt.Toolkit

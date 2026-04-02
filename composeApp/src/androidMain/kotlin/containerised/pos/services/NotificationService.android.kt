@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.services
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -7,6 +7,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import containerised.pos.R
 
 object AndroidNotificationService : NotificationService {
 	private const val CHANNEL_ID = "orders_channel"

@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.services
 
 import android.app.Service
 import android.content.Intent

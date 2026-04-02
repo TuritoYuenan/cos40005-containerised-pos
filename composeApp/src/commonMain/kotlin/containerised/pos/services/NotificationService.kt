@@ -1,4 +1,4 @@
-package containerised.pos
+package containerised.pos.services
 
 interface NotificationService {
 	fun showNotification(title: String, message: String)

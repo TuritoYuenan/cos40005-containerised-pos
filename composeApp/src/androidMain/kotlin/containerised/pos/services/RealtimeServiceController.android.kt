@@ -1,7 +1,8 @@
-package containerised.pos
+package containerised.pos.services
 
 import android.content.Intent
 import androidx.core.content.ContextCompat
+import containerised.pos.AppContextHolder
 
 object AndroidRealtimeServiceController: RealtimeServiceController {
 	private var started = false
