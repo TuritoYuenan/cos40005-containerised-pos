@@ -1,7 +1,7 @@
 -- Triggered by Supabase cron
 -- Generate sales report
 -- Accepts granularity, period_start, period_end, and currency as parameters
--- Inserts a new record into the sales_reports table with the calculated values
+-- Uses the actual orders schema: created_at, final_amount, and tax_amount
 CREATE OR REPLACE FUNCTION public.generate_sales_report(
   p_granularity public.sales_report_granularity,
   p_period_start date,
@@ -14,21 +14,22 @@ DECLARE
   v_net_sales numeric(20, 2);
   v_orders_count bigint;
 BEGIN
-  -- Calculate gross sales, discount total, net sales, and orders count based on the provided parameters
+  -- Calculate totals from the actual orders table columns.
+  -- The schema does not store discounts or currency on orders, so discount_total stays zero
+  -- and the currency is stored only on the generated report row.
   SELECT
-	COALESCE(SUM(o.total_amount), 0),
-	COALESCE(SUM(o.discount_amount), 0),
-	COALESCE(SUM(o.net_amount), 0),
-	COUNT(o.id)
+  	COALESCE(SUM(o.final_amount)::numeric(20, 2), 0),
+  	0::numeric(20, 2),
+  	COALESCE(SUM((o.final_amount - COALESCE(o.tax_amount, 0)))::numeric(20, 2), 0),
+  	COUNT(o.order_id)
   INTO
 	v_gross_sales,
 	v_discount_total,
 	v_net_sales,
 	v_orders_count
   FROM public.orders o
-  WHERE o.order_date >= p_period_start
-    AND o.order_date <= p_period_end
-    AND o.currency = p_currency;
+  WHERE o.created_at::date >= p_period_start
+    AND o.created_at::date <= p_period_end;
 
   -- Insert the calculated values into the sales_reports table
   INSERT INTO public.sales_reports (
@@ -40,7 +41,7 @@ BEGIN
 	discount_total,
 	net_sales,
 	orders_count,
-	created_at
+  	source_job
   ) VALUES (
 	p_granularity,
 	p_period_start,
@@ -50,7 +51,7 @@ BEGIN
 	v_discount_total,
 	v_net_sales,
 	v_orders_count,
-	NOW()
+  	'generate_sales_report'
   );
 END;
 $$;
