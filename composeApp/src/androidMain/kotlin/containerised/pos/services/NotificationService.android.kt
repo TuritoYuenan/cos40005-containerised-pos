@@ -62,6 +62,7 @@ object AndroidNotificationService : NotificationService {
 		text: String
 	): Notification {
 		return NotificationCompat.Builder(context, CHANNEL_ID)
+			.setSmallIcon(R.drawable.icon)
 			.setContentTitle(title)
 			.setContentText(text)
 			.setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -70,5 +71,4 @@ object AndroidNotificationService : NotificationService {
 	}
 }
 
-actual val notificationService: NotificationService
-	get() = AndroidNotificationService
+actual val notificationService: NotificationService = AndroidNotificationService
