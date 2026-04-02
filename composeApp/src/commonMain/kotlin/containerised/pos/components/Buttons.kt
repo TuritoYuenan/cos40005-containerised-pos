@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -13,6 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+@Preview
+@Composable
+fun SettingsButton(
+	modifier: Modifier = Modifier.padding(start = 8.dp),
+	onClick: () -> Unit = {}
+) = IconButton({ onClick() }, modifier) {
+	Icon( imageVector = Icons.Default.Settings, contentDescription = "Settings")
+}
 @Preview
 @Composable
 fun BackButton(

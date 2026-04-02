@@ -20,6 +20,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import containerised.pos.components.SettingsButton
 import containerised.pos.database.SupabaseClient
 import containerised.pos.models.DayOfWeek
 import containerised.pos.models.EmployeeShift
@@ -27,10 +29,11 @@ import containerised.pos.models.EmployeeShift.Companion.isInShift
 import containerised.pos.models.UserRole
 import containerised.pos.models.days
 import containerised.pos.models.hours
+import containerised.pos.routes.StaffRoutes
 
 
 @Composable
-fun EmployeeManagementPage() {
+fun EmployeeManagementPage(navController: NavController) {
 	val scope = rememberCoroutineScope()
 	val userId = SupabaseClient.auth.currentUserOrNull()?.id
 	var userRole by remember { mutableStateOf<UserRole?>(null) }
@@ -50,7 +53,7 @@ fun EmployeeManagementPage() {
 		verticalArrangement = Arrangement.spacedBy(12.dp)
 	){
 		item {
-			userRole?.EmployeeCard()
+			userRole?.EmployeeCard(navController)
 		}
 		item{
 			userRole?.DetailCard()
@@ -63,27 +66,19 @@ fun EmployeeManagementPage() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserRole.EmployeeCard(){
+fun UserRole.EmployeeCard(navController: NavController){
 	TopAppBar(
-		modifier = Modifier
-			.fillMaxWidth()
-			.clip(
-			RoundedCornerShape(
-					bottomStart = 10.dp,
-					bottomEnd = 10.dp
-				)
-			),
+
 		title = {
 			Text(
 				text = user?.fullName ?: "",
 				style = MaterialTheme.typography.titleLarge,
-				color = Color.White
 			)
 		},
-		colors = TopAppBarDefaults.topAppBarColors(
-			containerColor = MaterialTheme.colorScheme.primary,
-			titleContentColor = Color.White
-		)
+		actions = {
+			SettingsButton { navController.navigate(StaffRoutes.Setting) }
+		}
+
 	)
 }
 
