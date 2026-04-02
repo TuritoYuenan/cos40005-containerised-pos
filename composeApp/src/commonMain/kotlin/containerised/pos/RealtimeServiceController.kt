@@ -1,6 +1,8 @@
 package containerised.pos
 
-expect object RealtimeServiceController {
+interface RealtimeServiceController {
 	fun start()
 	fun stop()
 }
+
+expect val realtimeServiceController: RealtimeServiceController

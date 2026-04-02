@@ -2,10 +2,10 @@ package containerised.pos
 
 import containerised.pos.database.ChangeType
 
-actual object RealtimeServiceController {
+object JvmRealtimeServiceController: RealtimeServiceController {
 	private var started = false
 
-	actual fun start() {
+	override fun start() {
 		if (started) return
 		started = true
 
@@ -14,10 +14,13 @@ actual object RealtimeServiceController {
 		RealtimeManager.forOrderItems.start()
 	}
 
-	actual fun stop() {
+	override fun stop() {
 		RealtimeManager.forOrders.stop()
 		RealtimeManager.forIngredients.stop()
 		RealtimeManager.forOrderItems.stop()
 		started = false
 	}
 }
+
+actual val realtimeServiceController: RealtimeServiceController
+	get() = JvmRealtimeServiceController

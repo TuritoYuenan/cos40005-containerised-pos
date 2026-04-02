@@ -11,7 +11,7 @@ class AndroidOrderRealtimeService : Service() {
 
 		startForeground(
 			1,
-			NotificationService.createForegroundNotification(
+			AndroidNotificationService.createForegroundNotification(
 				this,
 				"Order Listener",
 				"Listening for new orders"

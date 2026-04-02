@@ -8,14 +8,14 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 
-actual object NotificationService {
-
+object AndroidNotificationService : NotificationService {
 	private const val CHANNEL_ID = "orders_channel"
 	private var appContext: Context? = null
 
 	fun initialize(context: Context) {
 		appContext = context.applicationContext
 		createChannel(context)
+		Log.d("NOTIF", "Notification service initialized with context: $appContext")
 	}
 
 	private fun createChannel(context: Context) {
@@ -35,7 +35,7 @@ actual object NotificationService {
 		}
 	}
 
-	actual fun showNotification(title: String, message: String) {
+	override fun showNotification(title: String, message: String) {
 		val context = appContext ?: run {
 			Log.d("NOTIF", "Context is null")
 			return
@@ -55,7 +55,11 @@ actual object NotificationService {
 		manager.notify(System.currentTimeMillis().toInt(), builder.build())
 	}
 
-	fun createForegroundNotification(context: Context, title: String, text: String): Notification {
+	fun createForegroundNotification(
+		context: Context,
+		title: String,
+		text: String
+	): Notification {
 		return NotificationCompat.Builder(context, CHANNEL_ID)
 			.setContentTitle(title)
 			.setContentText(text)
@@ -64,3 +68,6 @@ actual object NotificationService {
 			.build()
 	}
 }
+
+actual val notificationService: NotificationService
+	get() = AndroidNotificationService

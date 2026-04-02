@@ -1,5 +1,11 @@
 package containerised.pos
 
-actual object NotificationService {
-    actual fun showNotification(title: String, message: String) {}
+object WebNotificationService : NotificationService {
+	override fun showNotification(title: String, message: String) {
+		// Web-specific implementation to show a notification
+		println("Web Notification - Title: $title, Message: $message")
+	}
 }
+
+actual val notificationService: NotificationService
+	get() = WebNotificationService

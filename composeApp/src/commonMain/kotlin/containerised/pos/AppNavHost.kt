@@ -45,7 +45,7 @@ fun AppNavHost() {
 		val isLogin = currentRoute == "login"
 
 		LaunchedEffect(Unit) {
-			RealtimeServiceController.start()
+			realtimeServiceController.start()
 			RealtimeManager.forOrders.events.collect { action ->
 				when (action) {
 					is PostgresAction.Insert -> action.handle()
@@ -138,7 +138,7 @@ private fun PostgresAction.Insert.handle() {
 	val new = this.decodeRecord<Order>()
 	println("Insert data: $new")
 
-	NotificationService.showNotification(
+	notificationService.showNotification(
 		title = "New Order",
 		message = "Order #${new.orderNumber} received"
 	)
@@ -156,7 +156,7 @@ private fun PostgresAction.Update.handle() {
 	when {
 		isPtoF -> {
 			println("Order #${old.orderNumber} is done")
-			NotificationService.showNotification(
+			notificationService.showNotification(
 				"Order Updated",
 				"Order #${old.orderNumber} is done"
 			)
@@ -164,7 +164,7 @@ private fun PostgresAction.Update.handle() {
 
 		isPtoC -> {
 			println("Order #${old.orderNumber} is canceled")
-			NotificationService.showNotification(
+			notificationService.showNotification(
 				"Order Updated",
 				"Order #${old.orderNumber} is canceled"
 			)

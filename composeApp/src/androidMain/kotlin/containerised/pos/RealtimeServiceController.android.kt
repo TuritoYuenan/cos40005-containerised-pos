@@ -3,10 +3,10 @@ package containerised.pos
 import android.content.Intent
 import androidx.core.content.ContextCompat
 
-actual object RealtimeServiceController {
+object AndroidRealtimeServiceController: RealtimeServiceController {
 	private var started = false
 
-	actual fun start() {
+	override fun start() {
 		if (started) return
 		started = true
 
@@ -16,9 +16,12 @@ actual object RealtimeServiceController {
 		ContextCompat.startForegroundService(context, intent)
 	}
 
-	actual fun stop() {
+	override fun stop() {
 		val context = AppContextHolder.context
 		context.stopService(Intent(context, AndroidOrderRealtimeService::class.java))
 		started = false
 	}
 }
+
+actual val realtimeServiceController: RealtimeServiceController
+	get() = AndroidRealtimeServiceController

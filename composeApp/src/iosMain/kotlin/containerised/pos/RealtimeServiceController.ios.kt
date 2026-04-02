@@ -1,6 +1,9 @@
 package containerised.pos
 
-actual object RealtimeServiceController {
-	actual fun start() {}
-	actual fun stop() {}
+object IosRealtimeServiceController: RealtimeServiceController {
+	override fun start() {}
+	override fun stop() {}
 }
+
+actual val realtimeServiceController: RealtimeServiceController
+	get() = IosRealtimeServiceController

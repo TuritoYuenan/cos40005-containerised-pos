@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
 				android.Manifest.permission.POST_NOTIFICATIONS
 			)
 		}
-		NotificationService.initialize(this)
+		AndroidNotificationService.initialize(this)
 
 		setContent {
 			AppNavHost()

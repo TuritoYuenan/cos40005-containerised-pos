@@ -2,7 +2,7 @@ package containerised.pos.modelTests
 
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Ingredient
-import containerised.pos.models.ItemIngredientWithIngredient
+import containerised.pos.models.ItemIngredient
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
@@ -20,7 +20,7 @@ class BranchItemTest {
 	fun `test branch item is out of stock`() {
 		val branchItem = BranchItem.MOCK.copy(
 			itemIngredients = listOf(
-				ItemIngredientWithIngredient(
+				ItemIngredient(
 					ingredient = Ingredient(
 						id = "ing123",
 						ingredientName = "Tomato",
