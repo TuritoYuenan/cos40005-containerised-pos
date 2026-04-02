@@ -47,19 +47,14 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 	var error by remember { mutableStateOf<String?>(null) }
 	val scope = rememberCoroutineScope()
 
-	fun refreshCart() {
-		cartItems = CartService.loadItems()
-	}
-
 	fun BranchItem.addToCart() {
 		println("Adding item to cart: $itemName")
 		CartService.addOrIncreaseItem(this)
-		refreshCart()
+		cartItems = CartService.loadItems()
 	}
 
 	fun List<BranchItem>.filteredByTags(): List<BranchItem> {
-		if (selectedTags.isEmpty()) return this
-		return this.filter { item ->
+		return if (selectedTags.isEmpty()) this else this.filter { item ->
 			val itemTagNames = item.itemTags?.map { it.tag?.tagId } ?: emptyList()
 			itemTagNames.any { it in selectedTags }
 		}

@@ -1,0 +1,21 @@
+# Test the Kotlin/Compose Multiplatform application in `/`
+name: Test Application
+
+on:
+  push:
+    branches: [init]
+  pull_request:
+    branches: [init]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'oracle'
+          java-version: '21'
+      - name: Run tests
+        run: ./gradlew test
