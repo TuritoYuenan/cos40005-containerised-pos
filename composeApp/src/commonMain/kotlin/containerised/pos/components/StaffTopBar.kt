@@ -17,6 +17,7 @@ fun StaffTopBar(navController: NavController, currentRoute: String) {
 		currentRoute == "inventory" -> InventoryTopBar()
 		currentRoute.startsWith("ingredient-detail") -> IngredientDetailTopBar(navController)
 		currentRoute.startsWith("stock-history") -> StockHistoryTopBar(navController)
+		currentRoute.startsWith("sales-report") -> SalesReportTopBar(navController)
 		currentRoute.startsWith("employee-management") -> {}
 		else -> GenericStaffTopBar()
 	}
@@ -49,5 +50,13 @@ private fun StockHistoryTopBar(navController: NavController) {
 	CenterAlignedTopAppBar(
 		navigationIcon = { BackButton { navController.popBackStack() } },
 		title = { Text("Stock Adjustment History") }
+	)
+}
+
+@Composable
+private fun SalesReportTopBar(navController: NavController) {
+	CenterAlignedTopAppBar(
+		navigationIcon = { BackButton { navController.popBackStack() } },
+		title = { Text("Sales Report") }
 	)
 }
