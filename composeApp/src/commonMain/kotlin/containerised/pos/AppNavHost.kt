@@ -127,6 +127,7 @@ fun AppNavHost() {
 					val args = backStackEntry.toRoute<StaffRoutes.SalesReport>()
 					SalesReportPage(args)
 				}
+				composable<StaffRoutes.EmployeeProfile> { EmployeeProfilePage(navController) }
 				composable<StaffRoutes.EmployeeManagement> { EmployeeManagementPage(navController) }
 				composable<StaffRoutes.Setting> { SettingPage() }
 			}

@@ -19,13 +19,14 @@ val navItems = listOf(
 	NavigationItem("Sales", StaffRoutes.Sales, Icons.Filled.Money),
 	NavigationItem("Inventory", StaffRoutes.Inventory, Icons.Filled.Folder),
 	NavigationItem("Employee", StaffRoutes.EmployeeManagement, Icons.Filled.Badge),
+	NavigationItem("Profile", StaffRoutes.EmployeeProfile, Icons.Filled.AccountCircle),
 )
 
 @Composable
 fun StaffNavigationBar(navController: NavController, userPermissions: List<String>) {
 	var selectedDestination by remember { mutableStateOf(getStartRoute(userPermissions)) }
 	val allowedNavItems = navItems.filter { item ->
-		item.label == "Employee" ||  userPermissions.contains(item.label)
+		item.label == "Profile" ||  userPermissions.contains(item.label)
 	}
 
 	fun NavigationItem.goTo() {

@@ -58,6 +58,9 @@ object StaffRoutes {
 	@Serializable @SerialName("employee-management")
 	object EmployeeManagement
 
+	@Serializable @SerialName("employee-profile")
+	object EmployeeProfile
+
 	@Serializable @SerialName("setting")
 	object Setting
 }
