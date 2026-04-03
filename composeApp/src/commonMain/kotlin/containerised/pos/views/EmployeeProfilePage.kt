@@ -20,8 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.components.SettingsButton
 import containerised.pos.database.SupabaseClient
-import containerised.pos.models.EmployeeShift
-import containerised.pos.models.EmployeeShift.Companion.isInShift
+import containerised.pos.models.DayOfWeek
 import containerised.pos.models.UserRole
 import containerised.pos.models.days
 import containerised.pos.models.hours
@@ -33,12 +32,10 @@ fun EmployeeProfilePage(navController: NavController) {
 	val scope = rememberCoroutineScope()
 	val userId = SupabaseClient.auth.currentUserOrNull()?.id
 	var userRole by remember { mutableStateOf<UserRole?>(null) }
-	var shifts by remember { mutableStateOf<List<EmployeeShift>>(emptyList()) }
 
 	LaunchedEffect(Unit) {
 		try {
 			userRole = UserRole.fetchAndJoin(userId?: "")
-			shifts = EmployeeShift.fetchById(userId?: "")
 		} catch (e: Exception) {
 			val error = e.message
 			println("Error: $error")
@@ -55,7 +52,7 @@ fun EmployeeProfilePage(navController: NavController) {
 			userRole?.DetailCard()
 		}
 		item{
-			shifts.Timetable()
+			userRole?.Timetable()
 		}
 	}
 }
@@ -168,9 +165,12 @@ fun UserRole.DetailCard(){
 	}
 }
 @Composable
-fun List<EmployeeShift>.Timetable() {
+fun UserRole.Timetable() {
+	val shift: Map<DayOfWeek, List<String>> = user?.shift ?: emptyMap()
+
 	val borderColor = MaterialTheme.colorScheme.outline
 	val hourSpace = 40.dp
+
 	Column(
 		Modifier
 			.fillMaxWidth()
@@ -193,9 +193,9 @@ fun List<EmployeeShift>.Timetable() {
 				}
 			}
 	) {
-		// Header row (days)
+		// Header row
 		Row {
-			Spacer(modifier = Modifier.width(hourSpace)) // space for hour labels
+			Spacer(modifier = Modifier.width(hourSpace))
 
 			days.forEach { day ->
 				Box(
@@ -204,13 +204,16 @@ fun List<EmployeeShift>.Timetable() {
 						.padding(2.dp),
 					contentAlignment = Alignment.Center
 				) {
-					Text(day, style = MaterialTheme.typography.bodyMedium)
+					Text(
+						text = day.name, // 👈 enum → string
+						style = MaterialTheme.typography.bodyMedium
+					)
 				}
 			}
 		}
 
 		// Time rows
-		hours.forEachIndexed { index, hour ->
+		hours.forEach { hour ->
 			Row {
 				// Hour label
 				Box(
@@ -224,9 +227,7 @@ fun List<EmployeeShift>.Timetable() {
 
 				// Cells
 				days.forEach { day ->
-					val hasShift = any { shift ->
-						shift.date.toString() == day && isInShift(index, shift)
-					}
+					val hasShift = shift[day]?.contains(hour) == true
 
 					Box(
 						modifier = Modifier
@@ -234,8 +235,10 @@ fun List<EmployeeShift>.Timetable() {
 							.height(24.dp)
 							.padding(2.dp)
 							.background(
-								if (hasShift) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-								else MaterialTheme.colorScheme.surfaceVariant
+								if (hasShift)
+									MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+								else
+									MaterialTheme.colorScheme.surfaceVariant
 							)
 					)
 				}
