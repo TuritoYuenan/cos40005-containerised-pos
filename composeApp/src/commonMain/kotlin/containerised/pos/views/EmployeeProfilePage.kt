@@ -28,10 +28,12 @@ import containerised.pos.routes.StaffRoutes
 
 
 @Composable
-fun EmployeeProfilePage(navController: NavController) {
+fun EmployeeProfilePage(navController: NavController, argUserId: String? = null) {
 	val scope = rememberCoroutineScope()
-	val userId = SupabaseClient.auth.currentUserOrNull()?.id
+	var userId by remember { mutableStateOf<String?>(null) }
 	var userRole by remember { mutableStateOf<UserRole?>(null) }
+
+	userId = argUserId ?: SupabaseClient.auth.currentUserOrNull()?.id
 
 	LaunchedEffect(Unit) {
 		try {

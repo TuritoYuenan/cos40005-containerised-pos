@@ -19,7 +19,7 @@ val navItems = listOf(
 	NavigationItem("Sales", StaffRoutes.Sales, Icons.Filled.Money),
 	NavigationItem("Inventory", StaffRoutes.Inventory, Icons.Filled.Folder),
 	NavigationItem("Employee", StaffRoutes.EmployeeManagement, Icons.Filled.Badge),
-	NavigationItem("Profile", StaffRoutes.EmployeeProfile, Icons.Filled.AccountCircle),
+	NavigationItem("Profile", StaffRoutes.EmployeeProfile(), Icons.Filled.AccountCircle),
 )
 
 @Composable
