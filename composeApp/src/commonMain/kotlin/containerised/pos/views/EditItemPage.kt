@@ -18,10 +18,12 @@ import containerised.pos.components.BackButton
 import containerised.pos.components.menu_edit.MultiSelectDropdown
 import containerised.pos.components.menu_edit.SwitchField
 import containerised.pos.models.BranchItem
+import containerised.pos.models.BranchItemInsert
 import containerised.pos.models.Category
 import containerised.pos.models.ItemTag
 import containerised.pos.models.Tag
 import containerised.pos.routes.StaffRoutes
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 private data class EditItemFormState(
@@ -44,16 +46,17 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 	var item by remember { mutableStateOf<BranchItem?>(null) }
 	var itemTags by remember { mutableStateOf(emptyList<ItemTag>()) }
 	var selectedTagIds by remember { mutableStateOf(setOf<String>()) }
-
+    var originalTagIds by remember { mutableStateOf(setOf<String>()) }
+    var branchId = "BRA26011700"
 	LaunchedEffect(Unit) {
 		try {
 			categories = Category.fetchAll()
 			tags = Tag.fetchAll()
-			println(tags)
 			if (itemId != null) {
 				item = BranchItem.fetchById(itemId)
 				itemTags = ItemTag.fetchByItemId(itemId)
-				selectedTagIds = itemTags.map { it.tagId }.toSet()
+                originalTagIds = itemTags.map { it.tagId }.toSet()
+                selectedTagIds = originalTagIds
 			}
 			item?.let {
 				formState = EditItemFormState(
@@ -87,21 +90,57 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 				Arrangement.spacedBy(10.dp, Alignment.End)
 			) {
 				if (itemId == null) {
-					CreateButton()
+                    CreateButton {
+                        val newItem = BranchItemInsert(
+                            branchId = branchId,
+                            categoryId = formState.categoryId,
+                            itemName = formState.name,
+                            itemDes = null,
+                            price = formState.price.toInt(),
+                            estimatedPrep = "12 min",
+                            isAvailable = true,
+                            isFeatured = formState.isFeatured
+                        )
+
+                        scope.launch {
+                            val createdItem = BranchItem.create(newItem)
+                            ItemTag.insertTags(
+                                itemId = createdItem.itemId,
+                                tagIds = selectedTagIds
+                            )
+                            navController.navigate(StaffRoutes.MenuEdit)
+                        }
+                    }
 				} else {
-					DeleteButton { navController.navigate(StaffRoutes.MenuEdit) }
-					UpdateButton {
-						item?.let { original ->
-							val updated = original.copy(
-								itemName = formState.name,
-								price = formState.price.toInt(),
-								categoryId = formState.categoryId,
-								isFeatured = formState.isFeatured
-							)
-							scope.launch { BranchItem.update(itemId, updated) }
-						}
-						navController.navigate(StaffRoutes.MenuEdit)
-					}
+                    DeleteButton {
+                        scope.launch {
+                            BranchItem.delete(itemId)
+                            navController.navigate(StaffRoutes.MenuEdit)
+                        }
+                    }
+                    UpdateButton {
+                        item?.let { original ->
+                            val updated = original.copy(
+                                itemName = formState.name,
+                                price = formState.price.toInt(),
+                                categoryId = formState.categoryId,
+                                isFeatured = formState.isFeatured
+                            )
+
+                            scope.launch {
+                                BranchItem.update(itemId, updated)
+
+                                // 🔥 UPDATE TAGS HERE
+                                ItemTag.updateTags(
+                                    itemId = itemId,
+                                    oldTagIds = originalTagIds,
+                                    newTagIds = selectedTagIds
+                                )
+
+                                navController.navigate(StaffRoutes.MenuEdit)
+                            }
+                        }
+                    }
 				}
 			}
 		}
@@ -110,20 +149,20 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CreateButton() {
-	Button(
-		onClick = { },
-		modifier = Modifier.height(40.dp),
-		shape = RoundedCornerShape(8.dp),
-		colors = ButtonDefaults.buttonColors(
-			containerColor = MaterialTheme.colorScheme.primary,
-			contentColor = Color.White
-		)
-	) {
-		Icon(Icons.Filled.Check, contentDescription = null)
-		Spacer(Modifier.width(6.dp))
-		Text("Create")
-	}
+fun CreateButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.height(40.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = Color.White
+        )
+    ) {
+        Icon(Icons.Filled.Check, contentDescription = "Create")
+        Spacer(Modifier.width(6.dp))
+        Text("Create")
+    }
 }
 
 @Composable
@@ -264,11 +303,11 @@ private fun FormSection(
 				}
 			}
 
-			MultiSelectDropdown(
-				label = "Tags",
-				items = tags.map { it.tagId to it.tagName },
-				selected = selectedTagIds.toList()
-			) { newList -> onTagChange(newList.toSet()) }
+            MultiSelectDropdown(
+                label = "Tags",
+                items = tags.map { it.tagId to it.tagName },
+                selected = selectedTagIds.toList()
+            ) { newList -> onTagChange(newList.toSet()) }
 
 			SwitchField(
 				title = "Featured Item",
@@ -278,3 +317,4 @@ private fun FormSection(
 		}
 	}
 }
+

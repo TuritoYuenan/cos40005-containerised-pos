@@ -19,10 +19,10 @@ data class Promotion(
 	val endDate: String? = null,
 
 	@SerialName("days_of_week")
-	val daysOfWeek: String? = null,
+    val daysOfWeek: List<DaySchedule>? = null,
 
 	@SerialName("rules")
-	val rules: String? = null, // JSONB comes as String
+    val rules: List<PromotionRule>? = null, // JSONB comes as String
 
 	@SerialName("is_active")
 	val isActive: Boolean = true
@@ -43,22 +43,48 @@ data class Promotion(
 				.decodeList()
 		}
 
-		suspend fun insert(
-			startDate: String?,
-			endDate: String?,
-			daysOfWeek: String,
-			rules: String,
-			isActive: Boolean
-		) = SupabaseClient.db["promotions"].insert(
-			mapOf(
-				"promotion_id" to "PRO",
-				"branch_id" to "BRA26011700",
-				"start_date" to startDate,
-				"end_date" to endDate,
-				"days_of_week" to daysOfWeek,
-				"rules" to rules,
-				"is_active" to isActive.toString() // 👈 important
-			)
-		)
+        suspend fun insert(promotion: PromotionInsert) =
+            SupabaseClient.db["promotions"].insert(promotion)
+
+        suspend fun updateById(id: String, data: PromotionInsert) {
+            SupabaseClient.db["promotions"]
+                .update(data) {
+                    filter { eq("promotion_id", id) }
+                }
+        }
+        
+        suspend fun deleteById(id: String) {
+            SupabaseClient.db["promotions"]
+                .delete {
+                    filter { eq("promotion_id", id) }
+                }
+        }
 	}
 }
+
+@Serializable
+data class DaySchedule(
+    val day: String,
+    val startTime: String,
+    val endTime: String
+)
+
+@Serializable
+data class PromotionRule(
+    val rewardType: String = "FLAT_DISCOUNT",
+    val targetType: String = "",
+    val rewardValue: String = "",
+    val rewardItems: Map<String, Int> = emptyMap(),
+    val selectedIds: List<String> = emptyList(),
+    val comboItems: Map<String, Int> = emptyMap()
+)
+
+@Serializable
+data class PromotionInsert(
+    val branch_id: String,
+    val start_date: String? = null,
+    val end_date: String? = null,
+    val days_of_week: List<DaySchedule> = emptyList(),
+    val rules: List<PromotionRule> = emptyList(),
+    val is_active: Boolean = true
+)

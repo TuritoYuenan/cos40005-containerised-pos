@@ -36,6 +36,7 @@ fun MenuEditPage(navController: NavController) {
 				.groupBy { it.categoryId ?: "Uncategorized" }
 			promotions = Promotion.fetchByBranch(branchId)
 			tags = Tag.fetchAll()
+            println(tags)
 		} catch (e: Exception) {
 			println("Error fetching data: ${e.message}")
 		}
@@ -154,38 +155,80 @@ fun PromotionsTab(
 				.fillMaxWidth()
 				.padding(16.dp)
 		) {
-			items(promotions) { promotion ->
-				val backgroundColor = when (promotion.isActive) {
-					true -> MaterialTheme.colorScheme.primaryContainer
-					false -> MaterialTheme.colorScheme.outlineVariant
-				}
-				Box(
-					Modifier
-						.fillMaxWidth()
-						.padding(all = 4.dp)
-						.clip(RoundedCornerShape(4.dp))
-						.background(backgroundColor)
-				) {
-					Row {
-						Column(
-							Modifier
-								.weight(1f)
-								.padding(horizontal = 12.dp)
-						) {
-
-						}
-						IconButton(onClick = { onPromotionEdit(promotion) }) {
-							Icon(
-								Icons.Filled.Edit,
-								contentDescription = "Edit"
-							)
-						}
-
-					}
-				}
-			}
+            items(promotions) { promotion ->
+                PromotionRow(
+                    promotion = promotion,
+                    onEdit = { onPromotionEdit(promotion) }
+                )
+            }
 		}
 	}
+}
+
+@Composable
+fun PromotionRow(
+    promotion: Promotion,
+    onEdit: () -> Unit
+) {
+    val backgroundColor = if (promotion.isActive)
+        MaterialTheme.colorScheme.primaryContainer
+    else
+        MaterialTheme.colorScheme.outlineVariant
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+
+            // 🔹 Banner (FULL width again)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("🖼 Banner")
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // 🔹 Info + Edit row (like your original)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Start: ${promotion.startDate ?: "N/A"}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    Text(
+                        text = "End: ${promotion.endDate ?: "N/A"}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = "Edit Promotion"
+                    )
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

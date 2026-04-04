@@ -67,7 +67,7 @@ fun EditTagPage(navController: NavController?, tagId: String? = null) {
 			) {
 				if (tagId == null) {
 
-					CreateButton {
+					CreateButton() {
 						scope.launch {
 							Tag.create(
 								name = formState.name,
@@ -110,21 +110,6 @@ private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
 	}
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CreateButton(onClick: () -> Unit) = Button(
-	onClick = onClick,
-	shape = RoundedCornerShape(8.dp),
-	colors = ButtonDefaults.buttonColors(
-		containerColor = MaterialTheme.colorScheme.primary,
-		contentColor = Color.White
-	),
-	modifier = Modifier.height(40.dp)
-) {
-	Icon(Icons.Filled.Check, contentDescription = null)
-	Spacer(Modifier.width(6.dp))
-	Text("Create")
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -95,6 +95,18 @@ data class BranchItem(
 			SupabaseClient.db["branch_items"]
 				.update(updatedData) { filter { eq("item_id", itemId) } }
 		}
+        suspend fun create(newItem: BranchItemInsert): BranchItem {
+            return SupabaseClient.db["branch_items"]
+                .insert(newItem) {
+                    select()
+                }
+                .decodeSingle<BranchItem>()
+        }
+
+        suspend fun delete(itemId: String) {
+            SupabaseClient.db["branch_items"]
+                .delete { filter { eq("item_id", itemId) } }
+        }
 
 		val MOCK = BranchItem(
 			branchId = "branch123",
@@ -193,4 +205,16 @@ data class BranchItemWithCatAndIng(
 
 	@SerialName("url_img")
 	val urlImg: String? = null,
+)
+
+@Serializable
+data class BranchItemInsert(
+    @SerialName("branch_id") val branchId: String,
+    @SerialName("category_id") val categoryId: String? = null,
+    @SerialName("item_name") val itemName: String,
+    @SerialName("item_des") val itemDes: String? = null,
+    val price: Int,
+    @SerialName("estimated_prep") val estimatedPrep: String,
+    @SerialName("is_available") val isAvailable: Boolean = true,
+    @SerialName("is_featured") val isFeatured: Boolean = false
 )
