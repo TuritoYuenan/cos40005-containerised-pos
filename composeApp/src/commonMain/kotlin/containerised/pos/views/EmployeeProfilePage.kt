@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.components.SettingsButton
+import containerised.pos.components.StaffNavigationBar
+import containerised.pos.components.StaffTopBar
 import containerised.pos.database.SupabaseClient
 import containerised.pos.models.DayOfWeek
 import containerised.pos.models.User.Companion.updateShift
@@ -48,17 +50,19 @@ fun EmployeeProfilePage(navController: NavController, argUserId: String? = null)
 		}
 	}
 
-	LazyColumn(
-		verticalArrangement = Arrangement.spacedBy(12.dp)
-	){
-		item {
-			userRole?.EmployeeTopCard(navController)
-		}
-		item{
-			userRole?.DetailCard()
-		}
-		item{
-			userRole?.Timetable(editable)
+	Scaffold(
+		topBar = { userRole?.EmployeeTopCard(navController) },
+	) {paddingValues ->
+		LazyColumn(
+			Modifier.padding(paddingValues),
+			verticalArrangement = Arrangement.spacedBy(12.dp)
+		) {
+			item {
+				userRole?.DetailCard()
+			}
+			item {
+				userRole?.Timetable(editable)
+			}
 		}
 	}
 }
