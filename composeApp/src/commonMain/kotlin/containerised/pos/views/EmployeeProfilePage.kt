@@ -48,7 +48,7 @@ fun EmployeeProfilePage(navController: NavController, argUserId: String? = null)
 		verticalArrangement = Arrangement.spacedBy(12.dp)
 	){
 		item {
-			userRole?.EmployeeCard(navController)
+			userRole?.EmployeeTopCard(navController)
 		}
 		item{
 			userRole?.DetailCard()
@@ -61,7 +61,7 @@ fun EmployeeProfilePage(navController: NavController, argUserId: String? = null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserRole.EmployeeCard(navController: NavController){
+fun UserRole.EmployeeTopCard(navController: NavController){
 	TopAppBar(
 
 		title = {
