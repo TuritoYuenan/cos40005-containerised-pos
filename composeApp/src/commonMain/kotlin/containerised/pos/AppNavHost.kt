@@ -45,8 +45,11 @@ fun AppNavHost() {
 
 		val isLogin = currentRoute == "login"
 
-		LaunchedEffect(userPermissions) {
+		LaunchedEffect(Unit) {
 			RealtimeServiceController.start()
+		}
+
+		LaunchedEffect(userPermissions) {
 			if (userPermissions.contains("Kitchen")) {
 				RealtimeManager.forOrders.events.collect { action ->
 					when (action) {
