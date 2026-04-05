@@ -45,14 +45,16 @@ fun AppNavHost() {
 
 		val isLogin = currentRoute == "login"
 
-		LaunchedEffect(Unit) {
+		LaunchedEffect(userPermissions) {
 			RealtimeServiceController.start()
-			RealtimeManager.forOrders.events.collect { action ->
-				when (action) {
-					is PostgresAction.Insert -> action.handle()
-					is PostgresAction.Update -> action.handle()
-					is PostgresAction.Delete -> action.handle()
-					is PostgresAction.Select -> Unit
+			if (userPermissions.contains("Kitchen")) {
+				RealtimeManager.forOrders.events.collect { action ->
+					when (action) {
+						is PostgresAction.Insert -> action.handle()
+						is PostgresAction.Update -> action.handle()
+						is PostgresAction.Delete -> action.handle()
+						is PostgresAction.Select -> Unit
+					}
 				}
 			}
 		}
