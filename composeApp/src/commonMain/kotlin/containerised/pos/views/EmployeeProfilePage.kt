@@ -2,6 +2,7 @@ package containerised.pos.views
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -21,19 +22,22 @@ import androidx.navigation.NavController
 import containerised.pos.components.SettingsButton
 import containerised.pos.database.SupabaseClient
 import containerised.pos.models.DayOfWeek
+import containerised.pos.models.User.Companion.updateShift
 import containerised.pos.models.UserRole
 import containerised.pos.models.days
 import containerised.pos.models.hours
 import containerised.pos.routes.StaffRoutes
+import kotlinx.coroutines.launch
 
 
 @Composable
 fun EmployeeProfilePage(navController: NavController, argUserId: String? = null) {
-	val scope = rememberCoroutineScope()
 	var userId by remember { mutableStateOf<String?>(null) }
 	var userRole by remember { mutableStateOf<UserRole?>(null) }
 
 	userId = argUserId ?: SupabaseClient.auth.currentUserOrNull()?.id
+
+	val editable: Boolean = argUserId != null
 
 	LaunchedEffect(Unit) {
 		try {
@@ -54,7 +58,7 @@ fun EmployeeProfilePage(navController: NavController, argUserId: String? = null)
 			userRole?.DetailCard()
 		}
 		item{
-			userRole?.Timetable()
+			userRole?.Timetable(editable)
 		}
 	}
 }
@@ -167,82 +171,137 @@ fun UserRole.DetailCard(){
 	}
 }
 @Composable
-fun UserRole.Timetable() {
+fun UserRole.Timetable(editable: Boolean? = false) {
+	val scope = rememberCoroutineScope()
 	val shift: Map<DayOfWeek, List<String>> = user?.shift ?: emptyMap()
+	var isEditing by remember { mutableStateOf(false) }
+	var editableShift by remember {
+		mutableStateOf(shift.mapValues { it.value.toMutableList() })
+	}
 
 	val borderColor = MaterialTheme.colorScheme.outline
 	val hourSpace = 40.dp
 
-	Column(
-		Modifier
-			.fillMaxWidth()
-			.padding(12.dp, 6.dp)
-			.border(1.dp, borderColor)
-			.drawBehind {
-				val hourWidthPx = hourSpace.toPx()
-				val remainingWidth = size.width - hourWidthPx
-				val dayColumnWidth = remainingWidth / days.size
+	Column() {
+		if (editable == true) {
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalArrangement = Arrangement.End
+			) {
+				if (!isEditing) {
+					Button(onClick = { isEditing = true }) {
+						Text("Edit")
+					}
+				} else {
+					Row {
+						TextButton(onClick = {
+							// cancel → reset
+							editableShift = shift.mapValues { it.value.toMutableList() }
+							isEditing = false
+						}) {
+							Text("Cancel")
+						}
 
-				repeat(days.size) { index ->
-					val x = hourWidthPx + (dayColumnWidth * index)
-
-					drawLine(
-						color = borderColor,
-						start = Offset(x, 0f),
-						end = Offset(x, size.height),
-						strokeWidth = 1.dp.toPx()
-					)
-				}
-			}
-	) {
-		// Header row
-		Row {
-			Spacer(modifier = Modifier.width(hourSpace))
-
-			days.forEach { day ->
-				Box(
-					modifier = Modifier
-						.weight(1f)
-						.padding(2.dp),
-					contentAlignment = Alignment.Center
-				) {
-					Text(
-						text = day.name, // 👈 enum → string
-						style = MaterialTheme.typography.bodyMedium
-					)
+						Button(onClick = {
+							isEditing = false
+							scope.launch {
+								updateShift(userId, editableShift)
+							}
+						}) {
+							Text("Confirm")
+						}
+					}
 				}
 			}
 		}
+		Column(
+			Modifier
+				.fillMaxWidth()
+				.padding(12.dp, 6.dp)
+				.border(1.dp, borderColor)
+				.drawBehind {
+					val hourWidthPx = hourSpace.toPx()
+					val remainingWidth = size.width - hourWidthPx
+					val dayColumnWidth = remainingWidth / days.size
 
-		// Time rows
-		hours.forEach { hour ->
-			Row {
-				// Hour label
-				Box(
-					modifier = Modifier
-						.width(hourSpace)
-						.padding(4.dp),
-					contentAlignment = Alignment.CenterStart
-				) {
-					Text(hour, style = MaterialTheme.typography.bodySmall)
+					repeat(days.size) { index ->
+						val x = hourWidthPx + (dayColumnWidth * index)
+
+						drawLine(
+							color = borderColor,
+							start = Offset(x, 0f),
+							end = Offset(x, size.height),
+							strokeWidth = 1.dp.toPx()
+						)
+					}
 				}
+		) {
+			// Header row
+			Row {
+				Spacer(modifier = Modifier.width(hourSpace))
 
-				// Cells
 				days.forEach { day ->
-					val hasShift = shift[day]?.contains(hour) == true
-
 					Box(
 						modifier = Modifier
 							.weight(1f)
-							.height(24.dp)
-							.padding(2.dp)
-							.background(
-								if (hasShift)
-									MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-								else
-									MaterialTheme.colorScheme.surfaceVariant
-							)
-					)
+							.padding(2.dp),
+						contentAlignment = Alignment.Center
+					) {
+						Text(
+							text = day.name, // 👈 enum → string
+							style = MaterialTheme.typography.bodyMedium
+						)
+					}
+				}
+			}
+
+			// Time rows
+			hours.forEach { hour ->
+				Row {
+					// Hour label
+					Box(
+						modifier = Modifier
+							.width(hourSpace)
+							.padding(4.dp),
+						contentAlignment = Alignment.CenterStart
+					) {
+						Text(hour, style = MaterialTheme.typography.bodySmall)
+					}
+
+					// Cells
+					days.forEach { day ->
+						val hasShift = editableShift[day]?.contains(hour) == true
+
+						Box(
+							modifier = Modifier
+								.weight(1f)
+								.height(24.dp)
+								.padding(2.dp)
+								.background(
+									if (hasShift)
+										MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+									else
+										MaterialTheme.colorScheme.surfaceVariant
+								)
+								.then(
+									if (isEditing || editable == true) {
+										Modifier.clickable {
+											val list = editableShift[day]?.toMutableList() ?: mutableListOf()
+
+											if (list.contains(hour)) {
+												list.remove(hour)
+											} else {
+												list.add(hour)
+											}
+
+											editableShift = editableShift.toMutableMap().apply {
+												put(day, list)
+											}
+										}
+									} else Modifier
+								)
+						)
+					}
 				}
 			}
 		}

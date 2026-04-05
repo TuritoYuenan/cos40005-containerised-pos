@@ -134,5 +134,14 @@ data class User(
 					}
 				}
 		}
+		suspend fun updateShift(userId: String, newShift: Map<DayOfWeek, List<String>>) {
+			SupabaseClient.db
+				.from("users")
+				.update(mapOf("shift" to newShift)) {
+					filter {
+						eq("user_id", userId)
+					}
+				}
+		}
 	}
 }
