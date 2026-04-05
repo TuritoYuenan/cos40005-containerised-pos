@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +16,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import containerised.pos.components.ErrorView
+import containerised.pos.components.LoadingView
 import containerised.pos.models.User.Companion.getStatusFromShift
 import containerised.pos.models.User.Companion.updateLastLogin
 import containerised.pos.models.User.Companion.updateLastLogout
@@ -26,6 +30,8 @@ private const val CURRENT_BRANCH = "BRA26011700"
 @Composable
 fun EmployeeManagementPage(navController: NavController) {
 	var userRoles by remember { mutableStateOf<List<UserRole>>(emptyList()) }
+	var searchQuery by remember { mutableStateOf("") }
+	var error by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		try {
@@ -35,10 +41,38 @@ fun EmployeeManagementPage(navController: NavController) {
 			println("Error: $error")
 		}
 	}
+	val filteredUserRoles = remember(userRoles, searchQuery) {
+		if (searchQuery.isBlank()) {
+			userRoles
+		} else {
+			userRoles.filter {
+				val matchesName = it.user?.fullName?.contains(searchQuery, true)
+				val matchesRole = it.role.roleName.contains(searchQuery, true)
+				matchesName?.or(matchesRole) ?: false
+			}
+		}
+	}
 
-	LazyColumn {
-		items(userRoles) { userRole ->
-			userRole.EmployeeCard(navController)
+	Column(Modifier.fillMaxSize()) {
+		// Search bar
+		OutlinedTextField(
+			value = searchQuery,
+			onValueChange = { searchQuery = it },
+			modifier = Modifier.fillMaxWidth().padding(16.dp),
+			placeholder = { Text("Search items by name or role...") },
+			leadingIcon = { Icon(Icons.Filled.Search, "Search") },
+			singleLine = true
+		)
+
+		if (error != null) return ErrorView(
+			error ?: "Unknown error",
+			Modifier.fillMaxSize()
+		)
+
+		LazyColumn {
+			items(filteredUserRoles) { userRole ->
+				userRole.EmployeeCard(navController)
+			}
 		}
 	}
 }
