@@ -88,7 +88,7 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 
 	Scaffold(
 		topBar = { CheckoutTopBar(navController) },
-		contentWindowInsets = WindowInsets(16.dp)
+		contentWindowInsets = WindowInsets(16.dp, 16.dp, 16.dp, 16.dp)
 	) { paddingValues ->
 		Column(
 			Modifier.padding(paddingValues).verticalScroll(rememberScrollState()),
@@ -162,7 +162,7 @@ private fun PaymentButtonsView(
 
 		// Bank Transfer Payment Button
 		PaymentButton(
-			label = "Self-checkout via VietQR",
+			label = "Self-checkout",
 			amount = formattedTotal,
 			icon = Icons.Filled.AccountBalance
 		) {
@@ -307,18 +307,22 @@ private fun SpecialNotesDialog(item: BranchItem, onDismiss: () -> Unit) {
 
 @Composable
 private fun PaymentButton(label: String, amount: String, icon: ImageVector, onClick: () -> Unit) {
-	FilledTonalButton(
+	Button(
 		onClick,
 		Modifier.fillMaxWidth(),
-		shape = RoundedCornerShape(8.dp),
+		shape = RoundedCornerShape(12.dp),
 	) {
 		Row(
-			Modifier.fillMaxWidth().padding(vertical = 4.dp),
-			Arrangement.spacedBy(8.dp),
-			Alignment.Top
+			Modifier.fillMaxWidth(),
+			verticalAlignment = Alignment.CenterVertically
 		) {
 			Icon(icon, label)
-			Column(Modifier.fillMaxWidth()) {
+			Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+			Row(
+				Modifier.fillMaxWidth(),
+				Arrangement.SpaceBetween,
+				Alignment.CenterVertically
+			) {
 				Text(label, style = MaterialTheme.typography.titleMedium)
 				Text(amount, style = MaterialTheme.typography.bodyMedium)
 			}

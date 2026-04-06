@@ -20,8 +20,9 @@ fun SettingsButton(
 	modifier: Modifier = Modifier.padding(start = 8.dp),
 	onClick: () -> Unit = {}
 ) = IconButton({ onClick() }, modifier) {
-	Icon( imageVector = Icons.Default.Settings, contentDescription = "Settings")
+	Icon(Icons.Default.Settings, "Settings")
 }
+
 @Preview
 @Composable
 fun BackButton(

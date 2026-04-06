@@ -3,10 +3,7 @@ package containerised.pos.views
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.text.input.TextFieldState
@@ -25,7 +22,6 @@ import containerised.pos.models.Tag
 import containerised.pos.routes.CustomerRoutes
 import containerised.pos.services.CartService
 import kotlinx.coroutines.launch
-import kotlin.collections.emptyList
 
 private val defaultPadding = 16.dp
 
@@ -53,18 +49,6 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 		cartItems = CartService.loadItems()
 	}
 
-	fun List<BranchItem>.filteredByTags(): List<BranchItem> {
-		return if (selectedTags.isEmpty()) this else this.filter { item ->
-			val itemTagNames = item.itemTags?.map { it.tag?.tagId } ?: emptyList()
-			itemTagNames.any { it in selectedTags }
-		}
-	}
-
-	fun List<CartService.Entry>.cartInfo(): Pair<Int, Int> = Pair(
-		this.sumOf { it.count },
-		this.sumOf { it.count * it.branchItem.price }
-	)
-
 	// Fetch data on startup
 	LaunchedEffect(Unit) {
 		scope.launch {
@@ -82,9 +66,9 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 	Scaffold(
 		topBar = {
 			OrderSearchBar(textFieldState, Modifier, searchResults) {
-				searchResults = allItems.filter {
-					it.itemName.contains(it.itemName, true)
-				}.map { it.itemName }
+				searchResults = allItems
+					.filter { it.itemName.contains(it.itemName, true) }
+					.map { it.itemName }
 			}
 		},
 		bottomBar = {
@@ -101,7 +85,8 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 					)
 				}
 			}
-		}
+		},
+		contentWindowInsets = WindowInsets(16.dp, 16.dp, 16.dp, 16.dp)
 	) { paddingValues ->
 		if (isLoading) return@Scaffold LoadingView(
 			Modifier.fillMaxSize().padding(paddingValues)
@@ -117,30 +102,30 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 			verticalArrangement = Arrangement.spacedBy(defaultPadding)
 		) {
 			val featured = allItems.filter { it.isFeatured }
-			val filtered = allItems.filteredByTags()
+			val filtered = allItems.filter(selectedTags)
 
 			// Table Info
 			item {
 				Text(
 					"Ordering for Table ${args.tableID}",
-					Modifier.padding(8.dp).fillMaxWidth(),
+					Modifier.fillMaxWidth(),
 					style = MaterialTheme.typography.bodyLarge,
 					textAlign = TextAlign.Center
 				)
 
 				// Image Slider
-				featured.ImageSlider(Modifier.padding(8.dp, 0.dp))
+				featured.ImageSlider(Modifier.padding(top = defaultPadding))
 
 				// Featured Section
 				Text(
 					"Featured",
-					Modifier.padding(defaultPadding),
+					Modifier.padding(top = defaultPadding),
 					style = MaterialTheme.typography.headlineMedium
 				)
 
 				LazyRow(
-					Modifier.padding(8.dp, 0.dp),
-					horizontalArrangement = Arrangement.spacedBy(defaultPadding),
+					Modifier.padding(top = defaultPadding),
+					horizontalArrangement = Arrangement.spacedBy(defaultPadding)
 				) {
 					items(featured.size) { i ->
 						featured[i].TallCard { featured[i].addToCart() }
@@ -150,11 +135,11 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 				// Browse Section
 				Text(
 					"Browse all menu items",
-					Modifier.padding(defaultPadding),
+					Modifier.padding(top = defaultPadding),
 					style = MaterialTheme.typography.headlineMedium
 				)
 
-				tags.Row {
+				tags.Row(Modifier.padding(top = defaultPadding)) {
 					selectedTags = if (selectedTags.contains(it)) {
 						selectedTags - it
 					} else {
@@ -165,10 +150,20 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 
 			// Display all items for browsing, manipulated by tags
 			items(filtered.size) { i ->
-				filtered[i].WideCard(Modifier.padding(horizontal = 8.dp)) {
-					filtered[i].addToCart()
-				}
+				filtered[i].WideCard { filtered[i].addToCart() }
 			}
 		}
+	}
+}
+
+private fun List<CartService.Entry>.cartInfo(): Pair<Int, Int> = Pair(
+	this.sumOf { it.count },
+	this.sumOf { it.count * it.branchItem.price }
+)
+
+private fun List<BranchItem>.filter(tags: Set<String>): List<BranchItem> {
+	return if (tags.isEmpty()) this else this.filter { item ->
+		val itemTagNames = item.itemTags?.map { it.tag?.tagId } ?: emptyList()
+		itemTagNames.any { it in tags }
 	}
 }
