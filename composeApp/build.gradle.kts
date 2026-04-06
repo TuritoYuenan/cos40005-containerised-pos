@@ -74,10 +74,11 @@ kotlin {
 			implementation(libs.androidx.lifecycle.viewmodelCompose)
 			implementation(libs.androidx.lifecycle.runtimeCompose)
 			implementation(libs.androidx.navigation.compose)
+            implementation(libs.androidx.activity.compose)
 
 //			Image Loading
 			implementation(libs.kamel.image.default)
-
+            implementation("com.darkrockstudios:mpfilepicker:3.1.0")
 //			Supabase
 			implementation(project.dependencies.platform("io.github.jan-tennert.supabase:bom:3.4.0"))
 			implementation(libs.supabase.postgrest.kt)

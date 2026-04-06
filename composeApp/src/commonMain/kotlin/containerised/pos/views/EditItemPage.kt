@@ -23,6 +23,9 @@ import containerised.pos.models.Category
 import containerised.pos.models.ItemTag
 import containerised.pos.models.Tag
 import containerised.pos.routes.StaffRoutes
+import containerised.pos.components.CreateButton
+import containerised.pos.components.DeleteButton
+import containerised.pos.components.UpdateButton
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -145,54 +148,6 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 			}
 		}
 	}
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CreateButton(onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.height(40.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White
-        )
-    ) {
-        Icon(Icons.Filled.Check, contentDescription = "Create")
-        Spacer(Modifier.width(6.dp))
-        Text("Create")
-    }
-}
-
-@Composable
-private fun UpdateButton(onClick: () -> Unit) = Button(
-	onClick = onClick,
-	modifier = Modifier.height(40.dp),
-	shape = RoundedCornerShape(8.dp),
-	colors = ButtonDefaults.buttonColors(
-		containerColor = MaterialTheme.colorScheme.primary,
-		contentColor = Color.White
-	)
-) {
-	Icon(Icons.Filled.Check, "Update")
-	Spacer(Modifier.width(6.dp))
-	Text("Update")
-}
-
-@Composable
-private fun DeleteButton(onClick: () -> Unit) = Button(
-	onClick = onClick,
-	shape = RoundedCornerShape(8.dp),
-	colors = ButtonDefaults.buttonColors(
-		containerColor = MaterialTheme.colorScheme.error,
-		contentColor = Color.White
-	),
-	modifier = Modifier.height(40.dp)
-) {
-	Icon(Icons.Filled.Delete, "Delete")
-	Spacer(Modifier.width(6.dp))
-	Text("Delete")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

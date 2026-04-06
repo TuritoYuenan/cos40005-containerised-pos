@@ -25,7 +25,7 @@ data class Promotion(
     val rules: List<PromotionRule>? = null, // JSONB comes as String
 
 	@SerialName("is_active")
-	val isActive: Boolean = true
+	val isActive: Boolean
 ) {
 	companion object {
 		suspend fun fetchById(promotionId: String): Promotion? {
@@ -52,7 +52,7 @@ data class Promotion(
                     filter { eq("promotion_id", id) }
                 }
         }
-        
+
         suspend fun deleteById(id: String) {
             SupabaseClient.db["promotions"]
                 .delete {
@@ -86,5 +86,5 @@ data class PromotionInsert(
     val end_date: String? = null,
     val days_of_week: List<DaySchedule> = emptyList(),
     val rules: List<PromotionRule> = emptyList(),
-    val is_active: Boolean = true
+    val is_active: Boolean
 )

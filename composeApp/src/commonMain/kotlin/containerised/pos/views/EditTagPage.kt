@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.models.Tag
 import containerised.pos.routes.StaffRoutes
+import containerised.pos.components.CreateButton
+import containerised.pos.components.DeleteButton
+import containerised.pos.components.UpdateButton
 import kotlinx.coroutines.launch
 
 private data class EditTagFormState(
@@ -109,39 +112,6 @@ private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
 		}
 	}
 )
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun UpdateButton(onClick: () -> Unit) = Button(
-	onClick = onClick,
-	shape = RoundedCornerShape(8.dp),
-	colors = ButtonDefaults.buttonColors(
-		containerColor = MaterialTheme.colorScheme.primary,
-		contentColor = Color.White
-	),
-	modifier = Modifier.height(40.dp)
-) {
-	Icon(Icons.Filled.Check, contentDescription = null)
-	Spacer(Modifier.width(6.dp))
-	Text("Update")
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DeleteButton(onClick: () -> Unit) = Button(
-	onClick = onClick,
-	shape = RoundedCornerShape(8.dp),
-	colors = ButtonDefaults.buttonColors(
-		containerColor = MaterialTheme.colorScheme.error,
-		contentColor = Color.White
-	),
-	modifier = Modifier.height(40.dp)
-) {
-	Icon(Icons.Filled.Delete, contentDescription = null)
-	Spacer(Modifier.width(6.dp))
-	Text("Delete")
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

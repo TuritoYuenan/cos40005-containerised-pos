@@ -30,6 +30,9 @@ import containerised.pos.models.Tag
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import containerised.pos.components.CreateButton
+import containerised.pos.components.DeleteButton
+import containerised.pos.components.UpdateButton
 
 private val jsonFormatter = Json { prettyPrint = true }
 
@@ -104,11 +107,9 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
             ) {
-
                 if (promotionId == null) {
 
-                    // ✅ CREATE
-                    Button(
+                    CreateButton(
                         onClick = {
                             scope.launch {
                                 try {
@@ -122,21 +123,18 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
                                             is_active = formState.isActive
                                         )
                                     )
-                                    println("✅ Created")
+                                    println("Created")
                                     navController.popBackStack()
                                 } catch (e: Exception) {
-                                    println("❌ ${e.message}")
+                                    println("${e.message}")
                                 }
                             }
                         }
-                    ) {
-                        Text("Create")
-                    }
+                    )
 
                 } else {
 
-                    // ❌ DELETE
-                    Button(
+                    DeleteButton(
                         onClick = {
                             scope.launch {
                                 try {
@@ -144,19 +142,15 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
                                     println("🗑 Deleted")
                                     navController.popBackStack()
                                 } catch (e: Exception) {
-                                    println("❌ ${e.message}")
+                                    println("${e.message}")
                                 }
                             }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("Delete")
-                    }
+                        }
+                    )
 
-                    // 🔄 UPDATE
-                    Button(
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    UpdateButton(
                         onClick = {
                             scope.launch {
                                 try {
@@ -171,16 +165,14 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
                                             is_active = formState.isActive
                                         )
                                     )
-                                    println("✅ Updated")
+                                    println("Updated")
                                     navController.popBackStack()
                                 } catch (e: Exception) {
-                                    println("❌ ${e.message}")
+                                    println("${e.message}")
                                 }
                             }
                         }
-                    ) {
-                        Text("Update")
-                    }
+                    )
                 }
             }
         }
