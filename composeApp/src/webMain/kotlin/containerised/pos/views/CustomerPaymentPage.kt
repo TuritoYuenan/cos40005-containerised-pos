@@ -35,7 +35,7 @@ fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payme
 	) { paddingValues ->
 		Column(
 			Modifier.fillMaxSize().padding(paddingValues),
-			Arrangement.spacedBy(24.dp),
+			Arrangement.Center,
 			Alignment.CenterHorizontally,
 		) {
 			when {

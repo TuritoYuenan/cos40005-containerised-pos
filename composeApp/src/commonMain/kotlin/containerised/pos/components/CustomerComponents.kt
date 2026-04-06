@@ -167,13 +167,13 @@ fun BranchItem.TallCard(onAddToCart: () -> Unit = {}) {
 }
 
 @Composable
-fun PayAtCounterView(order: Order?) = Card(
+fun PayAtCounterView(order: Order?) = OutlinedCard(
 	Modifier.fillMaxWidth(),
 	elevation = CardDefaults.cardElevation(4.dp)
 ) {
 	Column(
-		Modifier.padding(24.dp),
-		Arrangement.spacedBy(16.dp),
+		Modifier.fillMaxWidth().padding(16.dp),
+		Arrangement.spacedBy(8.dp),
 		Alignment.CenterHorizontally,
 	) {
 		Text(
@@ -191,11 +191,11 @@ fun PayAtCounterView(order: Order?) = Card(
 }
 
 @Composable
-fun SelfCheckoutView(order: Order?) = Card(
+fun SelfCheckoutView(order: Order?) = OutlinedCard(
 	Modifier.fillMaxWidth().testTag("selfCheckoutView"),
 	elevation = CardDefaults.cardElevation(4.dp)
 ) {
-	if (order == null) return@Card Box(
+	if (order == null) return@OutlinedCard Box(
 		Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
 		Alignment.Center,
 	) {
