@@ -216,5 +216,6 @@ data class BranchItemInsert(
     val price: Int,
     @SerialName("estimated_prep") val estimatedPrep: String,
     @SerialName("is_available") val isAvailable: Boolean = true,
-    @SerialName("is_featured") val isFeatured: Boolean = false
+    @SerialName("is_featured") val isFeatured: Boolean = false,
+	@SerialName("url_img") val urlImg: String? = null,
 )

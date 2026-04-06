@@ -21,9 +21,9 @@ actual fun rememberImagePickerUri(onResult: (Any?) -> Unit): () -> Unit {
 	}
 }
 
-@Composable
+
 actual fun rememberImagePickerBytes(uri: Any?): ByteArray? {
-	val context = LocalContext.current
+	val context = AppContextHolder.context
 	val androidUri = uri as? android.net.Uri
 
 	return androidUri?.let {

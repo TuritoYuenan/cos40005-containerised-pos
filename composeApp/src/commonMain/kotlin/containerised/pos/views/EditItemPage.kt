@@ -1,5 +1,7 @@
 package containerised.pos.views
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,8 +13,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import containerised.pos.components.BackButton
 import containerised.pos.components.menu_edit.MultiSelectDropdown
@@ -26,6 +31,13 @@ import containerised.pos.routes.StaffRoutes
 import containerised.pos.components.CreateButton
 import containerised.pos.components.DeleteButton
 import containerised.pos.components.UpdateButton
+import containerised.pos.database.SupabaseClient
+import containerised.pos.database.SupabaseClient.uploadImage
+import containerised.pos.rememberImagePickerBytes
+import containerised.pos.rememberImagePickerUri
+import io.github.jan.supabase.storage.storage
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -50,7 +62,7 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 	var itemTags by remember { mutableStateOf(emptyList<ItemTag>()) }
 	var selectedTagIds by remember { mutableStateOf(setOf<String>()) }
     var originalTagIds by remember { mutableStateOf(setOf<String>()) }
-    var branchId = "BRA26011700"
+    val branchId = "BRA26011700"
 	LaunchedEffect(Unit) {
 		try {
 			categories = Category.fetchAll()
@@ -60,6 +72,7 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 				itemTags = ItemTag.fetchByItemId(itemId)
                 originalTagIds = itemTags.map { it.tagId }.toSet()
                 selectedTagIds = originalTagIds
+				imageUrl = item?.urlImg
 			}
 			item?.let {
 				formState = EditItemFormState(
@@ -77,7 +90,13 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 	LazyColumn {
 		item {
 			TopBar { navController.popBackStack() }
-			EditMenuImageSection(imageBytes, imageUrl) {}
+			EditMenuImageSection(
+				imageBytes = imageBytes,
+				imageUrl = imageUrl,
+				onImageSelected = { bytes ->
+					imageBytes = bytes
+				}
+			)
 
 			FormSection(
 				formState = formState,
@@ -94,22 +113,32 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 			) {
 				if (itemId == null) {
                     CreateButton {
-                        val newItem = BranchItemInsert(
-                            branchId = branchId,
-                            categoryId = formState.categoryId,
-                            itemName = formState.name,
-                            itemDes = null,
-                            price = formState.price.toInt(),
-                            estimatedPrep = "12 min",
-                            isAvailable = true,
-                            isFeatured = formState.isFeatured
-                        )
-
                         scope.launch {
+							var imgUrl: String? = null
+							if (imageBytes != null) {
+								val name = List(10) { ('a'..'z').random() }.joinToString("")
+								uploadImage("menu-images/$name.png", imageBytes!!)
+								imgUrl = SupabaseClient.storage
+									.from("images")
+									.publicUrl("menu-images/$name.png")
+							}
+
+							val newItem = BranchItemInsert(
+								branchId = branchId,
+								categoryId = formState.categoryId,
+								itemName = formState.name,
+								itemDes = null,
+								price = formState.price.toInt(),
+								estimatedPrep = "12 min",
+								isAvailable = true,
+								isFeatured = formState.isFeatured,
+								urlImg = imgUrl
+							)
+
                             val createdItem = BranchItem.create(newItem)
                             ItemTag.insertTags(
                                 itemId = createdItem.itemId,
-                                tagIds = selectedTagIds
+                                tagIds = selectedTagIds,
                             )
                             navController.navigate(StaffRoutes.MenuEdit)
                         }
@@ -123,14 +152,26 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
                     }
                     UpdateButton {
                         item?.let { original ->
-                            val updated = original.copy(
-                                itemName = formState.name,
-                                price = formState.price.toInt(),
-                                categoryId = formState.categoryId,
-                                isFeatured = formState.isFeatured
-                            )
+
 
                             scope.launch {
+								var imgUrl: String? = imageUrl
+								if (imageBytes != null) {
+									val name = List(10) { ('a'..'z').random() }.joinToString("")
+									uploadImage("menu-images/$name.png", imageBytes!!)
+									imgUrl = SupabaseClient.storage
+										.from("images")
+										.publicUrl("menu-images/$name.png")
+								}
+
+								val updated = original.copy(
+									itemName = formState.name,
+									price = formState.price.toInt(),
+									categoryId = formState.categoryId,
+									isFeatured = formState.isFeatured,
+									urlImg = imgUrl
+								)
+
                                 BranchItem.update(itemId, updated)
 
                                 // 🔥 UPDATE TAGS HERE
@@ -161,9 +202,90 @@ private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
 fun EditMenuImageSection(
 	imageBytes: ByteArray?,
 	imageUrl: String?,
-	onUploadClick: () -> Unit
+	onImageSelected: (ByteArray) -> Unit
 ) {
+	var uri by remember { mutableStateOf<Any?>(null) }
+	var pickedImageBytes  by remember { mutableStateOf<ByteArray?>(null) }
+	val openImagePicker = rememberImagePickerUri { result ->
+		println("Picked image: $result")
+		uri = result
+	}
+	pickedImageBytes = imageBytes
 
+	LaunchedEffect(uri) {
+		pickedImageBytes = rememberImagePickerBytes(uri)
+		pickedImageBytes?.let {
+			onImageSelected(it) // upload AFTER conversion
+		}
+	}
+
+	Card(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(vertical = 6.dp, horizontal = 12.dp),
+	) {
+		Row(
+			verticalAlignment = Alignment.CenterVertically,
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(vertical = 6.dp, horizontal = 12.dp),
+			horizontalArrangement = Arrangement.spacedBy(60.dp)
+		) {
+			if (pickedImageBytes != null) {
+				Image(
+					bitmap = pickedImageBytes!!.decodeToImageBitmap(),
+					contentDescription = null,
+					modifier = Modifier
+						.size(120.dp)
+						.clip(RoundedCornerShape(8.dp))
+				)
+			}
+			else if (imageUrl != null){
+				val url = imageUrl.toString()
+				KamelImage(
+					resource = { asyncPainterResource(url) },
+					contentDescription = "Menu image",
+					modifier = Modifier
+						.size(120.dp)
+						.clip(RoundedCornerShape(8.dp))
+				)
+			}
+			else {
+				Box(
+					modifier = Modifier
+						.size(120.dp)
+						.clip(RoundedCornerShape(8.dp))
+						.background(Color(0xFFACACAC)),
+					contentAlignment = Alignment.Center
+				) {}
+			}
+			Column(
+				verticalArrangement = Arrangement.spacedBy(8.dp),
+			) {
+				Button(
+					onClick = {
+						openImagePicker()
+					},
+					shape = RoundedCornerShape(50),
+					colors = ButtonDefaults.buttonColors(
+						containerColor = MaterialTheme.colorScheme.primary,
+						contentColor = Color.White
+					),
+					modifier = Modifier.height(40.dp)
+				) {
+					Text("Upload", color = Color.White)
+				}
+				Text(
+					text = "Supports PNG, JPEG, WEBP images below 5MB",
+					color = Color.Black.copy(alpha = 0.5f),
+					style = MaterialTheme.typography.labelSmall.copy(
+						fontSize = 12.sp
+					)
+				)
+			}
+
+		}
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
