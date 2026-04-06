@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Customer-facing application to GitHub Pages
 
 on:
   release:
@@ -27,7 +27,7 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
 
