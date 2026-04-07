@@ -74,15 +74,12 @@ data class Order(
 		@SerialName("created_at")
 		val createdAt: String? = null
 	) {
+		/**
+		 * Inserts this order into the database and returns the generated order ID.
+		 */
 		suspend fun add(): String = SupabaseClient.db["orders"]
 			.insert(this) { select() }
 			.decodeSingle<Order>().orderId
-
-		suspend fun addWithItems(items: List<OrderItem.Insertable>): String {
-			val orderID = add()
-			items.forEach { it.add() }
-			return orderID
-		}
 	}
 
 	/**

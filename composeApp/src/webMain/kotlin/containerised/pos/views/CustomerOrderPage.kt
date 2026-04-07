@@ -104,17 +104,17 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 			val featured = allItems.filter { it.isFeatured }
 			val filtered = allItems.filter(selectedTags)
 
-			// Table Info
 			item {
+				// Image Slider
+				featured.ImageSlider()
+
+				// Table Info
 				Text(
 					"Ordering for Table ${args.tableID}",
-					Modifier.fillMaxWidth(),
+					Modifier.padding(top = defaultPadding).fillMaxWidth(),
 					style = MaterialTheme.typography.bodyLarge,
 					textAlign = TextAlign.Center
 				)
-
-				// Image Slider
-				featured.ImageSlider(Modifier.padding(top = defaultPadding))
 
 				// Featured Section
 				Text(

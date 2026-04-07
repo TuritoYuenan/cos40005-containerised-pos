@@ -47,7 +47,12 @@ data class OrderItem(
 		@SerialName("item_status")
 		val itemStatus: Order.Status? = null
 	) {
-		suspend fun add() = SupabaseClient.db["order_items"].insert(this)
+		/**
+		 * Inserts this OrderItem into the database and returns the generated ID.
+		 */
+		suspend fun add(): String = SupabaseClient.db["order_items"]
+			.insert(this) { select() }
+			.decodeSingle<OrderItem>().itemId
 	}
 
 	companion object {
