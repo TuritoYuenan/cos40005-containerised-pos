@@ -31,6 +31,7 @@ import containerised.pos.routes.StaffRoutes
 import containerised.pos.components.CreateButton
 import containerised.pos.components.DeleteButton
 import containerised.pos.components.UpdateButton
+import containerised.pos.components.menu_edit.ImagePickerCard
 import containerised.pos.database.SupabaseClient
 import containerised.pos.database.SupabaseClient.uploadImage
 import containerised.pos.rememberImagePickerBytes
@@ -61,8 +62,8 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 	var item by remember { mutableStateOf<BranchItem?>(null) }
 	var itemTags by remember { mutableStateOf(emptyList<ItemTag>()) }
 	var selectedTagIds by remember { mutableStateOf(setOf<String>()) }
-    var originalTagIds by remember { mutableStateOf(setOf<String>()) }
-    val branchId = "BRA26011700"
+	var originalTagIds by remember { mutableStateOf(setOf<String>()) }
+	val branchId = "BRA26011700"
 	LaunchedEffect(Unit) {
 		try {
 			categories = Category.fetchAll()
@@ -70,8 +71,8 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 			if (itemId != null) {
 				item = BranchItem.fetchById(itemId)
 				itemTags = ItemTag.fetchByItemId(itemId)
-                originalTagIds = itemTags.map { it.tagId }.toSet()
-                selectedTagIds = originalTagIds
+				originalTagIds = itemTags.map { it.tagId }.toSet()
+				selectedTagIds = originalTagIds
 				imageUrl = item?.urlImg
 			}
 			item?.let {
@@ -90,7 +91,7 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 	LazyColumn {
 		item {
 			TopBar { navController.popBackStack() }
-			EditMenuImageSection(
+			ImagePickerCard(
 				imageBytes = imageBytes,
 				imageUrl = imageUrl,
 				onImageSelected = { bytes ->
@@ -112,11 +113,12 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 				Arrangement.spacedBy(10.dp, Alignment.End)
 			) {
 				if (itemId == null) {
-                    CreateButton {
-                        scope.launch {
+					CreateButton {
+						scope.launch {
 							var imgUrl: String? = null
 							if (imageBytes != null) {
-								val name = List(10) { ('a'..'z').random() }.joinToString("")
+								val name =
+									List(10) { ('a'..'z').random() }.joinToString("")
 								uploadImage("menu-images/$name.png", imageBytes!!)
 								imgUrl = SupabaseClient.storage
 									.from("images")
@@ -135,29 +137,30 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 								urlImg = imgUrl
 							)
 
-                            val createdItem = BranchItem.create(newItem)
-                            ItemTag.insertTags(
-                                itemId = createdItem.itemId,
-                                tagIds = selectedTagIds,
-                            )
-                            navController.navigate(StaffRoutes.MenuEdit)
-                        }
-                    }
+							val createdItem = BranchItem.create(newItem)
+							ItemTag.insertTags(
+								itemId = createdItem.itemId,
+								tagIds = selectedTagIds,
+							)
+							navController.navigate(StaffRoutes.MenuEdit)
+						}
+					}
 				} else {
-                    DeleteButton {
-                        scope.launch {
-                            BranchItem.delete(itemId)
-                            navController.navigate(StaffRoutes.MenuEdit)
-                        }
-                    }
-                    UpdateButton {
-                        item?.let { original ->
+					DeleteButton {
+						scope.launch {
+							BranchItem.delete(itemId)
+							navController.navigate(StaffRoutes.MenuEdit)
+						}
+					}
+					UpdateButton {
+						item?.let { original ->
 
 
-                            scope.launch {
+							scope.launch {
 								var imgUrl: String? = imageUrl
 								if (imageBytes != null) {
-									val name = List(10) { ('a'..'z').random() }.joinToString("")
+									val name =
+										List(10) { ('a'..'z').random() }.joinToString("")
 									uploadImage("menu-images/$name.png", imageBytes!!)
 									imgUrl = SupabaseClient.storage
 										.from("images")
@@ -172,19 +175,19 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 									urlImg = imgUrl
 								)
 
-                                BranchItem.update(itemId, updated)
+								BranchItem.update(itemId, updated)
 
-                                // 🔥 UPDATE TAGS HERE
-                                ItemTag.updateTags(
-                                    itemId = itemId,
-                                    oldTagIds = originalTagIds,
-                                    newTagIds = selectedTagIds
-                                )
+								// 🔥 UPDATE TAGS HERE
+								ItemTag.updateTags(
+									itemId = itemId,
+									oldTagIds = originalTagIds,
+									newTagIds = selectedTagIds
+								)
 
-                                navController.navigate(StaffRoutes.MenuEdit)
-                            }
-                        }
-                    }
+								navController.navigate(StaffRoutes.MenuEdit)
+							}
+						}
+					}
 				}
 			}
 		}
@@ -197,96 +200,6 @@ private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
 	title = { Text("Item edit") },
 	navigationIcon = { BackButton(onClick = onBack) }
 )
-
-@Composable
-fun EditMenuImageSection(
-	imageBytes: ByteArray?,
-	imageUrl: String?,
-	onImageSelected: (ByteArray) -> Unit
-) {
-	var uri by remember { mutableStateOf<Any?>(null) }
-	var pickedImageBytes  by remember { mutableStateOf<ByteArray?>(null) }
-	val openImagePicker = rememberImagePickerUri { result ->
-		println("Picked image: $result")
-		uri = result
-	}
-	pickedImageBytes = imageBytes
-
-	LaunchedEffect(uri) {
-		pickedImageBytes = rememberImagePickerBytes(uri)
-		pickedImageBytes?.let {
-			onImageSelected(it) // upload AFTER conversion
-		}
-	}
-
-	Card(
-		modifier = Modifier
-			.fillMaxWidth()
-			.padding(vertical = 6.dp, horizontal = 12.dp),
-	) {
-		Row(
-			verticalAlignment = Alignment.CenterVertically,
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(vertical = 6.dp, horizontal = 12.dp),
-			horizontalArrangement = Arrangement.spacedBy(60.dp)
-		) {
-			if (pickedImageBytes != null) {
-				Image(
-					bitmap = pickedImageBytes!!.decodeToImageBitmap(),
-					contentDescription = null,
-					modifier = Modifier
-						.size(120.dp)
-						.clip(RoundedCornerShape(8.dp))
-				)
-			}
-			else if (imageUrl != null){
-				val url = imageUrl.toString()
-				KamelImage(
-					resource = { asyncPainterResource(url) },
-					contentDescription = "Menu image",
-					modifier = Modifier
-						.size(120.dp)
-						.clip(RoundedCornerShape(8.dp))
-				)
-			}
-			else {
-				Box(
-					modifier = Modifier
-						.size(120.dp)
-						.clip(RoundedCornerShape(8.dp))
-						.background(Color(0xFFACACAC)),
-					contentAlignment = Alignment.Center
-				) {}
-			}
-			Column(
-				verticalArrangement = Arrangement.spacedBy(8.dp),
-			) {
-				Button(
-					onClick = {
-						openImagePicker()
-					},
-					shape = RoundedCornerShape(50),
-					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.primary,
-						contentColor = Color.White
-					),
-					modifier = Modifier.height(40.dp)
-				) {
-					Text("Upload", color = Color.White)
-				}
-				Text(
-					text = "Supports PNG, JPEG, WEBP images below 5MB",
-					color = Color.Black.copy(alpha = 0.5f),
-					style = MaterialTheme.typography.labelSmall.copy(
-						fontSize = 12.sp
-					)
-				)
-			}
-
-		}
-	}
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -380,11 +293,11 @@ private fun FormSection(
 				}
 			}
 
-            MultiSelectDropdown(
-                label = "Tags",
-                items = tags.map { it.tagId to it.tagName },
-                selected = selectedTagIds.toList()
-            ) { newList -> onTagChange(newList.toSet()) }
+			MultiSelectDropdown(
+				label = "Tags",
+				items = tags.map { it.tagId to it.tagName },
+				selected = selectedTagIds.toList()
+			) { newList -> onTagChange(newList.toSet()) }
 
 			SwitchField(
 				title = "Featured Item",

@@ -25,7 +25,10 @@ data class Promotion(
     val rules: List<PromotionRule>? = null, // JSONB comes as String
 
 	@SerialName("is_active")
-	val isActive: Boolean
+	val isActive: Boolean,
+
+	@SerialName("url_img")
+	val urlImg: String? = null,
 ) {
 	companion object {
 		suspend fun fetchById(promotionId: String): Promotion? {
@@ -86,5 +89,6 @@ data class PromotionInsert(
     val end_date: String? = null,
     val days_of_week: List<DaySchedule> = emptyList(),
     val rules: List<PromotionRule> = emptyList(),
-    val is_active: Boolean
+    val is_active: Boolean,
+	val urlImg: String? = null,
 )

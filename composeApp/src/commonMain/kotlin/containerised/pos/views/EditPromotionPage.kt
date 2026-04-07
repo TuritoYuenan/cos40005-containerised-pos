@@ -33,6 +33,9 @@ import kotlinx.serialization.json.Json
 import containerised.pos.components.CreateButton
 import containerised.pos.components.DeleteButton
 import containerised.pos.components.UpdateButton
+import containerised.pos.components.menu_edit.ImagePickerCard
+import containerised.pos.database.SupabaseClient
+import containerised.pos.database.SupabaseClient.uploadImage
 
 private val jsonFormatter = Json { prettyPrint = true }
 
@@ -52,11 +55,14 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 	var categories by remember { mutableStateOf(emptyList<Category>()) }
 	var items by remember { mutableStateOf(emptyList<BranchItem>()) }
 	var tags by remember { mutableStateOf(emptyList<Tag>()) }
+	var imageUrl by remember { mutableStateOf<String?>(null) }
+	var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
 
 	LaunchedEffect(promotionId) {
 		try {
 			if (promotionId != null) {
 				promotion = Promotion.fetchById(promotionId)
+				imageUrl = promotion?.urlImg
 			}
             promotion?.let {
                 formState = EditPromotionFormState(
@@ -78,6 +84,15 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 	LazyColumn {
 		item {
 			TopBar { navController.popBackStack() }
+		}
+		item {
+			ImagePickerCard(
+				imageBytes = imageBytes,
+				imageUrl = imageUrl,
+				onImageSelected = { bytes ->
+					imageBytes = bytes
+				}
+			)
 		}
 		item {
 			FormSection(formState) { formState = it }
@@ -113,6 +128,15 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
                         onClick = {
                             scope.launch {
                                 try {
+									var imgUrl: String? = null
+									if (imageBytes != null) {
+										val name = List(10) { ('a'..'z').random() }.joinToString("")
+										uploadImage("menu-images/$name.png", imageBytes!!)
+										imgUrl = SupabaseClient.storage
+											.from("images")
+											.publicUrl("menu-images/$name.png")
+									}
+
                                     Promotion.insert(
                                         PromotionInsert(
                                             branch_id = "BRA26011700",
@@ -120,7 +144,8 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
                                             end_date = formState.endDate,
                                             days_of_week = formState.daysOfWeek,
                                             rules = formState.rules,
-                                            is_active = formState.isActive
+                                            is_active = formState.isActive,
+											urlImg = imgUrl
                                         )
                                     )
                                     println("Created")
@@ -153,6 +178,16 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
                     UpdateButton(
                         onClick = {
                             scope.launch {
+								var imgUrl: String? = imageUrl
+								if (imageBytes != null) {
+									val name =
+										List(10) { ('a'..'z').random() }.joinToString("")
+									uploadImage("menu-images/$name.png", imageBytes!!)
+									imgUrl = SupabaseClient.storage
+										.from("images")
+										.publicUrl("menu-images/$name.png")
+								}
+
                                 try {
                                     Promotion.updateById(
                                         id = promotionId,
@@ -162,7 +197,8 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
                                             end_date = formState.endDate,
                                             days_of_week = formState.daysOfWeek,
                                             rules = formState.rules,
-                                            is_active = formState.isActive
+                                            is_active = formState.isActive,
+											urlImg = imgUrl
                                         )
                                     )
                                     println("Updated")
