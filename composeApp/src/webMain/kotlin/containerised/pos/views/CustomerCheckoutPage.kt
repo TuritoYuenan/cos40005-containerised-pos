@@ -1,5 +1,6 @@
 package containerised.pos.views
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,9 +24,14 @@ import containerised.pos.components.CheckoutTopBar
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Currency
 import containerised.pos.models.Order
+import containerised.pos.models.Promotion
+import containerised.pos.models.Promotion.Companion.fetchByBranch
+import containerised.pos.models.PromotionRule
 import containerised.pos.routes.CustomerRoutes
 import containerised.pos.services.CartService
 import containerised.pos.services.CartService.getFinalAmount
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -32,6 +40,7 @@ import kotlinx.coroutines.launch
 fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Checkout) {
 	var isPlacingOrder by remember { mutableStateOf(false) }
 	var checkoutItems by remember { mutableStateOf<List<CartService.Entry>>(emptyList()) }
+	var promotions by remember { mutableStateOf<List<Promotion>>(emptyList()) }
 	val scope = rememberCoroutineScope()
 
 	// Hardcoded tax amount - assume it is gathered from settings stored in database
@@ -77,7 +86,18 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 	// Initial load
 	LaunchedEffect(Unit) {
 		refreshCart()
+		promotions = fetchByBranch(args.branchID)
 		println("Loaded cart items: $checkoutItems")
+	}
+
+	val validPromotions by remember(promotions, checkoutItems) {
+		derivedStateOf {
+			promotions.filter { promotion ->
+				promotion.rules?.any { rule ->
+					rule.isSatisfied(checkoutItems)
+				} == true
+			}
+		}
 	}
 
 	// Calculate total based on cart items
@@ -94,7 +114,7 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 			Arrangement.spacedBy(16.dp)
 		) {
 			CartView(args, checkoutItems, isPlacingOrder) { refreshCart() }
-			DiscountView()
+			validPromotions.DiscountView()
 			PaymentButtonsView(total, scope, isPlacingOrder, ::placeOrder)
 		}
 	}
@@ -150,7 +170,7 @@ private fun CartView(
 }
 
 @Composable
-private fun DiscountView() {
+private fun List<Promotion>.DiscountView() {
 	OutlinedCard(Modifier.fillMaxWidth()) {
 		Column(Modifier.padding(16.dp), Arrangement.spacedBy(16.dp)) {
 			Row {
@@ -160,8 +180,7 @@ private fun DiscountView() {
 			}
 
 			Column(Modifier, Arrangement.spacedBy(8.dp)) {
-				DiscountItemCard()
-				DiscountItemCard()
+				forEach{ it.DiscountItemCard() }
 			}
 		}
 	}
@@ -281,27 +300,30 @@ private fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit
 }
 
 @Composable
-private fun DiscountItemCard() {
+private fun Promotion.DiscountItemCard() {
 	val cardHeight = 64.dp
 
 	Row(
 		Modifier.fillMaxWidth(),
-		Arrangement.spacedBy(16.dp),
 	) {
-		Box(
-			Modifier
-				.size(cardHeight)
-				.clip(RoundedCornerShape(8.dp))
-				.background(MaterialTheme.colorScheme.secondary),
-			Alignment.Center
-		) {}
-
-		Column(
-			Modifier.height(cardHeight),
-			Arrangement.Center
-		) {
-			Text("Lorem Ipsum title", style = MaterialTheme.typography.titleSmall)
-			Text("Lorem Ipsum condition", style = MaterialTheme.typography.bodySmall)
+		if (urlImg != null){
+			val url = urlImg.toString()
+			KamelImage(
+				resource = { asyncPainterResource(url) },
+				contentDescription = "Menu image",
+				modifier = Modifier
+					.fillMaxWidth()
+					.clip(RoundedCornerShape(8.dp))
+			)
+		}
+		else {
+			Box(
+				modifier = Modifier
+					.fillMaxWidth()
+					.clip(RoundedCornerShape(8.dp))
+					.background(Color(0xFFACACAC)),
+				contentAlignment = Alignment.Center
+			) {}
 		}
 	}
 }
@@ -380,7 +402,7 @@ private fun PagePreview() = Column(
 		)
 	) {}
 
-	DiscountView()
+//	DiscountView()
 
 	PaymentButtonsView(150000.0, rememberCoroutineScope()) {}
 }
@@ -389,4 +411,53 @@ private fun PagePreview() = Column(
 @Composable
 private fun SpecialNotesDialogPreview() = Column(Modifier.fillMaxSize()) {
 	SpecialNotesDialog(BranchItem.MOCK) { }
+}
+
+fun PromotionRule.isSatisfied(cart: List<CartService.Entry>): Boolean {
+
+	// Pre-calculate maps once (avoids repeated loops)
+	val itemCountMap = mutableMapOf<String, Int>()
+	val categoryCountMap = mutableMapOf<String, Int>()
+	val tagSet = mutableSetOf<String>()
+
+	for (entry in cart) {
+		val itemId = entry.branchItem.itemId
+		val categoryId = entry.branchItem.categoryId.toString()
+
+		itemCountMap[itemId] = (itemCountMap[itemId] ?: 0) + entry.count
+		categoryCountMap[categoryId] = (categoryCountMap[categoryId] ?: 0) + entry.count
+
+		entry.branchItem.itemTags?.forEach {
+			tagSet.add(it.tagId)
+		}
+	}
+
+	return when (targetType) {
+
+		"ITEM" -> {
+			selectedIds.any { itemId ->
+				(itemCountMap[itemId] ?: 0) > 0
+			}
+		}
+
+		"CATEGORY" -> {
+			selectedIds.any { categoryId ->
+				(categoryCountMap[categoryId] ?: 0) > 0
+			}
+		}
+
+		"TAG" -> {
+			selectedIds.any { tagId ->
+				tagId in tagSet
+			}
+		}
+
+		"COMBO" -> {
+			comboItems.all { (itemId, requiredQty) ->
+				(itemCountMap[itemId] ?: 0) >= requiredQty
+			}
+		}
+
+		else -> false
+	}
 }
