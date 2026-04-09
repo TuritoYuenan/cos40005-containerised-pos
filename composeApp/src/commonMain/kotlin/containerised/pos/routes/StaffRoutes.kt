@@ -7,6 +7,7 @@ object StaffRoutes {
 	@Serializable
 	@SerialName("loading")
 	object Loading
+
 	@Serializable
 	@SerialName("login")
 	object Login
@@ -16,7 +17,7 @@ object StaffRoutes {
 	object Inventory
 
 	@Serializable
-	@SerialName("ingredient-detail")
+	@SerialName("edit-ingredient")
 	data class EditIngredient(val ingredientId: String)
 
 	@Serializable
@@ -55,12 +56,15 @@ object StaffRoutes {
 	@SerialName("sales-report")
 	data class SalesReport(val id: String)
 
-	@Serializable @SerialName("employee-management")
+	@Serializable
+	@SerialName("employee-management")
 	object EmployeeManagement
 
-	@Serializable @SerialName("employee-profile")
+	@Serializable
+	@SerialName("employee-profile")
 	data class EmployeeProfile(val argUserId: String? = null)
 
-	@Serializable @SerialName("setting")
+	@Serializable
+	@SerialName("setting")
 	object Setting
 }

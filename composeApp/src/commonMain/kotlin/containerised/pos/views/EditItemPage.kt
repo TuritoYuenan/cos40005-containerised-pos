@@ -1,45 +1,25 @@
 package containerised.pos.views
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import containerised.pos.components.BackButton
-import containerised.pos.components.menu_edit.MultiSelectDropdown
-import containerised.pos.components.menu_edit.SwitchField
-import containerised.pos.models.BranchItem
-import containerised.pos.models.BranchItemInsert
-import containerised.pos.models.Category
-import containerised.pos.models.ItemTag
-import containerised.pos.models.Tag
-import containerised.pos.routes.StaffRoutes
 import containerised.pos.components.CreateButton
 import containerised.pos.components.DeleteButton
 import containerised.pos.components.UpdateButton
 import containerised.pos.components.menu_edit.ImagePickerCard
+import containerised.pos.components.menu_edit.MultiSelectDropdown
+import containerised.pos.components.menu_edit.SwitchField
 import containerised.pos.database.SupabaseClient
 import containerised.pos.database.SupabaseClient.uploadImage
-import containerised.pos.rememberImagePickerBytes
-import containerised.pos.rememberImagePickerUri
-import io.github.jan.supabase.storage.storage
-import io.kamel.image.KamelImage
-import io.kamel.image.asyncPainterResource
-import kotlinx.coroutines.Job
+import containerised.pos.models.*
+import containerised.pos.routes.StaffRoutes
 import kotlinx.coroutines.launch
 
 private data class EditItemFormState(
@@ -90,7 +70,6 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 
 	LazyColumn {
 		item {
-			TopBar { navController.popBackStack() }
 			ImagePickerCard(
 				imageBytes = imageBytes,
 				imageUrl = imageUrl,
@@ -193,13 +172,6 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 		}
 	}
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
-	title = { Text("Item edit") },
-	navigationIcon = { BackButton(onClick = onBack) }
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

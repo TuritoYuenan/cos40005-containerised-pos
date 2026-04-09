@@ -2,24 +2,19 @@ package containerised.pos.views
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.models.Tag
-import containerised.pos.routes.StaffRoutes
 import containerised.pos.components.CreateButton
 import containerised.pos.components.DeleteButton
 import containerised.pos.components.UpdateButton
+import containerised.pos.models.Tag
+import containerised.pos.routes.StaffRoutes
 import kotlinx.coroutines.launch
 
 private data class EditTagFormState(
@@ -55,9 +50,6 @@ fun EditTagPage(navController: NavController?, tagId: String? = null) {
 
 	LazyColumn {
 		item {
-			TopBar {
-				navController?.popBackStack()
-			}
 			TagFormSection(
 				formState = formState,
 				onFormChange = { formState = it }
@@ -101,17 +93,6 @@ fun EditTagPage(navController: NavController?, tagId: String? = null) {
 		}
 	}
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
-	title = { Text("Item edit") },
-	navigationIcon = {
-		IconButton(onClick = onBack) {
-			Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-		}
-	}
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

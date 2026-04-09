@@ -20,8 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.components.SettingsButton
-import containerised.pos.components.StaffNavigationBar
-import containerised.pos.components.StaffTopBar
 import containerised.pos.database.SupabaseClient
 import containerised.pos.models.DayOfWeek
 import containerised.pos.models.User.Companion.updateShift
@@ -43,7 +41,7 @@ fun EmployeeProfilePage(navController: NavController, argUserId: String? = null)
 
 	LaunchedEffect(Unit) {
 		try {
-			userRole = UserRole.fetchAndJoin(userId?: "")
+			userRole = UserRole.fetchAndJoin(userId ?: "")
 		} catch (e: Exception) {
 			val error = e.message
 			println("Error: $error")
@@ -52,7 +50,7 @@ fun EmployeeProfilePage(navController: NavController, argUserId: String? = null)
 
 	Scaffold(
 		topBar = { userRole?.EmployeeTopCard(navController) },
-	) {paddingValues ->
+	) { paddingValues ->
 		LazyColumn(
 			Modifier.padding(paddingValues),
 			verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -69,9 +67,8 @@ fun EmployeeProfilePage(navController: NavController, argUserId: String? = null)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserRole.EmployeeTopCard(navController: NavController){
+fun UserRole.EmployeeTopCard(navController: NavController) {
 	TopAppBar(
-
 		title = {
 			Text(
 				text = user?.fullName ?: "",
@@ -81,17 +78,16 @@ fun UserRole.EmployeeTopCard(navController: NavController){
 		actions = {
 			SettingsButton { navController.navigate(StaffRoutes.Setting) }
 		}
-
 	)
 }
 
 @Composable
-fun UserRole.DetailCard(){
+fun UserRole.DetailCard() {
 	OutlinedCard(
 		Modifier
 			.fillMaxWidth()
 			.padding(12.dp, 6.dp),
-		) {
+	) {
 		Row(
 			Modifier
 				.fillMaxWidth()
@@ -115,7 +111,9 @@ fun UserRole.DetailCard(){
 						modifier = Modifier
 							.size(10.dp)
 							.background(
-								color = if (isActive) Color(0xFF4CAF50) else Color(0xFFF44336),
+								color = if (isActive) Color(0xFF4CAF50) else Color(
+									0xFFF44336
+								),
 								shape = CircleShape
 							)
 					)
@@ -134,7 +132,7 @@ fun UserRole.DetailCard(){
 		Modifier
 			.fillMaxWidth()
 			.padding(12.dp, 6.dp),
-		) {
+	) {
 		Column(
 			Modifier
 				.fillMaxWidth()
@@ -174,6 +172,7 @@ fun UserRole.DetailCard(){
 		}
 	}
 }
+
 @Composable
 fun UserRole.Timetable(editable: Boolean? = false) {
 	val scope = rememberCoroutineScope()
@@ -290,7 +289,8 @@ fun UserRole.Timetable(editable: Boolean? = false) {
 								.then(
 									if (isEditing || editable == true) {
 										Modifier.clickable {
-											val list = editableShift[day]?.toMutableList() ?: mutableListOf()
+											val list = editableShift[day]?.toMutableList()
+												?: mutableListOf()
 
 											if (list.contains(hour)) {
 												list.remove(hour)
@@ -298,9 +298,10 @@ fun UserRole.Timetable(editable: Boolean? = false) {
 												list.add(hour)
 											}
 
-											editableShift = editableShift.toMutableMap().apply {
-												put(day, list)
-											}
+											editableShift =
+												editableShift.toMutableMap().apply {
+													put(day, list)
+												}
 										}
 									} else Modifier
 								)

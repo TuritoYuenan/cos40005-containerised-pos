@@ -2,14 +2,12 @@
 
 package containerised.pos.components
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.navigation.NavController
 import containerised.pos.routes.StaffRoutes
 import org.jetbrains.compose.resources.stringResource
@@ -20,7 +18,10 @@ import posapplication.composeapp.generated.resources.app_name
 fun StaffTopBar(navController: NavController, currentRoute: String) {
 	when {
 		currentRoute == "inventory" -> InventoryTopBar(navController)
-		currentRoute.startsWith("ingredient-detail") -> IngredientDetailTopBar(navController)
+		currentRoute.startsWith("edit-ingredient") -> IngredientDetailTopBar(navController)
+		currentRoute.startsWith("edit-promotion") -> EditPromotionTopBar(navController)
+		currentRoute.startsWith("edit-item") -> EditItemTopBar(navController)
+		currentRoute.startsWith("edit-tag") -> EditTagTopBar(navController)
 		currentRoute.startsWith("stock-history") -> StockHistoryTopBar(navController)
 		currentRoute.startsWith("sales-report") -> SalesReportTopBar(navController)
 		currentRoute.startsWith("employee-profile") -> {}
@@ -39,6 +40,7 @@ private fun GenericStaffTopBar(navController: NavController) {
 		}
 	)
 }
+
 @Composable
 private fun GenericStaffTopBar() {
 	CenterAlignedTopAppBar(
@@ -80,6 +82,42 @@ private fun StockHistoryTopBar(navController: NavController) {
 		}
 	)
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditPromotionTopBar(navController: NavController) = CenterAlignedTopAppBar(
+	navigationIcon = { BackButton { navController.popBackStack() } },
+	title = { Text("Edit Promotion") },
+	// Right-side icon buttons
+	actions = {
+		SettingsButton { navController.navigate(StaffRoutes.Setting) }
+	},
+	modifier = Modifier.testTag("topBar")
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditItemTopBar(navController: NavController) = CenterAlignedTopAppBar(
+	navigationIcon = { BackButton { navController.popBackStack() } },
+	title = { Text("Edit Item") },
+	// Right-side icon buttons
+	actions = {
+		SettingsButton { navController.navigate(StaffRoutes.Setting) }
+	},
+	modifier = Modifier.testTag("topBar")
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditTagTopBar(navController: NavController) = CenterAlignedTopAppBar(
+	navigationIcon = { BackButton { navController.popBackStack() } },
+	title = { Text("Edit Tag") },
+	// Right-side icon buttons
+	actions = {
+		SettingsButton { navController.navigate(StaffRoutes.Setting) }
+	},
+	modifier = Modifier.testTag("topBar")
+)
 
 @Composable
 private fun SalesReportTopBar(navController: NavController) {

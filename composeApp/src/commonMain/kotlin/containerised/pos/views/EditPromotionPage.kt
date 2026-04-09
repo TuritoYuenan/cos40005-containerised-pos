@@ -7,44 +7,35 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.components.menu_edit.MultiSelectDropdown
-import containerised.pos.components.menu_edit.SwitchField
-import containerised.pos.components.menu_edit.millisConverter
-import containerised.pos.models.BranchItem
-import containerised.pos.models.Category
-import containerised.pos.models.DaySchedule
-import containerised.pos.models.Promotion
-import containerised.pos.models.PromotionInsert
-import containerised.pos.models.PromotionRule
-import containerised.pos.models.Tag
-import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import containerised.pos.components.CreateButton
 import containerised.pos.components.DeleteButton
 import containerised.pos.components.UpdateButton
 import containerised.pos.components.menu_edit.ImagePickerCard
+import containerised.pos.components.menu_edit.MultiSelectDropdown
+import containerised.pos.components.menu_edit.SwitchField
+import containerised.pos.components.menu_edit.millisConverter
 import containerised.pos.database.SupabaseClient
 import containerised.pos.database.SupabaseClient.uploadImage
+import containerised.pos.models.*
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 private val jsonFormatter = Json { prettyPrint = true }
 
 private data class EditPromotionFormState(
-    var startDate: String? = null,
-    var endDate: String? = null,
-    var isActive: Boolean = false,
-    var rules: List<PromotionRule> = emptyList(),
-    var daysOfWeek: List<DaySchedule> = emptyList()
+	var startDate: String? = null,
+	var endDate: String? = null,
+	var isActive: Boolean = false,
+	var rules: List<PromotionRule> = emptyList(),
+	var daysOfWeek: List<DaySchedule> = emptyList()
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,15 +55,15 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 				promotion = Promotion.fetchById(promotionId)
 				imageUrl = promotion?.urlImg
 			}
-            promotion?.let {
-                formState = EditPromotionFormState(
-                    startDate = it.startDate,
-                    endDate = it.endDate,
-                    isActive = it.isActive,
-                    rules = it.rules ?: emptyList(),
-                    daysOfWeek = it.daysOfWeek ?: emptyList()
-                )
-            }
+			promotion?.let {
+				formState = EditPromotionFormState(
+					startDate = it.startDate,
+					endDate = it.endDate,
+					isActive = it.isActive,
+					rules = it.rules ?: emptyList(),
+					daysOfWeek = it.daysOfWeek ?: emptyList()
+				)
+			}
 			categories = Category.fetchAll()
 			items = BranchItem.fetchByBranch("BRA26011700")
 			tags = Tag.fetchAll()
@@ -81,149 +72,144 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 		}
 	}
 
-    Column{
-        TopBar { navController.popBackStack() }
-        ImagePickerCard(
-            imageBytes = imageBytes,
-            imageUrl = imageUrl,
-            onImageSelected = { bytes ->
-                imageBytes = bytes
-            }
-        )
-        LazyColumn {
-            item {
-                FormSection(formState) { formState = it }
-            }
-            item {
-                DaysOfWeekSection(formState.daysOfWeek) { newDays ->
-                    formState = formState.copy(daysOfWeek = newDays)
-                }
-            }
-            item {
-                ConditionSection(
-                    rules = formState.rules,
-                    onChange = { newRules ->
-                        formState = formState.copy(rules = newRules)
-                    },
-                    categories = categories,
-                    items = items,
-                    tags = tags
-                )
-            }
-            item {
-                val scope = rememberCoroutineScope()
+	Column {
+		ImagePickerCard(
+			imageBytes = imageBytes,
+			imageUrl = imageUrl,
+			onImageSelected = { bytes ->
+				imageBytes = bytes
+			}
+		)
+		LazyColumn {
+			item {
+				FormSection(formState) { formState = it }
+			}
+			item {
+				DaysOfWeekSection(formState.daysOfWeek) { newDays ->
+					formState = formState.copy(daysOfWeek = newDays)
+				}
+			}
+			item {
+				ConditionSection(
+					rules = formState.rules,
+					onChange = { newRules ->
+						formState = formState.copy(rules = newRules)
+					},
+					categories = categories,
+					items = items,
+					tags = tags
+				)
+			}
+			item {
+				val scope = rememberCoroutineScope()
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
-                ) {
-                    if (promotionId == null) {
+				Row(
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(12.dp),
+					horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
+				) {
+					if (promotionId == null) {
 
-                        CreateButton(
-                            onClick = {
-                                scope.launch {
-                                    try {
-                                        var imgUrl: String? = null
-                                        if (imageBytes != null) {
-                                            val name = List(10) { ('a'..'z').random() }.joinToString("")
-                                            uploadImage("menu-images/$name.png", imageBytes!!)
-                                            imgUrl = SupabaseClient.storage
-                                                .from("images")
-                                                .publicUrl("menu-images/$name.png")
-                                        }
+						CreateButton(
+							onClick = {
+								scope.launch {
+									try {
+										var imgUrl: String? = null
+										if (imageBytes != null) {
+											val name =
+												List(10) { ('a'..'z').random() }.joinToString(
+													""
+												)
+											uploadImage(
+												"menu-images/$name.png",
+												imageBytes!!
+											)
+											imgUrl = SupabaseClient.storage
+												.from("images")
+												.publicUrl("menu-images/$name.png")
+										}
 
-                                        Promotion.insert(
-                                            PromotionInsert(
-                                                branch_id = "BRA26011700",
-                                                start_date = formState.startDate,
-                                                end_date = formState.endDate,
-                                                days_of_week = formState.daysOfWeek,
-                                                rules = formState.rules,
-                                                is_active = formState.isActive,
-                                                urlImg = imgUrl
-                                            )
-                                        )
-                                        println("Created")
-                                        navController.popBackStack()
-                                    } catch (e: Exception) {
-                                        println("${e.message}")
-                                    }
-                                }
-                            }
-                        )
+										Promotion.insert(
+											PromotionInsert(
+												branch_id = "BRA26011700",
+												start_date = formState.startDate,
+												end_date = formState.endDate,
+												days_of_week = formState.daysOfWeek,
+												rules = formState.rules,
+												is_active = formState.isActive,
+												urlImg = imgUrl
+											)
+										)
+										println("Created")
+										navController.popBackStack()
+									} catch (e: Exception) {
+										println("${e.message}")
+									}
+								}
+							}
+						)
 
-                    } else {
+					} else {
 
-                        DeleteButton(
-                            onClick = {
-                                scope.launch {
-                                    try {
-                                        Promotion.deleteById(promotionId)
-                                        println("🗑 Deleted")
-                                        navController.popBackStack()
-                                    } catch (e: Exception) {
-                                        println("${e.message}")
-                                    }
-                                }
-                            }
-                        )
+						DeleteButton(
+							onClick = {
+								scope.launch {
+									try {
+										Promotion.deleteById(promotionId)
+										println("🗑 Deleted")
+										navController.popBackStack()
+									} catch (e: Exception) {
+										println("${e.message}")
+									}
+								}
+							}
+						)
 
-                        Spacer(modifier = Modifier.width(8.dp))
+						Spacer(modifier = Modifier.width(8.dp))
 
-                        UpdateButton(
-                            onClick = {
-                                scope.launch {
-                                    var imgUrl: String? = imageUrl
-                                    if (imageBytes != null) {
-                                        val name =
-                                            List(10) { ('a'..'z').random() }.joinToString("")
-                                        uploadImage("menu-images/$name.png", imageBytes!!)
-                                        imgUrl = SupabaseClient.storage
-                                            .from("images")
-                                            .publicUrl("menu-images/$name.png")
-                                    }
+						UpdateButton(
+							onClick = {
+								scope.launch {
+									var imgUrl: String? = imageUrl
+									if (imageBytes != null) {
+										val name =
+											List(10) { ('a'..'z').random() }.joinToString(
+												""
+											)
+										uploadImage("menu-images/$name.png", imageBytes!!)
+										imgUrl = SupabaseClient.storage
+											.from("images")
+											.publicUrl("menu-images/$name.png")
+									}
 
-                                    try {
-                                        Promotion.updateById(
-                                            id = promotionId,
-                                            data = PromotionInsert(
-                                                branch_id = "BRA26011700",
-                                                start_date = formState.startDate,
-                                                end_date = formState.endDate,
-                                                days_of_week = formState.daysOfWeek,
-                                                rules = formState.rules,
-                                                is_active = formState.isActive,
-                                                urlImg = imgUrl
-                                            )
-                                        )
-                                        println("Updated")
-                                        navController.popBackStack()
-                                    } catch (e: Exception) {
-                                        println("${e.message}")
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
-	navigationIcon = {
-		IconButton(onClick = onBack) {
-			Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+									try {
+										Promotion.updateById(
+											id = promotionId,
+											data = PromotionInsert(
+												branch_id = "BRA26011700",
+												start_date = formState.startDate,
+												end_date = formState.endDate,
+												days_of_week = formState.daysOfWeek,
+												rules = formState.rules,
+												is_active = formState.isActive,
+												urlImg = imgUrl
+											)
+										)
+										println("Updated")
+										navController.popBackStack()
+									} catch (e: Exception) {
+										println("${e.message}")
+									}
+								}
+							}
+						)
+					}
+				}
+			}
 		}
-	},
-	title = { Text("Promotion Edit") },
-	modifier = Modifier.testTag("topBar")
-)
+	}
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -334,8 +320,8 @@ fun DateField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConditionSection(
-    rules: List<PromotionRule>,
-    onChange: (List<PromotionRule>) -> Unit,
+	rules: List<PromotionRule>,
+	onChange: (List<PromotionRule>) -> Unit,
 	categories: List<Category>,
 	items: List<BranchItem>,
 	tags: List<Tag>
@@ -366,8 +352,8 @@ fun ConditionSection(
 			Text(
 				"New Condition +",
 				Modifier
-                    .clickable {onChange(rules + PromotionRule())}
-                    .padding(4.dp)
+					.clickable { onChange(rules + PromotionRule()) }
+					.padding(4.dp)
 			)
 		}
 	}
@@ -377,81 +363,82 @@ fun ConditionSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ComboDropdown(
-    label: String,
-    items: List<BranchItem>,
-    combo: Map<String, Int>,
-    onChange: (Map<String, Int>) -> Unit
+	label: String,
+	items: List<BranchItem>,
+	combo: Map<String, Int>,
+	onChange: (Map<String, Int>) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+	var expanded by remember { mutableStateOf(false) }
 
-    val itemMap = remember(items) { items.associateBy { it.itemId } }
+	val itemMap = remember(items) { items.associateBy { it.itemId } }
 
-    val selectedSummary = when {
-        combo.isEmpty() -> ""
-        combo.size <= 2 -> combo.entries.joinToString {
-            val name = itemMap[it.key]?.itemName ?: ""
-            "$name x${it.value}"
-        }
-        else -> "${combo.size} items selected"
-    }
+	val selectedSummary = when {
+		combo.isEmpty() -> ""
+		combo.size <= 2 -> combo.entries.joinToString {
+			val name = itemMap[it.key]?.itemName ?: ""
+			"$name x${it.value}"
+		}
 
-    Box {
-        OutlinedTextField(
-            value = selectedSummary,
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = true },
-            label = { Text(label) },
-            placeholder = { Text("Select items") },
-            trailingIcon = {
-                IconButton(onClick = { expanded = !expanded }) {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                }
-            }
-        )
+		else -> "${combo.size} items selected"
+	}
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items.forEach { item ->
-                val qty = combo[item.itemId] ?: 0
+	Box {
+		OutlinedTextField(
+			value = selectedSummary,
+			onValueChange = {},
+			readOnly = true,
+			modifier = Modifier
+				.fillMaxWidth()
+				.clickable { expanded = true },
+			label = { Text(label) },
+			placeholder = { Text("Select items") },
+			trailingIcon = {
+				IconButton(onClick = { expanded = !expanded }) {
+					ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+				}
+			}
+		)
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(item.itemName, Modifier.weight(1f))
+		DropdownMenu(
+			expanded = expanded,
+			onDismissRequest = { expanded = false },
+			modifier = Modifier.fillMaxWidth()
+		) {
+			items.forEach { item ->
+				val qty = combo[item.itemId] ?: 0
 
-                    OutlinedTextField(
-                        value = if (qty == 0) "" else qty.toString(),
-                        onValueChange = { input ->
-                            val value = input.toIntOrNull() ?: 0
-                            val newMap = combo.toMutableMap()
+				Row(
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(horizontal = 12.dp, vertical = 6.dp),
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					Text(item.itemName, Modifier.weight(1f))
 
-                            if (value > 0) {
-                                newMap[item.itemId] = value
-                            } else {
-                                newMap.remove(item.itemId)
-                            }
+					OutlinedTextField(
+						value = if (qty == 0) "" else qty.toString(),
+						onValueChange = { input ->
+							val value = input.toIntOrNull() ?: 0
+							val newMap = combo.toMutableMap()
 
-                            onChange(newMap)
-                        },
-                        singleLine = true,
-                        modifier = Modifier.width(80.dp),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        )
-                    )
-                }
-            }
-        }
-    }
+							if (value > 0) {
+								newMap[item.itemId] = value
+							} else {
+								newMap.remove(item.itemId)
+							}
+
+							onChange(newMap)
+						},
+						singleLine = true,
+						modifier = Modifier.width(80.dp),
+						keyboardOptions = KeyboardOptions(
+							keyboardType = KeyboardType.Number
+						)
+					)
+				}
+			}
+		}
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -516,9 +503,13 @@ fun DaysOfWeekSection(
 
 			allDays.forEach { day ->
 				val existing = days.find { it.day == day }
-                var enabled by remember(days) { mutableStateOf(existing != null) }
-                var start by remember(days) { mutableStateOf(existing?.startTime ?: "09:00") }
-                var end by remember(days) { mutableStateOf(existing?.endTime ?: "22:00") }
+				var enabled by remember(days) { mutableStateOf(existing != null) }
+				var start by remember(days) {
+					mutableStateOf(
+						existing?.startTime ?: "09:00"
+					)
+				}
+				var end by remember(days) { mutableStateOf(existing?.endTime ?: "22:00") }
 
 				Column(
 					modifier = Modifier
@@ -574,132 +565,132 @@ fun DaysOfWeekSection(
 
 @Composable
 fun RuleItem(
-    rule: PromotionRule,
-    categories: List<Category>,
-    items: List<BranchItem>,
-    tags: List<Tag>,
-    onUpdate: (PromotionRule) -> Unit,
-    onDelete: () -> Unit
+	rule: PromotionRule,
+	categories: List<Category>,
+	items: List<BranchItem>,
+	tags: List<Tag>,
+	onUpdate: (PromotionRule) -> Unit,
+	onDelete: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
-            .padding(10.dp)
-    ) {
-        Text("Target", style = MaterialTheme.typography.labelMedium)
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(vertical = 6.dp)
+			.border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+			.padding(10.dp)
+	) {
+		Text("Target", style = MaterialTheme.typography.labelMedium)
 
-        SimpleDropdown(
-            label = "Target Type",
-            value = rule.targetType,
-            options = listOf("ITEM", "CATEGORY", "TAG", "COMBO"),
-            onChange = {
-                onUpdate(
-                    rule.copy(
-                        targetType = it,
-                        selectedIds = emptyList(),
-                        comboItems = emptyMap()
-                    )
-                )
-            }
-        )
+		SimpleDropdown(
+			label = "Target Type",
+			value = rule.targetType,
+			options = listOf("ITEM", "CATEGORY", "TAG", "COMBO"),
+			onChange = {
+				onUpdate(
+					rule.copy(
+						targetType = it,
+						selectedIds = emptyList(),
+						comboItems = emptyMap()
+					)
+				)
+			}
+		)
 
-        Spacer(Modifier.height(8.dp))
+		Spacer(Modifier.height(8.dp))
 
-        when (rule.targetType) {
-            "ITEM" -> MultiSelectDropdown(
-                label = "Items",
-                items = items.map { it.itemId to it.itemName },
-                selected = rule.selectedIds,
-                onChange = { onUpdate(rule.copy(selectedIds = it)) }
-            )
+		when (rule.targetType) {
+			"ITEM" -> MultiSelectDropdown(
+				label = "Items",
+				items = items.map { it.itemId to it.itemName },
+				selected = rule.selectedIds,
+				onChange = { onUpdate(rule.copy(selectedIds = it)) }
+			)
 
-            "CATEGORY" -> MultiSelectDropdown(
-                label = "Categories",
-                items = categories.map { it.categoryId to it.categoryName },
-                selected = rule.selectedIds,
-                onChange = { onUpdate(rule.copy(selectedIds = it)) }
-            )
+			"CATEGORY" -> MultiSelectDropdown(
+				label = "Categories",
+				items = categories.map { it.categoryId to it.categoryName },
+				selected = rule.selectedIds,
+				onChange = { onUpdate(rule.copy(selectedIds = it)) }
+			)
 
-            "TAG" -> MultiSelectDropdown(
-                label = "Tags",
-                items = tags.map { it.tagId to it.tagName },
-                selected = rule.selectedIds,
-                onChange = { onUpdate(rule.copy(selectedIds = it)) }
-            )
+			"TAG" -> MultiSelectDropdown(
+				label = "Tags",
+				items = tags.map { it.tagId to it.tagName },
+				selected = rule.selectedIds,
+				onChange = { onUpdate(rule.copy(selectedIds = it)) }
+			)
 
-            "COMBO" -> ComboDropdown(
-                label = "Combo Items",
-                items = items,
-                combo = rule.comboItems,
-                onChange = { onUpdate(rule.copy(comboItems = it)) }
-            )
-        }
+			"COMBO" -> ComboDropdown(
+				label = "Combo Items",
+				items = items,
+				combo = rule.comboItems,
+				onChange = { onUpdate(rule.copy(comboItems = it)) }
+			)
+		}
 
-        Spacer(Modifier.height(8.dp))
-        Text("Reward", style = MaterialTheme.typography.labelMedium)
+		Spacer(Modifier.height(8.dp))
+		Text("Reward", style = MaterialTheme.typography.labelMedium)
 
-        SimpleDropdown(
-            label = "Reward Type",
-            value = rule.rewardType,
-            options = listOf("GIFT", "FLAT_DISCOUNT", "PERCENTAGE_DISCOUNT"),
-            onChange = {
-                onUpdate(
-                    rule.copy(
-                        rewardType = it,
-                        rewardValue = "",
-                        rewardItems = emptyMap()
-                    )
-                )
-            }
-        )
+		SimpleDropdown(
+			label = "Reward Type",
+			value = rule.rewardType,
+			options = listOf("GIFT", "FLAT_DISCOUNT", "PERCENTAGE_DISCOUNT"),
+			onChange = {
+				onUpdate(
+					rule.copy(
+						rewardType = it,
+						rewardValue = "",
+						rewardItems = emptyMap()
+					)
+				)
+			}
+		)
 
-        Spacer(Modifier.height(8.dp))
+		Spacer(Modifier.height(8.dp))
 
-        when (rule.rewardType) {
-            "FLAT_DISCOUNT", "PERCENTAGE_DISCOUNT" -> {
-                OutlinedTextField(
-                    value = rule.rewardValue,
-                    onValueChange = { onUpdate(rule.copy(rewardValue = it)) },
-                    label = {
-                        Text(
-                            if (rule.rewardType == "FLAT_DISCOUNT")
-                                "Amount"
-                            else
-                                "Percentage"
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+		when (rule.rewardType) {
+			"FLAT_DISCOUNT", "PERCENTAGE_DISCOUNT" -> {
+				OutlinedTextField(
+					value = rule.rewardValue,
+					onValueChange = { onUpdate(rule.copy(rewardValue = it)) },
+					label = {
+						Text(
+							if (rule.rewardType == "FLAT_DISCOUNT")
+								"Amount"
+							else
+								"Percentage"
+						)
+					},
+					modifier = Modifier.fillMaxWidth()
+				)
+			}
 
-            "GIFT" -> {
-                ComboDropdown(
-                    label = "Gift Items",
-                    items = items,
-                    combo = rule.rewardItems,
-                    onChange = { onUpdate(rule.copy(rewardItems = it)) }
-                )
-            }
-        }
-    }
+			"GIFT" -> {
+				ComboDropdown(
+					label = "Gift Items",
+					items = items,
+					combo = rule.rewardItems,
+					onChange = { onUpdate(rule.copy(rewardItems = it)) }
+				)
+			}
+		}
+	}
 }
 
 fun updateDays(
-    current: List<DaySchedule>,
-    day: String,
-    enabled: Boolean,
-    start: String,
-    end: String,
-    onChange: (List<DaySchedule>) -> Unit
+	current: List<DaySchedule>,
+	day: String,
+	enabled: Boolean,
+	start: String,
+	end: String,
+	onChange: (List<DaySchedule>) -> Unit
 ) {
-    val newList = current.toMutableList()
-    newList.removeAll { it.day == day }
+	val newList = current.toMutableList()
+	newList.removeAll { it.day == day }
 
-    if (enabled) newList.add(
-        DaySchedule(day, start, end)
-    )
+	if (enabled) newList.add(
+		DaySchedule(day, start, end)
+	)
 
-    onChange(newList)
+	onChange(newList)
 }
