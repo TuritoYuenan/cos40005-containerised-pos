@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.NotificationService
-import containerised.pos.RealtimeManager
+import containerised.pos.services.notificationService
+import containerised.pos.services.RealtimeManager
 import containerised.pos.components.ErrorView
 import containerised.pos.components.LoadingView
 import containerised.pos.models.Ingredient
@@ -188,7 +188,7 @@ private fun List<Ingredient>.onChange(action: PostgresAction.Update): List<Ingre
 	val areAllInBranch = listOf(newOne, oldOne).all { it.branchId == CURRENT_BRANCH }
 	val isRecentlyLowStock = newOne.isLowStock() && !oldOne.isLowStock()
 
-	if (areAllInBranch && isRecentlyLowStock) NotificationService.showNotification(
+	if (areAllInBranch && isRecentlyLowStock) notificationService.showNotification(
 		"Low Stock Alert",
 		"${newOne.ingredientName} is below minimum stock"
 	)

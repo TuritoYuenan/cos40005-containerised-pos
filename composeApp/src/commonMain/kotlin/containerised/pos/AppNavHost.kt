@@ -21,6 +21,9 @@ import containerised.pos.database.SupabaseClient
 import containerised.pos.models.Order
 import containerised.pos.models.UserRole.Companion.fetchUserPermission
 import containerised.pos.routes.StaffRoutes
+import containerised.pos.services.RealtimeManager
+import containerised.pos.services.notificationService
+import containerised.pos.services.realtimeServiceController
 import containerised.pos.views.*
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.realtime.PostgresAction
@@ -46,7 +49,7 @@ fun AppNavHost() {
 		val isLogin = currentRoute == "login"
 
 		LaunchedEffect(Unit) {
-			RealtimeServiceController.start()
+			realtimeServiceController.start()
 		}
 
 		LaunchedEffect(userPermissions) {
@@ -148,7 +151,7 @@ private fun PostgresAction.Insert.handle() {
 	val new = this.decodeRecord<Order>()
 	println("Insert data: $new")
 
-	NotificationService.showNotification(
+	notificationService.showNotification(
 		title = "New Order",
 		message = "Order #${new.orderNumber} received"
 	)
@@ -166,7 +169,7 @@ private fun PostgresAction.Update.handle() {
 	when {
 		isPtoF -> {
 			println("Order #${old.orderNumber} is done")
-			NotificationService.showNotification(
+			notificationService.showNotification(
 				"Order Updated",
 				"Order #${old.orderNumber} is done"
 			)
@@ -174,7 +177,7 @@ private fun PostgresAction.Update.handle() {
 
 		isPtoC -> {
 			println("Order #${old.orderNumber} is canceled")
-			NotificationService.showNotification(
+			notificationService.showNotification(
 				"Order Updated",
 				"Order #${old.orderNumber} is canceled"
 			)

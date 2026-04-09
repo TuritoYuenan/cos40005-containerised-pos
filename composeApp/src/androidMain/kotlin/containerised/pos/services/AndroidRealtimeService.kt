@@ -1,20 +1,20 @@
-package containerised.pos
+package containerised.pos.services
 
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import containerised.pos.database.ChangeType
 
-class AndroidOrderRealtimeService : Service() {
+class AndroidRealtimeService : Service() {
 	override fun onCreate() {
 		super.onCreate()
 
 		startForeground(
 			1,
-			NotificationService.createForegroundNotification(
+			AndroidNotificationService.createForegroundNotification(
 				this,
-				"Order Listener",
-				"Listening for new orders"
+				"Realtime Service",
+				"Listening for real-time updates..."
 			)
 		)
 

@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import containerised.pos.RealtimeManager
+import containerised.pos.services.RealtimeManager
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
 import io.github.jan.supabase.realtime.PostgresAction

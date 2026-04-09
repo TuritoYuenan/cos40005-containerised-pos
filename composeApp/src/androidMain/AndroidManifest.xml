@@ -24,7 +24,7 @@
         </activity>
 
 		<service
-			android:name=".AndroidOrderRealtimeService"
+			android:name=".services.AndroidRealtimeService"
 			android:foregroundServiceType="dataSync"
 			android:exported="false"/>
     </application>

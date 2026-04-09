@@ -1,40 +1,34 @@
 package containerised.pos
 
-import android.content.Context
+import android.Manifest.permission.POST_NOTIFICATIONS
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import containerised.pos.services.AndroidNotificationService
 
 class MainActivity : ComponentActivity() {
-	private val requestPermissionLauncher =
-		registerForActivityResult(
-			ActivityResultContracts.RequestPermission()
-		) { isGranted: Boolean ->
-			if (!isGranted) {
-				println("Notification permission denied")
-			}
-		}
+	private val requestPermissionLauncher = registerForActivityResult(
+		ActivityResultContracts.RequestPermission()
+	) { isGranted: Boolean ->
+		if (!isGranted) Log.i("NOTIF", "Notification permission denied")
+	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		enableEdgeToEdge()
 		super.onCreate(savedInstanceState)
-		AppContextHolder.context = applicationContext
+
+		AppGraph.init(applicationContext) // DI init
+
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-			requestPermissionLauncher.launch(
-				android.Manifest.permission.POST_NOTIFICATIONS
-			)
+			requestPermissionLauncher.launch(POST_NOTIFICATIONS)
 		}
-		NotificationService.initialize(this)
 
-		setContent {
-			AppNavHost()
-		}
+		AndroidNotificationService.initialize(this)
+
+		setContent { AppNavHost() }
 	}
-}
-
-object AppContextHolder {
-	lateinit var context: Context
 }

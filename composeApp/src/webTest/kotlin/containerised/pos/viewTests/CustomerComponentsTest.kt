@@ -7,8 +7,9 @@ import kotlin.test.Test
 import containerised.pos.components.*
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Order
+import kotlin.js.ExperimentalWasmJsInterop
 
-@OptIn(ExperimentalTestApi::class)
+@OptIn(ExperimentalTestApi::class, ExperimentalWasmJsInterop::class)
 class CustomerComponentsTest {
 	@Test
 	fun `test self checkout view displays correctly`() = runComposeUiTest {
