@@ -73,7 +73,7 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 		},
 		bottomBar = {
 			AnimatedVisibility(
-				!cartItems.isEmpty(),
+				cartItems.isNotEmpty(),
 				enter = slideInVertically(initialOffsetY = { it }),
 				exit = slideOutVertically(targetOffsetY = { it }),
 				label = "Cart Bottom Bar"

@@ -34,7 +34,7 @@ private data class EditPromotionFormState(
 	var startDate: String? = null,
 	var endDate: String? = null,
 	var isActive: Boolean = false,
-	var rules: List<PromotionRule> = emptyList(),
+	var rules: List<Promotion.Rule> = emptyList(),
 	var daysOfWeek: List<DaySchedule> = emptyList()
 )
 
@@ -104,10 +104,8 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 				val scope = rememberCoroutineScope()
 
 				Row(
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(12.dp),
-					horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
+					Modifier.fillMaxWidth().padding(12.dp),
+					Arrangement.spacedBy(10.dp, Alignment.End)
 				) {
 					if (promotionId == null) {
 
@@ -131,13 +129,13 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 										}
 
 										Promotion.insert(
-											PromotionInsert(
-												branch_id = "BRA26011700",
-												start_date = formState.startDate,
-												end_date = formState.endDate,
-												days_of_week = formState.daysOfWeek,
+											Promotion.Insertable(
+												branchID = "BRA26011700",
+												startDate = formState.startDate,
+												endDate = formState.endDate,
+												daysOfWeek = formState.daysOfWeek,
 												rules = formState.rules,
-												is_active = formState.isActive,
+												isActive = formState.isActive,
 												urlImg = imgUrl
 											)
 										)
@@ -186,13 +184,13 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 									try {
 										Promotion.updateById(
 											id = promotionId,
-											data = PromotionInsert(
-												branch_id = "BRA26011700",
-												start_date = formState.startDate,
-												end_date = formState.endDate,
-												days_of_week = formState.daysOfWeek,
+											data = Promotion.Insertable(
+												branchID = "BRA26011700",
+												startDate = formState.startDate,
+												endDate = formState.endDate,
+												daysOfWeek = formState.daysOfWeek,
 												rules = formState.rules,
-												is_active = formState.isActive,
+												isActive = formState.isActive,
 												urlImg = imgUrl
 											)
 										)
@@ -320,8 +318,8 @@ fun DateField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConditionSection(
-	rules: List<PromotionRule>,
-	onChange: (List<PromotionRule>) -> Unit,
+	rules: List<Promotion.Rule>,
+	onChange: (List<Promotion.Rule>) -> Unit,
 	categories: List<Category>,
 	items: List<BranchItem>,
 	tags: List<Tag>
@@ -352,7 +350,7 @@ fun ConditionSection(
 			Text(
 				"New Condition +",
 				Modifier
-					.clickable { onChange(rules + PromotionRule()) }
+					.clickable { onChange(rules + Promotion.Rule()) }
 					.padding(4.dp)
 			)
 		}
@@ -565,11 +563,11 @@ fun DaysOfWeekSection(
 
 @Composable
 fun RuleItem(
-	rule: PromotionRule,
+	rule: Promotion.Rule,
 	categories: List<Category>,
 	items: List<BranchItem>,
 	tags: List<Tag>,
-	onUpdate: (PromotionRule) -> Unit,
+	onUpdate: (Promotion.Rule) -> Unit,
 	onDelete: () -> Unit
 ) {
 	Column(

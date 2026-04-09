@@ -54,7 +54,7 @@ fun KitchenDisplayPage() {
 				is PostgresAction.Insert -> orders = orders.onChange(action)
 				is PostgresAction.Update -> orders = orders.onChange(action)
 				is PostgresAction.Delete -> orders = orders.onChange(action)
-				is PostgresAction.Select -> {}
+				is PostgresAction.Select -> { /* Nothing */ }
 			}
 		}
 	}
@@ -90,7 +90,7 @@ private fun Order.ItemCard(
 						orderItems.groupBy { it.branchItem?.category?.categoryName ?: "" }
 				}
 
-				else -> {}
+				else -> { /* Nothing */ }
 			}
 		}
 	}
