@@ -1,4 +1,4 @@
-name: Release desktop/mobile app versions for staff
+name: Release Staff-facing applications to GitHub Releases
 
 on:
   release:

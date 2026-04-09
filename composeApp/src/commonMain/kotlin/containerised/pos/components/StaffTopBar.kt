@@ -23,7 +23,8 @@ fun StaffTopBar(navController: NavController, currentRoute: String) {
 		currentRoute.startsWith("ingredient-detail") -> IngredientDetailTopBar(navController)
 		currentRoute.startsWith("stock-history") -> StockHistoryTopBar(navController)
 		currentRoute.startsWith("sales-report") -> SalesReportTopBar(navController)
-		currentRoute.startsWith("employee-management") -> {}
+		currentRoute.startsWith("employee-profile") -> {}
+		currentRoute.startsWith("setting") -> GenericStaffTopBar()
 		else -> GenericStaffTopBar(navController)
 	}
 }
@@ -36,6 +37,12 @@ private fun GenericStaffTopBar(navController: NavController) {
 		actions = {
 			SettingsButton { navController.navigate(StaffRoutes.Setting) }
 		}
+	)
+}
+@Composable
+private fun GenericStaffTopBar() {
+	CenterAlignedTopAppBar(
+		title = { Text(stringResource(Res.string.app_name)) },
 	)
 }
 

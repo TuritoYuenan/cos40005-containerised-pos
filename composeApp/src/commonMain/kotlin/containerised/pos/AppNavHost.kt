@@ -1,5 +1,6 @@
 package containerised.pos
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -49,12 +50,17 @@ fun AppNavHost() {
 
 		LaunchedEffect(Unit) {
 			realtimeServiceController.start()
-			RealtimeManager.forOrders.events.collect { action ->
-				when (action) {
-					is PostgresAction.Insert -> action.handle()
-					is PostgresAction.Update -> action.handle()
-					is PostgresAction.Delete -> action.handle()
-					is PostgresAction.Select -> Unit
+		}
+
+		LaunchedEffect(userPermissions) {
+			if (userPermissions.contains("Kitchen")) {
+				RealtimeManager.forOrders.events.collect { action ->
+					when (action) {
+						is PostgresAction.Insert -> action.handle()
+						is PostgresAction.Update -> action.handle()
+						is PostgresAction.Delete -> action.handle()
+						is PostgresAction.Select -> Unit
+					}
 				}
 			}
 		}
@@ -99,7 +105,7 @@ fun AppNavHost() {
 				StaffRoutes.Loading,
 				Modifier.padding(paddingValues)
 			) {
-				composable<StaffRoutes.Loading> { LoadingView() }
+				composable<StaffRoutes.Loading> { LoadingView(Modifier.fillMaxSize()) }
 				composable<StaffRoutes.Login> { LoginPage() }
 				composable<StaffRoutes.MenuEdit> { MenuEditPage(navController) }
 				composable<StaffRoutes.EditItem> { backStackEntry ->
@@ -129,6 +135,10 @@ fun AppNavHost() {
 				composable<StaffRoutes.SalesReport> { backStackEntry ->
 					val args = backStackEntry.toRoute<StaffRoutes.SalesReport>()
 					SalesReportPage(args)
+				}
+				composable<StaffRoutes.EmployeeProfile> { backStackEntry ->
+					val args = backStackEntry.toRoute<StaffRoutes.EmployeeProfile>()
+					EmployeeProfilePage(navController, args.argUserId)
 				}
 				composable<StaffRoutes.EmployeeManagement> { EmployeeManagementPage(navController) }
 				composable<StaffRoutes.Setting> { SettingPage() }
