@@ -90,5 +90,6 @@ data class PromotionInsert(
     val days_of_week: List<DaySchedule> = emptyList(),
     val rules: List<PromotionRule> = emptyList(),
     val is_active: Boolean,
+    @SerialName("url_img")
 	val urlImg: String? = null,
 )

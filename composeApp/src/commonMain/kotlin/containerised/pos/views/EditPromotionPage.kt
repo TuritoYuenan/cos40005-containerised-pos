@@ -81,138 +81,136 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 		}
 	}
 
-	LazyColumn {
-		item {
-			TopBar { navController.popBackStack() }
-		}
-		item {
-			ImagePickerCard(
-				imageBytes = imageBytes,
-				imageUrl = imageUrl,
-				onImageSelected = { bytes ->
-					imageBytes = bytes
-				}
-			)
-		}
-		item {
-			FormSection(formState) { formState = it }
-		}
-		item {
-			DaysOfWeekSection(formState.daysOfWeek) { newDays ->
-				formState = formState.copy(daysOfWeek = newDays)
-			}
-		}
-		item {
-			ConditionSection(
-				rules = formState.rules,
-				onChange = { newRules ->
-					formState = formState.copy(rules = newRules)
-				},
-				categories = categories,
-				items = items,
-				tags = tags
-			)
-		}
-        item {
-            val scope = rememberCoroutineScope()
+    Column{
+        TopBar { navController.popBackStack() }
+        ImagePickerCard(
+            imageBytes = imageBytes,
+            imageUrl = imageUrl,
+            onImageSelected = { bytes ->
+                imageBytes = bytes
+            }
+        )
+        LazyColumn {
+            item {
+                FormSection(formState) { formState = it }
+            }
+            item {
+                DaysOfWeekSection(formState.daysOfWeek) { newDays ->
+                    formState = formState.copy(daysOfWeek = newDays)
+                }
+            }
+            item {
+                ConditionSection(
+                    rules = formState.rules,
+                    onChange = { newRules ->
+                        formState = formState.copy(rules = newRules)
+                    },
+                    categories = categories,
+                    items = items,
+                    tags = tags
+                )
+            }
+            item {
+                val scope = rememberCoroutineScope()
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
-            ) {
-                if (promotionId == null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
+                ) {
+                    if (promotionId == null) {
 
-                    CreateButton(
-                        onClick = {
-                            scope.launch {
-                                try {
-									var imgUrl: String? = null
-									if (imageBytes != null) {
-										val name = List(10) { ('a'..'z').random() }.joinToString("")
-										uploadImage("menu-images/$name.png", imageBytes!!)
-										imgUrl = SupabaseClient.storage
-											.from("images")
-											.publicUrl("menu-images/$name.png")
-									}
+                        CreateButton(
+                            onClick = {
+                                scope.launch {
+                                    try {
+                                        var imgUrl: String? = null
+                                        if (imageBytes != null) {
+                                            val name = List(10) { ('a'..'z').random() }.joinToString("")
+                                            uploadImage("menu-images/$name.png", imageBytes!!)
+                                            imgUrl = SupabaseClient.storage
+                                                .from("images")
+                                                .publicUrl("menu-images/$name.png")
+                                        }
 
-                                    Promotion.insert(
-                                        PromotionInsert(
-                                            branch_id = "BRA26011700",
-                                            start_date = formState.startDate,
-                                            end_date = formState.endDate,
-                                            days_of_week = formState.daysOfWeek,
-                                            rules = formState.rules,
-                                            is_active = formState.isActive,
-											urlImg = imgUrl
+                                        Promotion.insert(
+                                            PromotionInsert(
+                                                branch_id = "BRA26011700",
+                                                start_date = formState.startDate,
+                                                end_date = formState.endDate,
+                                                days_of_week = formState.daysOfWeek,
+                                                rules = formState.rules,
+                                                is_active = formState.isActive,
+                                                urlImg = imgUrl
+                                            )
                                         )
-                                    )
-                                    println("Created")
-                                    navController.popBackStack()
-                                } catch (e: Exception) {
-                                    println("${e.message}")
+                                        println("Created")
+                                        navController.popBackStack()
+                                    } catch (e: Exception) {
+                                        println("${e.message}")
+                                    }
                                 }
                             }
-                        }
-                    )
+                        )
 
-                } else {
+                    } else {
 
-                    DeleteButton(
-                        onClick = {
-                            scope.launch {
-                                try {
-                                    Promotion.deleteById(promotionId)
-                                    println("🗑 Deleted")
-                                    navController.popBackStack()
-                                } catch (e: Exception) {
-                                    println("${e.message}")
+                        DeleteButton(
+                            onClick = {
+                                scope.launch {
+                                    try {
+                                        Promotion.deleteById(promotionId)
+                                        println("🗑 Deleted")
+                                        navController.popBackStack()
+                                    } catch (e: Exception) {
+                                        println("${e.message}")
+                                    }
                                 }
                             }
-                        }
-                    )
+                        )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                    UpdateButton(
-                        onClick = {
-                            scope.launch {
-								var imgUrl: String? = imageUrl
-								if (imageBytes != null) {
-									val name =
-										List(10) { ('a'..'z').random() }.joinToString("")
-									uploadImage("menu-images/$name.png", imageBytes!!)
-									imgUrl = SupabaseClient.storage
-										.from("images")
-										.publicUrl("menu-images/$name.png")
-								}
+                        UpdateButton(
+                            onClick = {
+                                scope.launch {
+                                    var imgUrl: String? = imageUrl
+                                    if (imageBytes != null) {
+                                        val name =
+                                            List(10) { ('a'..'z').random() }.joinToString("")
+                                        uploadImage("menu-images/$name.png", imageBytes!!)
+                                        imgUrl = SupabaseClient.storage
+                                            .from("images")
+                                            .publicUrl("menu-images/$name.png")
+                                    }
 
-                                try {
-                                    Promotion.updateById(
-                                        id = promotionId,
-                                        data = PromotionInsert(
-                                            branch_id = "BRA26011700",
-                                            start_date = formState.startDate,
-                                            end_date = formState.endDate,
-                                            days_of_week = formState.daysOfWeek,
-                                            rules = formState.rules,
-                                            is_active = formState.isActive,
-											urlImg = imgUrl
+                                    try {
+                                        Promotion.updateById(
+                                            id = promotionId,
+                                            data = PromotionInsert(
+                                                branch_id = "BRA26011700",
+                                                start_date = formState.startDate,
+                                                end_date = formState.endDate,
+                                                days_of_week = formState.daysOfWeek,
+                                                rules = formState.rules,
+                                                is_active = formState.isActive,
+                                                urlImg = imgUrl
+                                            )
                                         )
-                                    )
-                                    println("Updated")
-                                    navController.popBackStack()
-                                } catch (e: Exception) {
-                                    println("${e.message}")
+                                        println("Updated")
+                                        navController.popBackStack()
+                                    } catch (e: Exception) {
+                                        println("${e.message}")
+                                    }
                                 }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
-	}
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
