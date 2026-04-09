@@ -4,7 +4,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 actual fun rememberImagePickerUri(onResult: (Any?) -> Unit): () -> Unit {
@@ -23,7 +22,7 @@ actual fun rememberImagePickerUri(onResult: (Any?) -> Unit): () -> Unit {
 
 
 actual fun rememberImagePickerBytes(uri: Any?): ByteArray? {
-	val context = AppContextHolder.context
+	val context = AppGraph.appContext
 	val androidUri = uri as? android.net.Uri
 
 	return androidUri?.let {

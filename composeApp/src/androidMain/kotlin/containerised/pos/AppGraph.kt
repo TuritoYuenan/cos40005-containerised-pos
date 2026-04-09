@@ -5,7 +5,7 @@ import containerised.pos.services.AndroidRealtimeServiceController
 import containerised.pos.services.RealtimeServiceController
 
 object AppGraph {
-    private lateinit var appContext: Context
+    lateinit var appContext: Context
 
     fun init(context: Context) {
         appContext = context.applicationContext
