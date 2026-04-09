@@ -1,23 +1,15 @@
 package containerised.pos.components
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
@@ -26,7 +18,7 @@ import androidx.compose.ui.unit.dp
 fun SettingsButton(
 	modifier: Modifier = Modifier.padding(start = 8.dp),
 	onClick: () -> Unit = {}
-) = IconButton({ onClick() }, modifier) {
+) = IconButton({ onClick() }, modifier.testTag("settingsButton")) {
 	Icon(Icons.Default.Settings, "Settings")
 }
 
@@ -35,7 +27,7 @@ fun SettingsButton(
 fun BackButton(
 	modifier: Modifier = Modifier.padding(start = 8.dp),
 	onClick: () -> Unit = {}
-) = IconButton({ onClick() }, modifier) {
+) = IconButton({ onClick() }, modifier.testTag("backButton")) {
 	Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
 }
 
@@ -44,7 +36,7 @@ fun BackButton(
 fun HomeButton(
 	modifier: Modifier = Modifier.padding(start = 8.dp),
 	onClick: () -> Unit = {}
-) = IconButton({ onClick() }, modifier) {
+) = IconButton({ onClick() }, modifier.testTag("homeButton")) {
 	Icon(Icons.Default.Home, "Home")
 }
 
@@ -53,7 +45,10 @@ fun HomeButton(
 fun AddToCartButton(
 	modifier: Modifier = Modifier,
 	onClick: () -> Unit = {},
-) = FilledTonalIconButton(onClick, modifier.padding(8.dp).size(32.dp)) {
+) = FilledTonalIconButton(
+	onClick,
+	modifier.padding(8.dp).size(32.dp).testTag("addToCartButton")
+) {
 	Icon(Icons.Filled.Add, "Add to cart", Modifier.size(18.dp))
 }
 
@@ -66,55 +61,52 @@ fun CartFAB(
 	{ Text("View Cart") },
 	{ Icon(Icons.Filled.ShoppingCart, "Cart") },
 	onClick,
-	modifier,
+	modifier.testTag("cartFab"),
 	containerColor = MaterialTheme.colorScheme.primary,
 	contentColor = MaterialTheme.colorScheme.onPrimary,
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateButton(onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier.height(40.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White
-        )
-    ) {
-        Icon(Icons.Filled.Check, contentDescription = "Create")
-        Spacer(Modifier.width(6.dp))
-        Text("Create")
-    }
+fun CreateButton(onClick: () -> Unit) = Button(
+	onClick,
+	Modifier.height(40.dp).testTag("createButton"),
+	shape = RoundedCornerShape(8.dp),
+	colors = ButtonDefaults.buttonColors(
+		containerColor = MaterialTheme.colorScheme.primary,
+		contentColor = Color.White
+	)
+) {
+	Icon(Icons.Filled.Check, contentDescription = "Create")
+	Spacer(Modifier.width(6.dp))
+	Text("Create")
 }
 
 @Composable
 fun UpdateButton(onClick: () -> Unit) = Button(
-    onClick = onClick,
-    modifier = Modifier.height(40.dp),
-    shape = RoundedCornerShape(8.dp),
-    colors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = Color.White
-    )
+	onClick = onClick,
+	modifier = Modifier.height(40.dp).testTag("updateButton"),
+	shape = RoundedCornerShape(8.dp),
+	colors = ButtonDefaults.buttonColors(
+		containerColor = MaterialTheme.colorScheme.primary,
+		contentColor = Color.White
+	)
 ) {
-    Icon(Icons.Filled.Check, "Update")
-    Spacer(Modifier.width(6.dp))
-    Text("Update")
+	Icon(Icons.Filled.Check, "Update")
+	Spacer(Modifier.width(6.dp))
+	Text("Update")
 }
 
 @Composable
 fun DeleteButton(onClick: () -> Unit) = Button(
-    onClick = onClick,
-    shape = RoundedCornerShape(8.dp),
-    colors = ButtonDefaults.buttonColors(
-        containerColor = MaterialTheme.colorScheme.error,
-        contentColor = Color.White
-    ),
-    modifier = Modifier.height(40.dp)
+	onClick = onClick,
+	shape = RoundedCornerShape(8.dp),
+	colors = ButtonDefaults.buttonColors(
+		containerColor = MaterialTheme.colorScheme.error,
+		contentColor = Color.White
+	),
+	modifier = Modifier.height(40.dp).testTag("deleteButton")
 ) {
-    Icon(Icons.Filled.Delete, "Delete")
-    Spacer(Modifier.width(6.dp))
-    Text("Delete")
+	Icon(Icons.Filled.Delete, "Delete")
+	Spacer(Modifier.width(6.dp))
+	Text("Delete")
 }

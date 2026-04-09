@@ -1,6 +1,5 @@
-package containerised.pos.modelTests
+package containerised.pos.models
 
-import containerised.pos.models.Order
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -75,5 +74,29 @@ class OrderTest {
 			true, isFCtoP,
 			"Expected change FINISHED/CANCELED -> PREPARING"
 		)
+	}
+
+	@Test
+	fun `test order status unchanged has no inferred transition`() {
+		val oldOrder = Order.MOCK.copy(status = Order.Status.PREPARING)
+		val newOrder = oldOrder.copy(status = Order.Status.PREPARING)
+
+		val (isPtoF, isPtoC, isFCtoP) = newOrder.inferStatusChange(oldOrder)
+
+		assertEquals(false, isPtoF)
+		assertEquals(false, isPtoC)
+		assertEquals(false, isFCtoP)
+	}
+
+	@Test
+	fun `test order cancelled to preparing is inferred as FC to P`() {
+		val oldOrder = Order.MOCK.copy(status = Order.Status.CANCELED)
+		val newOrder = oldOrder.copy(status = Order.Status.PREPARING)
+
+		val (isPtoF, isPtoC, isFCtoP) = newOrder.inferStatusChange(oldOrder)
+
+		assertEquals(false, isPtoF)
+		assertEquals(false, isPtoC)
+		assertEquals(true, isFCtoP)
 	}
 }

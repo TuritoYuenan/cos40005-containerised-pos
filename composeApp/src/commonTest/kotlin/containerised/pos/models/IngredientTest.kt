@@ -1,6 +1,5 @@
-package containerised.pos.modelTests
+package containerised.pos.models
 
-import containerised.pos.models.Ingredient
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
