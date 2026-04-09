@@ -4,14 +4,7 @@ import containerised.pos.database.SupabaseClient
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Serializable
-enum class DayOfWeek {
-	MON, TUE, WED, THU, FRI, SAT, SUN
-}
-val days = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
-val hours = (6..21).map { hour ->
-	"${hour.toString().padStart(2, '0')}:00"
-}
+
 
 @Serializable
 data class EmployeeShift(

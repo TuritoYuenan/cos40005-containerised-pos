@@ -58,6 +58,9 @@ object StaffRoutes {
 	@Serializable @SerialName("employee-management")
 	object EmployeeManagement
 
+	@Serializable @SerialName("employee-profile")
+	data class EmployeeProfile(val argUserId: String? = null)
+
 	@Serializable @SerialName("setting")
 	object Setting
 }

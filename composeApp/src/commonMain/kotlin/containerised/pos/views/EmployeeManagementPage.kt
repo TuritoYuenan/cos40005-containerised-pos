@@ -1,249 +1,166 @@
 package containerised.pos.views
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Mail
-import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import containerised.pos.components.SettingsButton
-import containerised.pos.database.SupabaseClient
-import containerised.pos.models.DayOfWeek
-import containerised.pos.models.EmployeeShift
-import containerised.pos.models.EmployeeShift.Companion.isInShift
+import containerised.pos.components.ErrorView
+import containerised.pos.components.LoadingView
+import containerised.pos.models.User.Companion.getStatusFromShift
+import containerised.pos.models.User.Companion.updateLastLogin
+import containerised.pos.models.User.Companion.updateLastLogout
+import containerised.pos.models.User.EmployeeStatus
 import containerised.pos.models.UserRole
-import containerised.pos.models.days
-import containerised.pos.models.hours
 import containerised.pos.routes.StaffRoutes
+import kotlinx.coroutines.launch
 
-
+private const val CURRENT_BRANCH = "BRA26011700"
 @Composable
 fun EmployeeManagementPage(navController: NavController) {
-	val scope = rememberCoroutineScope()
-	val userId = SupabaseClient.auth.currentUserOrNull()?.id
-	var userRole by remember { mutableStateOf<UserRole?>(null) }
-	var shifts by remember { mutableStateOf<List<EmployeeShift>>(emptyList()) }
+	var userRoles by remember { mutableStateOf<List<UserRole>>(emptyList()) }
+	var searchQuery by remember { mutableStateOf("") }
+	var error by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		try {
-			userRole = UserRole.fetchAndJoin(userId?: "")
-			shifts = EmployeeShift.fetchById(userId?: "")
+			userRoles = UserRole.fetchAndJoinByBranch(CURRENT_BRANCH)
 		} catch (e: Exception) {
 			val error = e.message
 			println("Error: $error")
 		}
 	}
+	val filteredUserRoles = remember(userRoles, searchQuery) {
+		if (searchQuery.isBlank()) {
+			userRoles
+		} else {
+			userRoles.filter {
+				val matchesName = it.user?.fullName?.contains(searchQuery, true)
+				val matchesRole = it.role.roleName.contains(searchQuery, true)
+				matchesName?.or(matchesRole) ?: false
+			}
+		}
+	}
 
-	LazyColumn(
-		verticalArrangement = Arrangement.spacedBy(12.dp)
-	){
-		item {
-			userRole?.EmployeeCard(navController)
-		}
-		item{
-			userRole?.DetailCard()
-		}
-		item{
-			shifts.Timetable()
+	Column(Modifier.fillMaxSize()) {
+		// Search bar
+		OutlinedTextField(
+			value = searchQuery,
+			onValueChange = { searchQuery = it },
+			modifier = Modifier.fillMaxWidth().padding(16.dp),
+			placeholder = { Text("Search items by name or role...") },
+			leadingIcon = { Icon(Icons.Filled.Search, "Search") },
+			singleLine = true
+		)
+
+		if (error != null) return ErrorView(
+			error ?: "Unknown error",
+			Modifier.fillMaxSize()
+		)
+
+		LazyColumn {
+			items(filteredUserRoles) { userRole ->
+				userRole.EmployeeCard(navController)
+			}
 		}
 	}
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserRole.EmployeeCard(navController: NavController){
-	TopAppBar(
-
-		title = {
-			Text(
-				text = user?.fullName ?: "",
-				style = MaterialTheme.typography.titleLarge,
-			)
-		},
-		actions = {
-			SettingsButton { navController.navigate(StaffRoutes.Setting) }
-		}
-
-	)
-}
-
-@Composable
-fun UserRole.DetailCard(){
-	OutlinedCard(
+	Card(
 		Modifier
 			.fillMaxWidth()
-			.padding(12.dp, 6.dp),
-		) {
+			.background(MaterialTheme.colorScheme.onPrimary)
+			.clip(RoundedCornerShape(8.dp))
+			.padding(12.dp, 6.dp)
+			.clickable { navController.navigate(StaffRoutes.EmployeeProfile(userId)) },
+		elevation = CardDefaults.cardElevation(
+			defaultElevation = 12.dp
+		)
+	){
 		Row(
 			Modifier
 				.fillMaxWidth()
+				.height(69.dp)
 				.padding(12.dp, 6.dp),
-		) {
-			Column(
-				modifier = Modifier.weight(1f)
-			) {
-				Text("DEPARTMENT", style = MaterialTheme.typography.bodyMedium)
-				Text(role.roleName, style = MaterialTheme.typography.titleMedium)
+			horizontalArrangement = Arrangement.SpaceBetween,
+			verticalAlignment = Alignment.CenterVertically
+		){
+			Column(){
+				Text(user?.fullName ?: "", style = MaterialTheme.typography.titleMedium)
+				Text(role.roleName, style = MaterialTheme.typography.bodyMedium)
 			}
-
-			Column(
-				modifier = Modifier.weight(1f)
-			) {
-				Text("STATUS", style = MaterialTheme.typography.bodyMedium)
-
-				Row(verticalAlignment = Alignment.CenterVertically) {
-					val isActive = user?.isActive == true
-					Box(
-						modifier = Modifier
-							.size(10.dp)
-							.background(
-								color = if (isActive) Color(0xFF4CAF50) else Color(0xFFF44336),
-								shape = CircleShape
-							)
-					)
-
-					Spacer(modifier = Modifier.width(6.dp))
-
-					Text(
-						text = if (isActive) "Active" else "Inactive",
-						style = MaterialTheme.typography.titleMedium
-					)
-				}
-			}
+			StatusBox()
 		}
 	}
-	OutlinedCard(
-		Modifier
-			.fillMaxWidth()
-			.padding(12.dp, 6.dp),
-		) {
-		Column(
-			Modifier
-				.fillMaxWidth()
-				.padding(12.dp, 6.dp),
-			verticalArrangement = Arrangement.spacedBy(8.dp)
-		) {
-			Row() {
-				Icon(Icons.Filled.Mail, "Mail")
-				Column() {
-					Text("EMAIL", style = MaterialTheme.typography.bodyMedium)
-					Text(
-						user?.email ?: "null",
-						style = MaterialTheme.typography.bodyMedium
+}
+@Composable
+fun UserRole.StatusBox(){
+	val scope = rememberCoroutineScope()
+	var expanded by remember { mutableStateOf(false) }
+	var status by remember { mutableStateOf<EmployeeStatus>(getStatusFromShift(user?.shift ?: emptyMap())) }
+	Box(
+		modifier = Modifier
+			.clickable { expanded = !expanded }
+	) {
+		Text(
+			text = status.toString(),
+			style = MaterialTheme.typography.titleMedium,
+			modifier = Modifier
+				.background(getStatusColor(status), RoundedCornerShape(8.dp))
+				.padding(8.dp),
+		)
+		if (status == EmployeeStatus.ACTIVE || status == EmployeeStatus.INACTIVE) {
+			DropdownMenu(
+				expanded = expanded,
+				onDismissRequest = { expanded = false }
+			) {
+				if (status == EmployeeStatus.INACTIVE) {
+					DropdownMenuItem(
+						text = { Text(EmployeeStatus.ACTIVE.toString()) },
+						onClick = {
+							status = EmployeeStatus.ACTIVE
+							expanded = false
+							scope.launch {
+								updateLastLogin(userId)
+							}
+						}
 					)
-				}
-			}
-			if (user?.phone != null) {
-				Row() {
-					Icon(Icons.Filled.Phone, "Phone")
-					Column() {
-						Text("PHONE", style = MaterialTheme.typography.bodyMedium)
-						Text(user.phone, style = MaterialTheme.typography.bodyMedium)
-					}
-				}
-			}
-			Row() {
-				Icon(Icons.Filled.AccessTime, "clock")
-				Column() {
-					Text("JOINED", style = MaterialTheme.typography.bodyMedium)
-					Text(
-						user?.createdAt?.take(10) ?: "null",
-						style = MaterialTheme.typography.bodyMedium
+				} else if (status == EmployeeStatus.ACTIVE) {
+					DropdownMenuItem(
+						text = { Text(EmployeeStatus.INACTIVE.toString()) },
+						onClick = {
+							status = EmployeeStatus.INACTIVE
+							expanded = false
+							scope.launch {
+								updateLastLogout(userId)
+							}
+						}
 					)
-
 				}
 			}
 		}
 	}
 }
 @Composable
-fun List<EmployeeShift>.Timetable() {
-	val borderColor = MaterialTheme.colorScheme.outline
-	val hourSpace = 40.dp
-	Column(
-		Modifier
-			.fillMaxWidth()
-			.padding(12.dp, 6.dp)
-			.border(1.dp, borderColor)
-			.drawBehind {
-				val hourWidthPx = hourSpace.toPx()
-				val remainingWidth = size.width - hourWidthPx
-				val dayColumnWidth = remainingWidth / days.size
-
-				repeat(days.size) { index ->
-					val x = hourWidthPx + (dayColumnWidth * index)
-
-					drawLine(
-						color = borderColor,
-						start = Offset(x, 0f),
-						end = Offset(x, size.height),
-						strokeWidth = 1.dp.toPx()
-					)
-				}
-			}
-	) {
-		// Header row (days)
-		Row {
-			Spacer(modifier = Modifier.width(hourSpace)) // space for hour labels
-
-			days.forEach { day ->
-				Box(
-					modifier = Modifier
-						.weight(1f)
-						.padding(2.dp),
-					contentAlignment = Alignment.Center
-				) {
-					Text(day, style = MaterialTheme.typography.bodyMedium)
-				}
-			}
-		}
-
-		// Time rows
-		hours.forEachIndexed { index, hour ->
-			Row {
-				// Hour label
-				Box(
-					modifier = Modifier
-						.width(hourSpace)
-						.padding(4.dp),
-					contentAlignment = Alignment.CenterStart
-				) {
-					Text(hour, style = MaterialTheme.typography.bodySmall)
-				}
-
-				// Cells
-				days.forEach { day ->
-					val hasShift = any { shift ->
-						shift.date.toString() == day && isInShift(index, shift)
-					}
-
-					Box(
-						modifier = Modifier
-							.weight(1f)
-							.height(24.dp)
-							.padding(2.dp)
-							.background(
-								if (hasShift) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-								else MaterialTheme.colorScheme.surfaceVariant
-							)
-					)
-				}
-			}
-		}
+fun getStatusColor(status: EmployeeStatus?): Color {
+	return when (status) {
+		EmployeeStatus.ACTIVE -> MaterialTheme.colorScheme.primary
+		EmployeeStatus.INACTIVE -> MaterialTheme.colorScheme.error
+		EmployeeStatus.BREAK -> Color(0xFFFFC107)
+		EmployeeStatus.OFF_DUTY -> Color.LightGray
+		else -> Color.Transparent
 	}
 }
