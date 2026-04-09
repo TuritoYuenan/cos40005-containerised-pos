@@ -7,11 +7,15 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -19,14 +23,23 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import containerised.pos.models.*
+import containerised.pos.services.downloadService
+import io.github.alexzhirkevich.qrose.ImageFormat
+import io.github.alexzhirkevich.qrose.options.QrLogoPadding
+import io.github.alexzhirkevich.qrose.options.QrLogoShape
+import io.github.alexzhirkevich.qrose.options.circle
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
+import io.github.alexzhirkevich.qrose.toByteArray
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import org.jetbrains.compose.resources.painterResource
+import posapplication.composeapp.generated.resources.Res
+import posapplication.composeapp.generated.resources.compose_multiplatform
 
 @Composable
-fun List<BranchItem>.ImageSlider(
-	modifier: Modifier = Modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)
-) = Card(modifier) {
+fun List<BranchItem>.ImageSlider(modifier: Modifier = Modifier) = Card(
+	modifier.widthIn(0.dp, 512.dp).aspectRatio(2f)
+) {
 	if (isEmpty()) return@Card Box(
 		Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
 		Alignment.Center,
@@ -154,13 +167,13 @@ fun BranchItem.TallCard(onAddToCart: () -> Unit = {}) {
 }
 
 @Composable
-fun PayAtCounterView(order: Order?) = Card(
+fun PayAtCounterView(order: Order?) = OutlinedCard(
 	Modifier.fillMaxWidth(),
 	elevation = CardDefaults.cardElevation(4.dp)
 ) {
 	Column(
-		Modifier.padding(24.dp),
-		Arrangement.spacedBy(16.dp),
+		Modifier.fillMaxWidth().padding(16.dp),
+		Arrangement.spacedBy(8.dp),
 		Alignment.CenterHorizontally,
 	) {
 		Text(
@@ -178,11 +191,26 @@ fun PayAtCounterView(order: Order?) = Card(
 }
 
 @Composable
-fun SelfCheckoutView(order: Order?) {
-	val amount = order?.finalAmount ?: 0
+fun SelfCheckoutView(order: Order?) = OutlinedCard(
+	Modifier.fillMaxWidth().testTag("selfCheckoutView"),
+	elevation = CardDefaults.cardElevation(4.dp)
+) {
+	if (order == null) return@OutlinedCard Box(
+		Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
+		Alignment.Center,
+	) {
+		LoadingView(Modifier.fillMaxWidth())
+		Text(
+			"Loading order details...",
+			color = MaterialTheme.colorScheme.onPrimary,
+			style = MaterialTheme.typography.titleMedium
+		)
+	}
+
+	val amount = order.finalAmount ?: 0
 	val currency = Currency.VND
 
-	val paymentCode = if (order == null || amount <= 0) "" else PaymentCode.Builder()
+	val paymentCode = PaymentCode.Builder()
 		.set(PaymentCode.PIMethod.DYNAMIC)
 		.set(PaymentCode.ServiceCode.TRANSFER_TO_ACCOUNT)
 		.setAccount(Bank.HDBank, "002704070021976")
@@ -191,38 +219,61 @@ fun SelfCheckoutView(order: Order?) {
 		.setPurpose("Payment for order ${order.orderId}")
 		.build()
 
-	val paymentQRCode = rememberQrCodePainter(paymentCode)
+	val logoPainter = painterResource(Res.drawable.compose_multiplatform)
+	val qrCodePainter = rememberQrCodePainter(paymentCode) {
+		logo {
+			painter = logoPainter
+			padding = QrLogoPadding.Natural(.1f)
+			shape = QrLogoShape.circle()
+			size = 0.2f
+		}
 
-	Card(
-		Modifier.fillMaxWidth().testTag("selfCheckoutView"),
-		elevation = CardDefaults.cardElevation(4.dp)
+		background {
+			fill = SolidColor(Color.White)
+		}
+	}
+
+	Column(
+		Modifier.fillMaxWidth().padding(16.dp),
+		Arrangement.spacedBy(8.dp),
+		Alignment.CenterHorizontally,
 	) {
-		Column(
-			Modifier.fillMaxWidth().padding(16.dp),
-			Arrangement.spacedBy(8.dp),
-			Alignment.CenterHorizontally,
-		) {
-			Text(
-				"Self-checkout",
-				Modifier.testTag("checkoutTitle"),
-				style = MaterialTheme.typography.titleMedium
-			)
-			Text(
-				"$amount $currency",
-				Modifier.testTag("orderAmount"),
-				color = MaterialTheme.colorScheme.primary,
-				style = MaterialTheme.typography.displaySmall,
-				fontWeight = FontWeight.Bold,
-			)
-			Text(
-				"We accept VietQR bank transfer",
-				Modifier.testTag("paymentMethodInfo"),
-				style = MaterialTheme.typography.titleMedium
-			)
+		Text(
+			"Self-checkout",
+			Modifier.testTag("checkoutTitle"),
+			style = MaterialTheme.typography.titleMedium
+		)
+		Text(
+			"$amount $currency",
+			Modifier.testTag("orderAmount"),
+			color = MaterialTheme.colorScheme.primary,
+			style = MaterialTheme.typography.displaySmall,
+			fontWeight = FontWeight.Bold,
+		)
+		Text(
+			"We accept VietQR bank transfer",
+			Modifier.testTag("paymentMethodInfo"),
+			style = MaterialTheme.typography.titleMedium
+		)
+
+		Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+
+		Card(colors = CardDefaults.cardColors(Color.White)) {
 			Image(
-				paymentQRCode, "Payment QR Code",
-				Modifier.testTag("paymentQRCode")
+				qrCodePainter, "Payment QR Code",
+				Modifier.padding(16.dp).testTag("paymentQRCode")
 			)
+		}
+
+		Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+
+		Button({
+			val qrCodeImage = qrCodePainter.toByteArray(1024, 1024, ImageFormat.PNG)
+			downloadService.download(qrCodeImage, "payment-qr-code.png", "image/png")
+		}) {
+			Icon(Icons.Default.Download, "Download")
+			Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+			Text("Download payment QR code")
 		}
 	}
 }

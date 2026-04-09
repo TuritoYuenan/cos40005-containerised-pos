@@ -3,21 +3,34 @@ package containerised.pos.routes
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-object CustomerRoutes {
-	@Serializable
-    @SerialName("order")
-	data class Order(val branchID: String = "Unknown", val tableID: String = "Unknown")
+/**
+ * Represent a route on the customer-facing web application.
+ * The app must always know where the customer is (which branch, which table).
+ */
+interface CustomerRoutes {
+	val branchID: String
+	val tableID: String
 
 	@Serializable
-    @SerialName("checkout")
-	data class Checkout(val branchID: String = "Unknown", val tableID: String = "Unknown")
+	@SerialName("order")
+	data class Order(
+		override val branchID: String = "Unknown",
+		override val tableID: String = "Unknown"
+	) : CustomerRoutes
 
 	@Serializable
-    @SerialName("payment")
+	@SerialName("checkout")
+	data class Checkout(
+		override val branchID: String = "Unknown",
+		override val tableID: String = "Unknown"
+	) : CustomerRoutes
+
+	@Serializable
+	@SerialName("payment")
 	data class Payment(
-		val branchID: String = "Unknown",
-		val tableID: String = "Unknown",
+		override val branchID: String = "Unknown",
+		override val tableID: String = "Unknown",
 		val orderID: String = "Unknown",
 		val isPayingAtCounter: Boolean = false
-	)
+	) : CustomerRoutes
 }

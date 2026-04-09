@@ -1,7 +1,8 @@
 package containerised.pos.views
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,13 +28,14 @@ fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payme
 		}
 	}
 
+	val route = CustomerRoutes.Order(args.branchID, args.tableID)
 	Scaffold(
-		topBar = { PaymentTopBar { navController.popBackStack(CustomerRoutes.Order, true) } },
-		contentWindowInsets = WindowInsets(16.dp)
+		topBar = { PaymentTopBar { navController.navigate(route) } },
+		contentWindowInsets = WindowInsets(16.dp, 16.dp, 16.dp, 16.dp),
 	) { paddingValues ->
 		Column(
 			Modifier.fillMaxSize().padding(paddingValues),
-			Arrangement.spacedBy(24.dp),
+			Arrangement.Center,
 			Alignment.CenterHorizontally,
 		) {
 			when {
@@ -46,11 +48,6 @@ fun CustomerPaymentPage(navController: NavController, args: CustomerRoutes.Payme
 				// Show QR code for self-checkout
 				else -> SelfCheckoutView(order)
 			}
-		}
-
-		val route = CustomerRoutes.Order(args.branchID, args.tableID)
-		Button({ navController.navigate(route) }, Modifier.fillMaxWidth()) {
-			Text("Back to Order Page")
 		}
 	}
 }

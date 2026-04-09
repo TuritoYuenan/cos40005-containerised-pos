@@ -84,6 +84,7 @@ kotlin {
 			implementation(libs.supabase.auth.kt)
 			implementation(libs.supabase.realtime.kt)
 			implementation(libs.supabase.storage.kt)
+			implementation(libs.supabase.functions.kt)
 
 //			SQLDelight
 			implementation(libs.kotlinx.coroutines.core)

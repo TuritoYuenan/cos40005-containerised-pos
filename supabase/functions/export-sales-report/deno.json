@@ -1,0 +1,16 @@
+{
+	"fmt": {
+		"indentWidth": 4,
+		"lineWidth": 90,
+		"newLineKind": "lf",
+		"semiColons": true,
+		"singleQuote": true,
+		"useBraces": "whenNotSingleLine",
+		"useTabs": true
+	},
+	"imports": {
+		"@supabase/functions-js": "jsr:@supabase/functions-js@^2",
+		"@supabase/supabase-js": "npm:@supabase/supabase-js@^2.101.1",
+		"pdf-lib": "npm:pdf-lib@^1.17.1"
+	}
+}

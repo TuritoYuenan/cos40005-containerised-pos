@@ -26,11 +26,11 @@ import containerised.pos.services.CartService
 import containerised.pos.services.CartService.getFinalAmount
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Checkout) {
+	var isPlacingOrder by remember { mutableStateOf(false) }
 	var checkoutItems by remember { mutableStateOf<List<CartService.Entry>>(emptyList()) }
 	val scope = rememberCoroutineScope()
 
@@ -49,13 +49,10 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 			return
 		}
 
-		// Generate a unique order ID client-side to avoid database function permission issues
-		val generatedOrderId = "ORD${Clock.System.now().toEpochMilliseconds()}"
-
+		isPlacingOrder = true
 		val order = Order.Insertable(
-			orderId = generatedOrderId,
 			orderNumber = "001",
-			orderType = "DINE_IN",
+			orderType = resolveOrderType(args.tableID),
 			tableNumber = args.tableID,
 			status = Order.Status.PREPARING,
 			branchId = args.branchID,
@@ -63,12 +60,14 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 			finalAmount = checkoutItems.getFinalAmount(taxAmount)
 		)
 
-		val orderItems = checkoutItems.map { entry -> entry.toOrderItem(generatedOrderId) }
-		val orderID = order.addWithItems(orderItems)
+		val orderID = order.add()
+		val orderItems = checkoutItems.map { entry -> entry.toOrderItem(orderID) }
+		orderItems.forEach { it.add() }
 
-//		After order creation, clear the cart
+//		After order is placed, clear the cart
 		CartService.clear()
 		refreshCart()
+		isPlacingOrder = false
 
 //		Navigate to payment page
 		val route = CustomerRoutes.Payment(args.branchID, args.tableID, orderID, isPayingAtCounter)
@@ -88,23 +87,34 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 
 	Scaffold(
 		topBar = { CheckoutTopBar(navController) },
-		contentWindowInsets = WindowInsets(16.dp)
+		contentWindowInsets = WindowInsets(16.dp, 16.dp, 16.dp, 16.dp)
 	) { paddingValues ->
 		Column(
 			Modifier.padding(paddingValues).verticalScroll(rememberScrollState()),
 			Arrangement.spacedBy(16.dp)
 		) {
-			CartView(args, checkoutItems) { refreshCart() }
+			CartView(args, checkoutItems, isPlacingOrder) { refreshCart() }
 			DiscountView()
-			PaymentButtonsView(total, scope, ::placeOrder)
+			PaymentButtonsView(total, scope, isPlacingOrder, ::placeOrder)
 		}
 	}
+}
+
+/**
+ * Resolves the order type based on the table ID.
+ * The average table has the ID `TAB########`.
+ */
+private fun resolveOrderType(tableID: String): String = when (tableID) {
+	"TAB00000000" -> "TAKEAWAY"
+	"TAB11111111" -> "DELIVERY"
+	else -> "DINE_IN"
 }
 
 @Composable
 private fun CartView(
 	args: CustomerRoutes.Checkout,
 	checkoutItems: List<CartService.Entry>,
+	isPlacingOrder: Boolean = false,
 	onRefresh: () -> Unit
 ) {
 	OutlinedCard(Modifier.fillMaxWidth()) {
@@ -119,6 +129,22 @@ private fun CartView(
 			}
 
 			checkoutItems.forEach { CheckoutMenuItem(it.branchItem, it.count, onRefresh) }
+		}
+
+		if (isPlacingOrder) Box(
+			Modifier
+				.fillMaxWidth()
+				.height(4.dp)
+				.background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)),
+			Alignment.Center
+		) {
+			CircularProgressIndicator(Modifier.size(24.dp))
+			Text(
+				"Placing order...",
+				color = MaterialTheme.colorScheme.surface,
+				style = MaterialTheme.typography.bodyMedium,
+				modifier = Modifier.padding(top = ButtonDefaults.IconSpacing)
+			)
 		}
 	}
 }
@@ -145,6 +171,7 @@ private fun DiscountView() {
 private fun PaymentButtonsView(
 	total: Double,
 	scope: CoroutineScope,
+	isPlacingOrder: Boolean = false,
 	onPlaceOrder: suspend (isPayingAtCounter: Boolean) -> Unit = { _ -> }
 ) {
 	Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -155,6 +182,7 @@ private fun PaymentButtonsView(
 		PaymentButton(
 			label = "Pay at Counter",
 			amount = formattedTotal,
+			enabled = !isPlacingOrder,
 			icon = Icons.Filled.Payment
 		) {
 			scope.launch { onPlaceOrder(true) }
@@ -162,8 +190,9 @@ private fun PaymentButtonsView(
 
 		// Bank Transfer Payment Button
 		PaymentButton(
-			label = "Self-checkout via VietQR",
+			label = "Self-checkout",
 			amount = formattedTotal,
+			enabled = !isPlacingOrder,
 			icon = Icons.Filled.AccountBalance
 		) {
 			scope.launch { onPlaceOrder(false) }
@@ -306,19 +335,30 @@ private fun SpecialNotesDialog(item: BranchItem, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun PaymentButton(label: String, amount: String, icon: ImageVector, onClick: () -> Unit) {
-	FilledTonalButton(
+private fun PaymentButton(
+	label: String,
+	amount: String,
+	icon: ImageVector,
+	enabled: Boolean = true,
+	onClick: () -> Unit
+) {
+	Button(
 		onClick,
 		Modifier.fillMaxWidth(),
-		shape = RoundedCornerShape(8.dp),
+		enabled,
+		shape = RoundedCornerShape(12.dp),
 	) {
 		Row(
-			Modifier.fillMaxWidth().padding(vertical = 4.dp),
-			Arrangement.spacedBy(8.dp),
-			Alignment.Top
+			Modifier.fillMaxWidth(),
+			verticalAlignment = Alignment.CenterVertically
 		) {
 			Icon(icon, label)
-			Column(Modifier.fillMaxWidth()) {
+			Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+			Row(
+				Modifier.fillMaxWidth(),
+				Arrangement.SpaceBetween,
+				Alignment.CenterVertically
+			) {
 				Text(label, style = MaterialTheme.typography.titleMedium)
 				Text(amount, style = MaterialTheme.typography.bodyMedium)
 			}
