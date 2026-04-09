@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.models.BranchItem
+import containerised.pos.models.Category
 import containerised.pos.models.Promotion
 import containerised.pos.models.Tag
 import containerised.pos.routes.StaffRoutes
@@ -23,17 +24,18 @@ import containerised.pos.routes.StaffRoutes
 @Composable
 fun MenuEditPage(navController: NavController) {
 	val branchId = "BRA26011700"
-	//Promotion Fetching
-
-	//Item Fetching
 	var items by remember { mutableStateOf<Map<String, List<BranchItem>>>(emptyMap()) }
 	var promotions by remember { mutableStateOf<List<Promotion>>(emptyList()) }
 	var tags by remember { mutableStateOf<List<Tag>>(emptyList()) }
+    var categories by remember { mutableStateOf<List<Category>>(emptyList())}
+
 	LaunchedEffect(Unit) {
 		try {
+            categories= Category.fetchAll()
+            val categoryMap = categories.associate { it.categoryId to it.categoryName }
 			items = BranchItem.fetchByBranch(branchId)
 				.sortedBy { it.itemId }
-				.groupBy { it.categoryId ?: "Uncategorized" }
+				.groupBy { item -> categoryMap[item.categoryId] ?: "Uncategorized" }
 			promotions = Promotion.fetchByBranch(branchId)
 			tags = Tag.fetchAll()
 		} catch (e: Exception) {
@@ -154,38 +156,80 @@ fun PromotionsTab(
 				.fillMaxWidth()
 				.padding(16.dp)
 		) {
-			items(promotions) { promotion ->
-				val backgroundColor = when (promotion.isActive) {
-					true -> MaterialTheme.colorScheme.primaryContainer
-					false -> MaterialTheme.colorScheme.outlineVariant
-				}
-				Box(
-					Modifier
-						.fillMaxWidth()
-						.padding(all = 4.dp)
-						.clip(RoundedCornerShape(4.dp))
-						.background(backgroundColor)
-				) {
-					Row {
-						Column(
-							Modifier
-								.weight(1f)
-								.padding(horizontal = 12.dp)
-						) {
-
-						}
-						IconButton(onClick = { onPromotionEdit(promotion) }) {
-							Icon(
-								Icons.Filled.Edit,
-								contentDescription = "Edit"
-							)
-						}
-
-					}
-				}
-			}
+            items(promotions) { promotion ->
+                PromotionRow(
+                    promotion = promotion,
+                    onEdit = { onPromotionEdit(promotion) }
+                )
+            }
 		}
 	}
+}
+
+@Composable
+fun PromotionRow(
+    promotion: Promotion,
+    onEdit: () -> Unit
+) {
+    val backgroundColor = if (promotion.isActive)
+        MaterialTheme.colorScheme.primaryContainer
+    else
+        MaterialTheme.colorScheme.outlineVariant
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+
+            // 🔹 Banner (FULL width again)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("🖼 Banner")
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // 🔹 Info + Edit row (like your original)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Start: ${promotion.startDate ?: "N/A"}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    Text(
+                        text = "End: ${promotion.endDate ?: "N/A"}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = "Edit Promotion"
+                    )
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -290,11 +334,11 @@ fun ItemsTab(
 		verticalArrangement = Arrangement.spacedBy(12.dp),
 		contentPadding = PaddingValues(16.dp)
 	) {
-		groupedItems.forEach { (categoryId, branchItems) ->
+		groupedItems.forEach { (category, branchItems) ->
 
 			item {
 				Text(
-					text = categoryId,
+					text = category,
 					style = MaterialTheme.typography.titleMedium,
 					modifier = Modifier.padding(vertical = 8.dp)
 				)
@@ -389,4 +433,10 @@ fun ItemCard(
 			}
 		}
 	}
+}
+
+@Composable
+fun Test()
+{
+
 }

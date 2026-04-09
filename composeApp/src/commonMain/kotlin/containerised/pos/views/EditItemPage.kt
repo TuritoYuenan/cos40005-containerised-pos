@@ -1,5 +1,7 @@
 package containerised.pos.views
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,17 +13,33 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import containerised.pos.components.BackButton
 import containerised.pos.components.menu_edit.MultiSelectDropdown
 import containerised.pos.components.menu_edit.SwitchField
 import containerised.pos.models.BranchItem
+import containerised.pos.models.BranchItemInsert
 import containerised.pos.models.Category
 import containerised.pos.models.ItemTag
 import containerised.pos.models.Tag
 import containerised.pos.routes.StaffRoutes
+import containerised.pos.components.CreateButton
+import containerised.pos.components.DeleteButton
+import containerised.pos.components.UpdateButton
+import containerised.pos.components.menu_edit.ImagePickerCard
+import containerised.pos.database.SupabaseClient
+import containerised.pos.database.SupabaseClient.uploadImage
+import containerised.pos.rememberImagePickerBytes
+import containerised.pos.rememberImagePickerUri
+import io.github.jan.supabase.storage.storage
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 private data class EditItemFormState(
@@ -44,16 +62,18 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 	var item by remember { mutableStateOf<BranchItem?>(null) }
 	var itemTags by remember { mutableStateOf(emptyList<ItemTag>()) }
 	var selectedTagIds by remember { mutableStateOf(setOf<String>()) }
-
+	var originalTagIds by remember { mutableStateOf(setOf<String>()) }
+	val branchId = "BRA26011700"
 	LaunchedEffect(Unit) {
 		try {
 			categories = Category.fetchAll()
 			tags = Tag.fetchAll()
-			println(tags)
 			if (itemId != null) {
 				item = BranchItem.fetchById(itemId)
 				itemTags = ItemTag.fetchByItemId(itemId)
-				selectedTagIds = itemTags.map { it.tagId }.toSet()
+				originalTagIds = itemTags.map { it.tagId }.toSet()
+				selectedTagIds = originalTagIds
+				imageUrl = item?.urlImg
 			}
 			item?.let {
 				formState = EditItemFormState(
@@ -71,7 +91,13 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 	LazyColumn {
 		item {
 			TopBar { navController.popBackStack() }
-			EditMenuImageSection(imageBytes, imageUrl) {}
+			ImagePickerCard(
+				imageBytes = imageBytes,
+				imageUrl = imageUrl,
+				onImageSelected = { bytes ->
+					imageBytes = bytes
+				}
+			)
 
 			FormSection(
 				formState = formState,
@@ -87,20 +113,80 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 				Arrangement.spacedBy(10.dp, Alignment.End)
 			) {
 				if (itemId == null) {
-					CreateButton()
+					CreateButton {
+						scope.launch {
+							var imgUrl: String? = null
+							if (imageBytes != null) {
+								val name =
+									List(10) { ('a'..'z').random() }.joinToString("")
+								uploadImage("menu-images/$name.png", imageBytes!!)
+								imgUrl = SupabaseClient.storage
+									.from("images")
+									.publicUrl("menu-images/$name.png")
+							}
+
+							val newItem = BranchItemInsert(
+								branchId = branchId,
+								categoryId = formState.categoryId,
+								itemName = formState.name,
+								itemDes = null,
+								price = formState.price.toInt(),
+								estimatedPrep = "12 min",
+								isAvailable = true,
+								isFeatured = formState.isFeatured,
+								urlImg = imgUrl
+							)
+
+							val createdItem = BranchItem.create(newItem)
+							ItemTag.insertTags(
+								itemId = createdItem.itemId,
+								tagIds = selectedTagIds,
+							)
+							navController.navigate(StaffRoutes.MenuEdit)
+						}
+					}
 				} else {
-					DeleteButton { navController.navigate(StaffRoutes.MenuEdit) }
+					DeleteButton {
+						scope.launch {
+							BranchItem.delete(itemId)
+							navController.navigate(StaffRoutes.MenuEdit)
+						}
+					}
 					UpdateButton {
 						item?.let { original ->
-							val updated = original.copy(
-								itemName = formState.name,
-								price = formState.price.toInt(),
-								categoryId = formState.categoryId,
-								isFeatured = formState.isFeatured
-							)
-							scope.launch { BranchItem.update(itemId, updated) }
+
+
+							scope.launch {
+								var imgUrl: String? = imageUrl
+								if (imageBytes != null) {
+									val name =
+										List(10) { ('a'..'z').random() }.joinToString("")
+									uploadImage("menu-images/$name.png", imageBytes!!)
+									imgUrl = SupabaseClient.storage
+										.from("images")
+										.publicUrl("menu-images/$name.png")
+								}
+
+								val updated = original.copy(
+									itemName = formState.name,
+									price = formState.price.toInt(),
+									categoryId = formState.categoryId,
+									isFeatured = formState.isFeatured,
+									urlImg = imgUrl
+								)
+
+								BranchItem.update(itemId, updated)
+
+								// 🔥 UPDATE TAGS HERE
+								ItemTag.updateTags(
+									itemId = itemId,
+									oldTagIds = originalTagIds,
+									newTagIds = selectedTagIds
+								)
+
+								navController.navigate(StaffRoutes.MenuEdit)
+							}
 						}
-						navController.navigate(StaffRoutes.MenuEdit)
 					}
 				}
 			}
@@ -110,67 +196,10 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CreateButton() {
-	Button(
-		onClick = { },
-		modifier = Modifier.height(40.dp),
-		shape = RoundedCornerShape(8.dp),
-		colors = ButtonDefaults.buttonColors(
-			containerColor = MaterialTheme.colorScheme.primary,
-			contentColor = Color.White
-		)
-	) {
-		Icon(Icons.Filled.Check, contentDescription = null)
-		Spacer(Modifier.width(6.dp))
-		Text("Create")
-	}
-}
-
-@Composable
-private fun UpdateButton(onClick: () -> Unit) = Button(
-	onClick = onClick,
-	modifier = Modifier.height(40.dp),
-	shape = RoundedCornerShape(8.dp),
-	colors = ButtonDefaults.buttonColors(
-		containerColor = MaterialTheme.colorScheme.primary,
-		contentColor = Color.White
-	)
-) {
-	Icon(Icons.Filled.Check, "Update")
-	Spacer(Modifier.width(6.dp))
-	Text("Update")
-}
-
-@Composable
-private fun DeleteButton(onClick: () -> Unit) = Button(
-	onClick = onClick,
-	shape = RoundedCornerShape(8.dp),
-	colors = ButtonDefaults.buttonColors(
-		containerColor = MaterialTheme.colorScheme.error,
-		contentColor = Color.White
-	),
-	modifier = Modifier.height(40.dp)
-) {
-	Icon(Icons.Filled.Delete, "Delete")
-	Spacer(Modifier.width(6.dp))
-	Text("Delete")
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 private fun TopBar(onBack: () -> Unit) = CenterAlignedTopAppBar(
 	title = { Text("Item edit") },
 	navigationIcon = { BackButton(onClick = onBack) }
 )
-
-@Composable
-fun EditMenuImageSection(
-	imageBytes: ByteArray?,
-	imageUrl: String?,
-	onUploadClick: () -> Unit
-) {
-
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -278,3 +307,4 @@ private fun FormSection(
 		}
 	}
 }
+

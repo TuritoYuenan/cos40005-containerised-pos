@@ -21,5 +21,4 @@ actual fun rememberImagePickerUri(onResult: (Any?) -> Unit): () -> Unit {
 	}
 }
 
-@Composable
 actual fun rememberImagePickerBytes(uri: Any?): ByteArray? = (uri as? File)?.readBytes()
