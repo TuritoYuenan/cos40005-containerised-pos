@@ -5,8 +5,8 @@ import { Database, Tables } from './models.ts';
 
 /** Supabase client */
 const supabase = createClient<Database>(
-	Deno.env.get('SUPABASE_URL')!,
-	Deno.env.get('SUPABASE_ANON_KEY')!,
+	Deno.env.get('SUPABASE_URL'),
+	Deno.env.get('SUPABASE_ANON_KEY'),
 );
 
 /** Display the sales report period */

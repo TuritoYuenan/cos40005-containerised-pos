@@ -7,4 +7,7 @@ import androidx.compose.runtime.Composable
 actual fun dynamicColorSchemeOrNull(
     darkTheme: Boolean,
     dynamicColor: Boolean
-): ColorScheme? = null
+): ColorScheme? {
+	println("darkTheme=$darkTheme, dynamicColor=$dynamicColor - Dynamic color is not supported on iOS, returning null")
+	return null
+}

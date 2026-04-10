@@ -18,6 +18,7 @@ import containerised.pos.models.Order
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
+import kotlinx.coroutines.launch
 
 private const val CURRENT_BRANCH = "BRA26011700"
 private val defaultPadding = 16.dp
@@ -44,8 +45,7 @@ fun OrderConfirmPage() {
 		RealtimeManager.forOrders.events.collect { action ->
 			when (action) {
 				is PostgresAction.Insert -> orders = orders.onChange(action)
-				is PostgresAction.Update -> { /* TODO: Implement live order update */
-				}
+                is PostgresAction.Update -> orders = orders.onChange(action)
 
 				is PostgresAction.Delete -> orders = orders.onChange(action)
 				is PostgresAction.Select -> {}
@@ -61,59 +61,136 @@ fun OrderConfirmPage() {
 		)
 
 		LazyColumn(verticalArrangement = Arrangement.spacedBy(defaultPadding)) {
-			items(orders.size) { orders[it].Card(Modifier.fillMaxWidth()) }
+            items(orders.size) {
+                orders[it].Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    onLocalUpdate = { updatedOrder ->
+                        orders = orders.map {
+                            if (it.orderId == updatedOrder.orderId) updatedOrder else it
+                        }
+                    }
+                )
+            }
 		}
 	}
 }
 
 @Composable
-private fun Order.Card(modifier: Modifier = Modifier) {
-	OutlinedCard(modifier) {
-		Column(
-			Modifier.padding(defaultPadding),
-			Arrangement.spacedBy(defaultPadding),
-		) {
-			Row(Modifier.fillMaxWidth()) {
-				Column {
-					Text(
-						"Order #$orderNumber",
-						style = MaterialTheme.typography.headlineMedium
-					)
+private fun Order.Card(
+    modifier: Modifier = Modifier,
+    onLocalUpdate: (Order) -> Unit
+) {
+    val order = this
+    val scope = rememberCoroutineScope()
+    var showCancelDialog by remember { mutableStateOf(false) }
+    OutlinedCard(modifier) {
+        Column(
+            Modifier.padding(defaultPadding),
+            Arrangement.spacedBy(defaultPadding),
+        ) {
+            Row(Modifier.fillMaxWidth()) {
+                Column {
+                    Text(
+                        "Order #$orderNumber",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
 
-					Row(verticalAlignment = Alignment.CenterVertically) {
-						Icon(Icons.Default.TableRestaurant, "Table")
-						Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-						Text("Table: ${table?.tableCode}")
-					}
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.TableRestaurant, "Table")
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text("Table: ${table?.tableCode}")
+                    }
 
-					Row(verticalAlignment = Alignment.CenterVertically) {
-						Icon(Icons.Default.Info, "Status")
-						Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-						Text("Status: $status")
-					}
-				}
-			}
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Info, "Status")
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text("Status: $status")
+                    }
 
-			HorizontalDivider()
-			ActionButtons(
-				onCancel = { /* TODO: Implement cancel logic */ },
-				onPrepare = { /* TODO: Implement prepare logic */ }
-			)
-		}
-	}
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Info, "Payment")
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text("Payment: ${if (paymentStatus) "Paid" else "Unpaid"}")
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Info, "Amount")
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text("Total: $finalAmount")
+                    }
+                }
+            }
+
+            HorizontalDivider()
+
+            OrderActionButtons(
+                status = status,
+                paymentStatus = paymentStatus,
+                onCancel = {
+                    showCancelDialog = true
+                },
+                onPayment = {
+                    scope.launch {
+                        confirmPayment(order)
+                        onLocalUpdate(order.copy(paymentStatus = true))
+                    }
+                }
+            )
+        }
+        if (showCancelDialog) {
+            AlertDialog(
+                onDismissRequest = { showCancelDialog = false },
+                title = { Text("Cancel Order") },
+                text = { Text("Are you sure you want to cancel this order?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showCancelDialog = false
+                            scope.launch {
+                                cancelOrder(order)
+                                onLocalUpdate(order.copy(status = Order.Status.CANCELED))
+                            }
+                        }
+                    ) {
+                        Text("Yes")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showCancelDialog = false }
+                    ) {
+                        Text("No")
+                    }
+                }
+            )
+        }
+    }
 }
 
 @Composable
-private fun ActionButtons(
-	modifier: Modifier = Modifier,
-	onCancel: () -> Unit = {},
-	onPrepare: () -> Unit = {},
+private fun OrderActionButtons(
+    modifier: Modifier = Modifier,
+    status: Order.Status?,
+    paymentStatus: Boolean,
+    onCancel: () -> Unit = {},
+    onPayment: () -> Unit = {},
 ) = Row(
 	modifier.fillMaxWidth(),
 	Arrangement.spacedBy(defaultPadding, Alignment.End),
 ) {
-	Button(onCancel) { Text("Cancel") }
-	Button(onPrepare) { Text("Prepare") }
+    Button(
+        onClick = onCancel,
+        enabled = status != Order.Status.CANCELED
+    ) {
+        Text("Cancel")
+    }
+
+    Button(
+        onClick = onPayment,
+        enabled = !paymentStatus && status != Order.Status.CANCELED
+    ) {
+        Text("Confirm Payment")
+    }
 }
 
 private fun List<Order>.onChange(action: PostgresAction.Insert): List<Order> {
@@ -124,6 +201,18 @@ private fun List<Order>.onChange(action: PostgresAction.Delete): List<Order> {
 	return this.filterNot { it.orderId == action.decodeOldRecord<Order>().orderId }
 }
 
-@Preview
-@Composable
-fun OrderCardPreview() = Order.MOCK.Card(Modifier.fillMaxWidth())
+private fun List<Order>.onChange(action: PostgresAction.Update): List<Order> {
+    val updated = action.decodeRecord<Order>()
+    return this.map {
+        if (it.orderId == updated.orderId) updated else it
+    }
+}
+
+private suspend fun cancelOrder(order: Order) {
+    Order.markCancelled(order.orderId)
+}
+
+private suspend fun confirmPayment(order: Order) {
+    Order.markPaid(order.orderId)
+}
+

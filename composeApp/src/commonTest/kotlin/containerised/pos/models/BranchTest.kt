@@ -1,6 +1,5 @@
-package containerised.pos.modelTests
+package containerised.pos.models
 
-import containerised.pos.models.Branch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

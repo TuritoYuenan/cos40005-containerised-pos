@@ -20,7 +20,7 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.0.0
         with:
           cache-read-only: true
 
@@ -31,7 +31,7 @@ jobs:
         run: .\\gradlew.bat :composeApp:packageReleaseExe
 
       - name: Upload EXE to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.0.0
         with:
           files: |
             composeApp/build/compose/binaries/main-release/exe/*.exe
@@ -51,7 +51,7 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.0.0
         with:
           cache-read-only: true
 
@@ -65,7 +65,7 @@ jobs:
         run: ./gradlew :composeApp:packageReleaseDeb :composeApp:assembleRelease
 
       - name: Upload DEB and APK to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.0.0
         with:
           files: |
             composeApp/build/compose/binaries/main-release/deb/*.deb

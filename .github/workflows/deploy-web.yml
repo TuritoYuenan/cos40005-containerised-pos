@@ -4,11 +4,6 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -27,7 +22,7 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.0.0
         with:
           cache-read-only: true
 
@@ -49,6 +44,7 @@ jobs:
     needs: build
 
     permissions:
+      contents: read
       pages: write
       id-token: write
 

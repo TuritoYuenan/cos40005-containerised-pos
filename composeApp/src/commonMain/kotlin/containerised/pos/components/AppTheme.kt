@@ -24,7 +24,7 @@ fun AppTheme(
 }
 
 /**
- * Returns a dynamic [ColorScheme] if dynamic color is supported and enabled, or null otherwise.
+ * Returns a dynamic [ColorScheme] if dynamic colour is supported and enabled, or null otherwise.
  */
 @Composable
 expect fun dynamicColorSchemeOrNull(

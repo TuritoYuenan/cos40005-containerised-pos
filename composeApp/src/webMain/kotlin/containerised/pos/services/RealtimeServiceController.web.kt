@@ -1,8 +1,8 @@
 package containerised.pos.services
 
 object WebRealtimeServiceController: RealtimeServiceController {
-	override fun start() {}
-	override fun stop() {}
+	override fun start() { println("Not supported on web") }
+	override fun stop() { println("Not supported on web") }
 }
 
 actual val realtimeServiceController: RealtimeServiceController
