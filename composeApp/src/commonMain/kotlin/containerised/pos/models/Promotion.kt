@@ -29,6 +29,9 @@ data class Promotion(
 
 	@SerialName("url_img")
 	val urlImg: String? = null,
+
+	@SerialName("promotion_name")
+	val promotionName: String? = null,
 ) {
 	@Serializable
 	data class Insertable(
@@ -52,6 +55,9 @@ data class Promotion(
 
 		@SerialName("url_img")
 		val urlImg: String? = null,
+
+		@SerialName("promotion_name")
+		val promotionName: String? = null,
 	)
 
 	@Serializable
