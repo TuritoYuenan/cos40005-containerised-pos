@@ -1,6 +1,5 @@
 package containerised.pos.views
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,7 +24,6 @@ import containerised.pos.models.Currency
 import containerised.pos.models.Order
 import containerised.pos.models.Promotion
 import containerised.pos.models.Promotion.Companion.fetchByBranch
-import containerised.pos.models.PromotionRule
 import containerised.pos.routes.CustomerRoutes
 import containerised.pos.services.CartService
 import containerised.pos.services.CartService.getFinalAmount
@@ -304,26 +301,32 @@ private fun Promotion.DiscountItemCard() {
 
 	Row(
 		Modifier.fillMaxWidth(),
+		verticalAlignment = Alignment.CenterVertically
 	) {
 		if (urlImg != null){
-			val url = urlImg.toString()
+			val url = urlImg
 			KamelImage(
 				resource = { asyncPainterResource(url) },
-				contentDescription = "Menu image",
+				contentDescription = "Promotion image",
 				modifier = Modifier
-					.fillMaxWidth()
+					.size(76.dp)
 					.clip(RoundedCornerShape(8.dp))
 			)
 		}
 		else {
 			Box(
 				modifier = Modifier
-					.fillMaxWidth()
+					.size(76.dp)
 					.clip(RoundedCornerShape(8.dp))
 					.background(Color(0xFFACACAC)),
 				contentAlignment = Alignment.Center
 			) {}
 		}
+		Text(
+			text = promotionName?: "null",
+			modifier = Modifier
+				.padding(start = 8.dp)
+		)
 	}
 }
 
@@ -412,7 +415,7 @@ private fun SpecialNotesDialogPreview() = Column(Modifier.fillMaxSize()) {
 	SpecialNotesDialog(BranchItem.MOCK) { }
 }
 
-fun PromotionRule.isSatisfied(cart: List<CartService.Entry>): Boolean {
+fun Promotion.Rule.isSatisfied(cart: List<CartService.Entry>): Boolean {
 
 	// Pre-calculate maps once (avoids repeated loops)
 	val itemCountMap = mutableMapOf<String, Int>()
