@@ -37,7 +37,10 @@ data class Order(
 	val updatedAt: String? = null,
 
 	@SerialName("created_at")
-	val createdAt: String? = null
+	val createdAt: String? = null,
+
+    @SerialName("payment_status")
+    val paymentStatus: Boolean = false,
 ) {
 	@Serializable
 	enum class Status { CANCELED, PREPARING, FINISHED }
@@ -130,7 +133,12 @@ data class Order(
 					eq("status", Status.PREPARING)
 				}
 			}
-
+        suspend fun markPaid(orderId: String) = SupabaseClient.db["orders"]
+            .update({ set("payment_status", true) }) {
+                filter {
+                    eq("order_id", orderId)
+                }
+            }
 		suspend fun fetchByID(orderId: String): Order? = SupabaseClient.db["orders"]
 			.select { filter { eq("order_id", orderId) } }
 			.decodeSingleOrNull<Order>()
