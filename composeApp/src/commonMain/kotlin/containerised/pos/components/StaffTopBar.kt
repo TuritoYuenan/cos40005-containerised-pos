@@ -24,7 +24,7 @@ fun StaffTopBar(navController: NavController, currentRoute: String) {
 		currentRoute.startsWith("edit-tag") -> EditTagTopBar(navController)
 		currentRoute.startsWith("stock-history") -> StockHistoryTopBar(navController)
 		currentRoute.startsWith("sales-report") -> SalesReportTopBar(navController)
-		currentRoute.startsWith("employee-profile") -> {}
+		currentRoute.startsWith("employee-profile") -> println("In-page bar")
 		currentRoute.startsWith("setting") -> GenericStaffTopBar()
 		else -> GenericStaffTopBar(navController)
 	}

@@ -35,13 +35,25 @@ kotlin {
 	jvm()
 
 	js {
-		browser()
+		browser {
+			testTask {
+				useKarma {
+					useFirefoxDeveloperHeadless()
+				}
+			}
+		}
 		binaries.executable()
 	}
 
 	@OptIn(ExperimentalWasmDsl::class)
 	wasmJs {
-		browser()
+		browser {
+			testTask {
+				useKarma {
+					useFirefoxDeveloperHeadless()
+				}
+			}
+		}
 		binaries.executable()
 	}
 
@@ -102,6 +114,10 @@ kotlin {
 			implementation(libs.ui.test)
 			implementation(kotlin("test"))
 		}
+		androidInstrumentedTest.dependencies {
+			implementation(libs.androidx.junit)
+			implementation(libs.androidx.core.ktx)
+		}
 		jvmMain.dependencies {
 			implementation(compose.desktop.currentOs)
 			implementation(libs.kotlinx.coroutinesSwing)
@@ -124,6 +140,7 @@ android {
 		targetSdk = libs.versions.android.targetSdk.get().toInt()
 		versionCode = 1
 		versionName = "1.0"
+		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 	}
 	compileOptions {
 		sourceCompatibility = JavaVersion.VERSION_11

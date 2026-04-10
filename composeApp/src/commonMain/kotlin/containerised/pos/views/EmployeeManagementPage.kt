@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.components.ErrorView
-import containerised.pos.components.LoadingView
 import containerised.pos.models.User.Companion.getStatusFromShift
 import containerised.pos.models.User.Companion.updateLastLogin
 import containerised.pos.models.User.Companion.updateLastLogout
@@ -27,6 +26,7 @@ import containerised.pos.routes.StaffRoutes
 import kotlinx.coroutines.launch
 
 private const val CURRENT_BRANCH = "BRA26011700"
+
 @Composable
 fun EmployeeManagementPage(navController: NavController) {
 	var userRoles by remember { mutableStateOf<List<UserRole>>(emptyList()) }
@@ -78,7 +78,7 @@ fun EmployeeManagementPage(navController: NavController) {
 }
 
 @Composable
-fun UserRole.EmployeeCard(navController: NavController){
+fun UserRole.EmployeeCard(navController: NavController) {
 	Card(
 		Modifier
 			.fillMaxWidth()
@@ -89,7 +89,7 @@ fun UserRole.EmployeeCard(navController: NavController){
 		elevation = CardDefaults.cardElevation(
 			defaultElevation = 12.dp
 		)
-	){
+	) {
 		Row(
 			Modifier
 				.fillMaxWidth()
@@ -97,8 +97,8 @@ fun UserRole.EmployeeCard(navController: NavController){
 				.padding(12.dp, 6.dp),
 			horizontalArrangement = Arrangement.SpaceBetween,
 			verticalAlignment = Alignment.CenterVertically
-		){
-			Column(){
+		) {
+			Column() {
 				Text(user?.fullName ?: "", style = MaterialTheme.typography.titleMedium)
 				Text(role.roleName, style = MaterialTheme.typography.bodyMedium)
 			}
@@ -106,22 +106,24 @@ fun UserRole.EmployeeCard(navController: NavController){
 		}
 	}
 }
+
 @Composable
-fun UserRole.StatusBox(){
+fun UserRole.StatusBox() {
 	val scope = rememberCoroutineScope()
 	var expanded by remember { mutableStateOf(false) }
-	var status by remember { mutableStateOf<EmployeeStatus>(getStatusFromShift(user?.shift ?: emptyMap())) }
-	Box(
-		modifier = Modifier
-			.clickable { expanded = !expanded }
-	) {
+	var status by remember {
+		mutableStateOf(getStatusFromShift(user?.shift ?: emptyMap()))
+	}
+
+	Box(Modifier.clickable { expanded = !expanded }) {
 		Text(
-			text = status.toString(),
-			style = MaterialTheme.typography.titleMedium,
-			modifier = Modifier
+			status.toString(),
+			Modifier
 				.background(getStatusColor(status), RoundedCornerShape(8.dp))
 				.padding(8.dp),
+			style = MaterialTheme.typography.titleMedium,
 		)
+
 		if (status == EmployeeStatus.ACTIVE || status == EmployeeStatus.INACTIVE) {
 			DropdownMenu(
 				expanded = expanded,
@@ -133,9 +135,7 @@ fun UserRole.StatusBox(){
 						onClick = {
 							status = EmployeeStatus.ACTIVE
 							expanded = false
-							scope.launch {
-								updateLastLogin(userId)
-							}
+							scope.launch { updateLastLogin(userId) }
 						}
 					)
 				} else if (status == EmployeeStatus.ACTIVE) {
@@ -144,9 +144,7 @@ fun UserRole.StatusBox(){
 						onClick = {
 							status = EmployeeStatus.INACTIVE
 							expanded = false
-							scope.launch {
-								updateLastLogout(userId)
-							}
+							scope.launch { updateLastLogout(userId) }
 						}
 					)
 				}
@@ -154,6 +152,7 @@ fun UserRole.StatusBox(){
 		}
 	}
 }
+
 @Composable
 fun getStatusColor(status: EmployeeStatus?): Color {
 	return when (status) {

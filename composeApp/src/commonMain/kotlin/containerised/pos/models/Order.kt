@@ -53,8 +53,8 @@ data class Order(
 		@SerialName("order_type")
 		val orderType: String? = null,
 
-		@SerialName("table_number")
-		val tableNumber: String? = null,
+		@SerialName("table_id")
+		val tableId: String? = null,
 
 		@SerialName("status")
 		val status: Status? = null,

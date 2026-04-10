@@ -1,12 +1,16 @@
 package containerised.pos.services
 
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.Foundation.NSData
 import platform.Foundation.NSHomeDirectory
 import platform.Foundation.NSURL
+import platform.Foundation.dataWithBytes
+import platform.Foundation.writeToFile
 import platform.UIKit.UIApplication
 
+@OptIn(ExperimentalForeignApi::class)
 object IOSDownloadService : DownloadService {
 	override fun download(url: String) {
 		if (url.isBlank()) return

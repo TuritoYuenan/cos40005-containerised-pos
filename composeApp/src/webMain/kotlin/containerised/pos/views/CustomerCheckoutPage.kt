@@ -44,7 +44,6 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 
 	suspend fun placeOrder(isPayingAtCounter: Boolean) {
 		if (checkoutItems.isEmpty()) {
-			// TODO: Show a message if the cart is empty
 			println("Cart is empty, cannot place order")
 			return
 		}
@@ -53,7 +52,7 @@ fun CustomerCheckoutPage(navController: NavController?, args: CustomerRoutes.Che
 		val order = Order.Insertable(
 			orderNumber = "001",
 			orderType = resolveOrderType(args.tableID),
-			tableNumber = args.tableID,
+			tableId = args.tableID,
 			status = Order.Status.PREPARING,
 			branchId = args.branchID,
 			taxAmount = taxAmount,
