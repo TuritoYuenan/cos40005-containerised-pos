@@ -20,6 +20,8 @@ import containerised.pos.models.Category
 import containerised.pos.models.Promotion
 import containerised.pos.models.Tag
 import containerised.pos.routes.StaffRoutes
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 
 @Composable
 fun MenuEditPage(navController: NavController) {
@@ -196,7 +198,32 @@ fun PromotionRow(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Text("🖼 Banner")
+                val imageUrl = promotion.urlImg
+
+                if (!imageUrl.isNullOrBlank()) {
+                    KamelImage(
+                        resource = asyncPainterResource(imageUrl),
+                        contentDescription = "Promotion Image",
+                        modifier = Modifier.fillMaxSize(),
+                        onLoading = {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        },
+                        onFailure = {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("❌ Failed to load")
+                            }
+                        }
+                    )
+                } else {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("🖼 No Image")
+                    }
+                }
             }
 
             Spacer(Modifier.height(8.dp))
