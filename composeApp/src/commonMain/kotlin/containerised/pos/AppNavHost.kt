@@ -12,11 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import containerised.pos.components.AppTheme
-import containerised.pos.components.LoadingView
-import containerised.pos.components.StaffNavigationBar
-import containerised.pos.components.StaffTopBar
-import containerised.pos.components.getStartRoute
+import containerised.pos.components.*
 import containerised.pos.database.SupabaseClient
 import containerised.pos.models.Order
 import containerised.pos.models.UserRole.Companion.fetchUserPermission
@@ -140,7 +136,11 @@ fun AppNavHost() {
 					val args = backStackEntry.toRoute<StaffRoutes.EmployeeProfile>()
 					EmployeeProfilePage(navController, args.argUserId)
 				}
-				composable<StaffRoutes.EmployeeManagement> { EmployeeManagementPage(navController) }
+				composable<StaffRoutes.EmployeeManagement> {
+					EmployeeManagementPage(
+						navController
+					)
+				}
 				composable<StaffRoutes.Setting> { SettingPage() }
 			}
 		}
