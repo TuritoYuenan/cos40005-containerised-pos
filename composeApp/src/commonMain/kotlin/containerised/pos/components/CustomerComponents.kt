@@ -82,16 +82,23 @@ fun List<BranchItem>.ImageSlider(modifier: Modifier = Modifier) = Card(
 
 @Composable
 fun List<Tag>.Row(
-	modifier: Modifier = Modifier,
-	onFilter: (String) -> Unit = { },
-) = LazyRow(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-	items(size) { index ->
-		FilterChip(
-			false,
-			{ onFilter(this@Row[index].tagName) },
-			{ Text(this@Row[index].tagName) },
-		)
-	}
+    modifier: Modifier = Modifier,
+    selectedTags: Set<String>,
+    onFilter: (String) -> Unit = {}
+) = LazyRow(
+    modifier,
+    horizontalArrangement = Arrangement.spacedBy(8.dp)
+) {
+    items(size) { index ->
+        val tag = this@Row[index]
+        val isSelected = selectedTags.contains(tag.tagId)
+
+        FilterChip(
+            selected = isSelected,
+            onClick = { onFilter(tag.tagId) },
+            label = { Text(tag.tagName) }
+        )
+    }
 }
 
 @Composable
@@ -324,7 +331,7 @@ private fun OrderPagePreview() = Column(
 		BranchItem.MOCK.TallCard()
 	}
 
-	Tag.MOCKS.Row()
+	Tag.MOCKS.Row(Modifier, emptySet())
 
 	BranchItem.MOCK.WideCard()
 	BranchItem.MOCK.WideCard()
