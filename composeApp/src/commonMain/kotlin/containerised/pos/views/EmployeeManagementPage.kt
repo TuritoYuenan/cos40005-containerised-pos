@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import containerised.pos.components.ErrorView
+import containerised.pos.database.SupabaseClient
+import containerised.pos.models.User.Companion.fetchBranchById
 import containerised.pos.models.User.Companion.getStatusFromShift
 import containerised.pos.models.User.Companion.updateLastLogin
 import containerised.pos.models.User.Companion.updateLastLogout
@@ -25,17 +27,19 @@ import containerised.pos.models.UserRole
 import containerised.pos.routes.StaffRoutes
 import kotlinx.coroutines.launch
 
-private const val CURRENT_BRANCH = "BRA26032801"
 
 @Composable
 fun EmployeeManagementPage(navController: NavController) {
 	var userRoles by remember { mutableStateOf<List<UserRole>>(emptyList()) }
 	var searchQuery by remember { mutableStateOf("") }
 	var error by remember { mutableStateOf<String?>(null) }
+	val userId = SupabaseClient.auth.currentUserOrNull()?.id
+	var branchId by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		try {
-			userRoles = UserRole.fetchAndJoinByBranch(CURRENT_BRANCH)
+			branchId = fetchBranchById(userId?: "")
+			userRoles = UserRole.fetchAndJoinByBranch(branchId!!)
 		} catch (e: Exception) {
 			val error = e.message
 			println("Error: $error")

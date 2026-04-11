@@ -51,7 +51,7 @@ data class UserRole(
 		}
 		suspend fun fetchAndJoinByBranch(branchId: String): List<UserRole> {
 
-			val result = SupabaseClient.db
+			return SupabaseClient.db
 				.from("user_roles")
 				.select(
 					Columns.raw("*, user:users(*), role:roles(*)")
@@ -61,8 +61,6 @@ data class UserRole(
 					}
 				}
 				.decodeList<UserRole>()
-
-			return result
 		}
 	}
 }
