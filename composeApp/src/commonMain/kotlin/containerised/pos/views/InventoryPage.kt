@@ -18,7 +18,9 @@ import containerised.pos.services.notificationService
 import containerised.pos.services.RealtimeManager
 import containerised.pos.components.ErrorView
 import containerised.pos.components.LoadingView
+import containerised.pos.database.SupabaseClient
 import containerised.pos.models.Ingredient
+import containerised.pos.models.User.Companion.fetchBranchById
 import containerised.pos.routes.StaffRoutes
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
@@ -26,7 +28,7 @@ import io.github.jan.supabase.realtime.decodeRecord
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-private const val CURRENT_BRANCH = "BRA26011700"
+
 private val defaultPadding = 16.dp
 
 @Composable
@@ -35,11 +37,14 @@ fun InventoryPage(navController: NavController) {
 	var isLoading by remember { mutableStateOf(true) }
 	var ingredients by remember { mutableStateOf<List<Ingredient>>(emptyList()) }
 	var searchQuery by remember { mutableStateOf("") }
+	val userId = SupabaseClient.auth.currentUserOrNull()?.id
+	var branchId by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		try {
+			branchId = fetchBranchById(userId?: "")
 			isLoading = true
-			ingredients = Ingredient.fetchByBranch(CURRENT_BRANCH).sortedBy { it.id }
+			ingredients = Ingredient.fetchByBranch(branchId!!).sortedBy { it.id }
 			error = null
 		} catch (e: Exception) {
 			error = e.message
@@ -51,9 +56,9 @@ fun InventoryPage(navController: NavController) {
 	LaunchedEffect(Unit) {
 		RealtimeManager.forIngredients.events.collect { action ->
 			when (action) {
-				is PostgresAction.Insert -> ingredients = ingredients.onChange(action)
-				is PostgresAction.Update -> ingredients = ingredients.onChange(action)
-				is PostgresAction.Delete -> ingredients = ingredients.onChange(action)
+				is PostgresAction.Insert -> ingredients = ingredients.onChange(action, branchId?:"")
+				is PostgresAction.Update -> ingredients = ingredients.onChange(action, branchId?:"")
+				is PostgresAction.Delete -> ingredients = ingredients.onChange(action, branchId?:"")
 				is PostgresAction.Select -> Unit
 			}
 		}
@@ -169,23 +174,23 @@ private fun Ingredient.Card(onViewEdit: () -> Unit = {}, onViewHistory: () -> Un
 	}
 }
 
-private fun List<Ingredient>.onChange(action: PostgresAction.Insert): List<Ingredient> {
+private fun List<Ingredient>.onChange(action: PostgresAction.Insert, branchId: String): List<Ingredient> {
 	val newOne = action.decodeRecord<Ingredient>()
-	if (newOne.branchId != CURRENT_BRANCH || !newOne.isActive) return this
+	if (newOne.branchId != branchId || !newOne.isActive) return this
 	return (this.filterNot { it.id == newOne.id } + newOne).sortedBy { it.id }
 }
 
-private fun List<Ingredient>.onChange(action: PostgresAction.Delete): List<Ingredient> {
+private fun List<Ingredient>.onChange(action: PostgresAction.Delete, branchId: String): List<Ingredient> {
 	val oldOne = action.decodeOldRecord<Ingredient>()
-	if (oldOne.branchId != CURRENT_BRANCH) return this
+	if (oldOne.branchId != branchId) return this
 	return this.filterNot { it.id == oldOne.id }
 }
 
-private fun List<Ingredient>.onChange(action: PostgresAction.Update): List<Ingredient> {
+private fun List<Ingredient>.onChange(action: PostgresAction.Update, branchId: String): List<Ingredient> {
 	val newOne = action.decodeRecord<Ingredient>()
 	val oldOne = action.decodeOldRecord<Ingredient>()
 
-	val areAllInBranch = listOf(newOne, oldOne).all { it.branchId == CURRENT_BRANCH }
+	val areAllInBranch = listOf(newOne, oldOne).all { it.branchId == branchId }
 	val isRecentlyLowStock = newOne.isLowStock() && !oldOne.isLowStock()
 
 	if (areAllInBranch && isRecentlyLowStock) notificationService.showNotification(
@@ -193,7 +198,7 @@ private fun List<Ingredient>.onChange(action: PostgresAction.Update): List<Ingre
 		"${newOne.ingredientName} is below minimum stock"
 	)
 
-	return if (newOne.branchId != CURRENT_BRANCH || !newOne.isActive) {
+	return if (newOne.branchId != branchId || !newOne.isActive) {
 		this.filterNot { it.id == newOne.id }
 	} else {
 		(this.filterNot { it.id == newOne.id } + newOne).sortedBy { it.id }

@@ -25,6 +25,7 @@ import containerised.pos.components.menu_edit.millisConverter
 import containerised.pos.database.SupabaseClient
 import containerised.pos.database.SupabaseClient.uploadImage
 import containerised.pos.models.*
+import containerised.pos.models.User.Companion.fetchBranchById
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
@@ -49,9 +50,12 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 	var tags by remember { mutableStateOf(emptyList<Tag>()) }
 	var imageUrl by remember { mutableStateOf<String?>(null) }
 	var imageBytes by remember { mutableStateOf<ByteArray?>(null) }
+	val userId = SupabaseClient.auth.currentUserOrNull()?.id
+	var branchId by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(promotionId) {
 		try {
+			branchId = fetchBranchById(userId?: "")
 			if (promotionId != null) {
 				promotion = Promotion.fetchById(promotionId)
 				imageUrl = promotion?.urlImg
@@ -67,7 +71,7 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
                 )
 			}
 			categories = Category.fetchAll()
-			items = BranchItem.fetchByBranch("BRA26011700")
+			items = BranchItem.fetchByBranch(branchId!!)
 			tags = Tag.fetchAll()
 		} catch (e: Exception) {
 			println("Error fetching data: ${e.message}")
@@ -132,7 +136,7 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 
 										Promotion.insert(
 											Promotion.Insertable(
-												branchID = "BRA26011700",
+												branchID = branchId!!,
 												startDate = formState.startDate,
 												endDate = formState.endDate,
 												daysOfWeek = formState.daysOfWeek,
@@ -188,7 +192,7 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 										Promotion.updateById(
 											id = promotionId,
 											data = Promotion.Insertable(
-												branchID = "BRA26011700",
+												branchID = branchId!!,
 												startDate = formState.startDate,
 												endDate = formState.endDate,
 												daysOfWeek = formState.daysOfWeek,

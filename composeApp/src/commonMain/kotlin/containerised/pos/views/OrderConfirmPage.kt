@@ -14,13 +14,14 @@ import androidx.compose.ui.unit.dp
 import containerised.pos.services.RealtimeManager
 import containerised.pos.components.ErrorView
 import containerised.pos.components.LoadingView
+import containerised.pos.database.SupabaseClient
 import containerised.pos.models.Order
+import containerised.pos.models.User.Companion.fetchBranchById
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
 import kotlinx.coroutines.launch
 
-private const val CURRENT_BRANCH = "BRA26011700"
 private val defaultPadding = 16.dp
 
 @Composable
@@ -28,11 +29,14 @@ fun OrderConfirmPage() {
 	var error by remember { mutableStateOf<String?>(null) }
 	var isLoading by remember { mutableStateOf(false) }
 	var orders by remember { mutableStateOf(emptyList<Order>()) }
+	val userId = SupabaseClient.auth.currentUserOrNull()?.id
+	var branchId by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		try {
+			branchId = fetchBranchById(userId?: "")
 			isLoading = true
-			orders = Order.fetchByBranch(CURRENT_BRANCH)
+			orders = Order.fetchByBranch(branchId!!)
 			error = null
 		} catch (e: Exception) {
 			error = e.message

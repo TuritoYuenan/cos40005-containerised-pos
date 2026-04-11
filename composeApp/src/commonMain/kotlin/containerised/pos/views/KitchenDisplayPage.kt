@@ -19,16 +19,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import containerised.pos.database.SupabaseClient
 import containerised.pos.services.RealtimeManager
 import containerised.pos.models.Order
 import containerised.pos.models.OrderItem
+import containerised.pos.models.User.Companion.fetchBranchById
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.decodeOldRecord
 import io.github.jan.supabase.realtime.decodeRecord
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-private const val CURRENT_BRANCH = "BRA26011700"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KitchenDisplayPage() {
@@ -36,10 +37,13 @@ fun KitchenDisplayPage() {
 	var selectedOrder by remember { mutableStateOf<Order?>(null) }
 	var selectedOrderItems by remember { mutableStateOf<List<OrderItem>>(emptyList()) }
 	var error by remember { mutableStateOf<String?>(null) }
+	val userId = SupabaseClient.auth.currentUserOrNull()?.id
+	var branchId by remember { mutableStateOf<String?>(null) }
 
 	LaunchedEffect(Unit) {
 		try {
-			orders = Order.fetchPreparingByBranch(CURRENT_BRANCH)
+			branchId = fetchBranchById(userId?: "")
+			orders = Order.fetchPreparingByBranch(branchId!!)
 			println("Fetched ${orders.size} orders:")
 		} catch (e: Exception) {
 			error = e.message

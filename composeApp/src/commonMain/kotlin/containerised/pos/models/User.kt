@@ -65,7 +65,11 @@ data class User(
 			.select { filter { eq("user_id", userId) } }
 			.decodeList<User>().firstOrNull()
 
-		suspend fun fetchByBranch(branchId: String): List<User> = SupabaseClient.db["users"]
+		suspend fun fetchBranchById(userId: String): String = SupabaseClient.db["users"]
+			.select { filter { eq("user_id", userId) } }
+			.decodeList<User>().firstOrNull()?.branchId ?:"null"
+
+		suspend  fun fetchByBranch(branchId: String): List<User> = SupabaseClient.db["users"]
 			.select { filter { eq("branch_id", branchId) } }
 			.decodeList<User>()
 

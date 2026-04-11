@@ -19,6 +19,7 @@ import containerised.pos.components.menu_edit.SwitchField
 import containerised.pos.database.SupabaseClient
 import containerised.pos.database.SupabaseClient.uploadImage
 import containerised.pos.models.*
+import containerised.pos.models.User.Companion.fetchBranchById
 import containerised.pos.routes.StaffRoutes
 import kotlinx.coroutines.launch
 
@@ -43,9 +44,11 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 	var itemTags by remember { mutableStateOf(emptyList<ItemTag>()) }
 	var selectedTagIds by remember { mutableStateOf(setOf<String>()) }
 	var originalTagIds by remember { mutableStateOf(setOf<String>()) }
-	val branchId = "BRA26011700"
+	val userId = SupabaseClient.auth.currentUserOrNull()?.id
+	var branchId by remember { mutableStateOf<String?>(null) }
 	LaunchedEffect(Unit) {
 		try {
+			branchId = fetchBranchById(userId?: "")
 			categories = Category.fetchAll()
 			tags = Tag.fetchAll()
 			if (itemId != null) {
@@ -105,7 +108,7 @@ fun EditItemPage(navController: NavController, itemId: String? = null) {
 							}
 
 							val newItem = BranchItemInsert(
-								branchId = branchId,
+								branchId = branchId!!,
 								categoryId = formState.categoryId,
 								itemName = formState.name,
 								itemDes = null,

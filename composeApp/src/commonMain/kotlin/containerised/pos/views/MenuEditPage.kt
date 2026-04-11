@@ -15,30 +15,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import containerised.pos.database.SupabaseClient
 import containerised.pos.models.BranchItem
 import containerised.pos.models.Category
 import containerised.pos.models.Promotion
 import containerised.pos.models.Tag
+import containerised.pos.models.User.Companion.fetchBranchById
 import containerised.pos.routes.StaffRoutes
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 
 @Composable
 fun MenuEditPage(navController: NavController) {
-	val branchId = "BRA26011700"
 	var items by remember { mutableStateOf<Map<String, List<BranchItem>>>(emptyMap()) }
 	var promotions by remember { mutableStateOf<List<Promotion>>(emptyList()) }
 	var tags by remember { mutableStateOf<List<Tag>>(emptyList()) }
     var categories by remember { mutableStateOf<List<Category>>(emptyList())}
+	val userId = SupabaseClient.auth.currentUserOrNull()?.id
+	var branchId by remember { mutableStateOf<String?>(null) }
+
 
 	LaunchedEffect(Unit) {
 		try {
+			branchId = fetchBranchById(userId?: "")
             categories= Category.fetchAll()
             val categoryMap = categories.associate { it.categoryId to it.categoryName }
-			items = BranchItem.fetchByBranch(branchId)
+			items = BranchItem.fetchByBranch(branchId!!)
 				.sortedBy { it.itemId }
 				.groupBy { item -> categoryMap[item.categoryId] ?: "Uncategorized" }
-			promotions = Promotion.fetchByBranch(branchId)
+			promotions = Promotion.fetchByBranch(branchId!!)
 			tags = Tag.fetchAll()
 		} catch (e: Exception) {
 			println("Error fetching data: ${e.message}")
