@@ -139,13 +139,16 @@ fun CustomerOrderPage(navController: NavController?, args: CustomerRoutes.Order)
 					style = MaterialTheme.typography.headlineMedium
 				)
 
-				tags.Row(Modifier.padding(top = defaultPadding)) {
-					selectedTags = if (selectedTags.contains(it)) {
-						selectedTags - it
-					} else {
-						selectedTags + it
-					}
-				}
+                tags.Row(
+                    Modifier.padding(top = defaultPadding),
+                    selectedTags = selectedTags // pass state
+                ) { tagId ->
+                    selectedTags = if (selectedTags.contains(tagId)) {
+                        selectedTags - tagId
+                    } else {
+                        selectedTags + tagId
+                    }
+                }
 			}
 
 			// Display all items for browsing, manipulated by tags
