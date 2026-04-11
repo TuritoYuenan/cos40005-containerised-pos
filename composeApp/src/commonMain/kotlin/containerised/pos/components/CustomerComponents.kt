@@ -64,18 +64,7 @@ fun List<BranchItem>.ImageSlider(modifier: Modifier = Modifier) = Card(
 			this@ImageSlider[page % size].itemName,
 			Modifier.fillMaxSize(),
 			contentScale = ContentScale.Crop,
-			onFailure = {
-				Box(
-					Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
-					Alignment.Center,
-				) {
-					Text(
-						this@ImageSlider[page].itemName,
-						color = MaterialTheme.colorScheme.onPrimary,
-						style = MaterialTheme.typography.titleMedium
-					)
-				}
-			}
+
 		)
 	}
 }
@@ -109,7 +98,7 @@ fun BranchItem.WideCard(modifier: Modifier = Modifier, onAddToCart: () -> Unit =
 		Box {
 			Row(Modifier.fillMaxWidth()) {
 				KamelImage(
-					resource = { asyncPainterResource("https://placehold.co/256x256") },
+					resource = { asyncPainterResource(urlImg ?: "https://placehold.co/512x256") },
 					contentDescription = itemName,
 					contentScale = ContentScale.Crop,
 					modifier = Modifier
@@ -144,7 +133,7 @@ fun BranchItem.TallCard(onAddToCart: () -> Unit = {}) {
 		Box {
 			Column {
 				KamelImage(
-					resource = { asyncPainterResource("https://placehold.co/256x256") },
+					resource = { asyncPainterResource(urlImg ?: "https://placehold.co/512x256") },
 					contentDescription = itemName,
 					contentScale = ContentScale.Crop,
 					modifier = Modifier
