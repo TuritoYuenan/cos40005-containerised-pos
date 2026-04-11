@@ -223,14 +223,26 @@ private fun CheckoutMenuItem(item: BranchItem, count: Int, onRefresh: () -> Unit
 	Column(Modifier.fillMaxWidth(), Arrangement.spacedBy(4.dp)) {
 		// First Row: image and item details
 		Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(16.dp)) {
-			// Image placeholder
-			Box(
-				Modifier
-					.size(76.dp)
-					.clip(RoundedCornerShape(8.dp))
-					.background(MaterialTheme.colorScheme.primary),
-				Alignment.Center
-			) {}
+			// Image
+			if (item.urlImg != null){
+				val url = item.urlImg
+				KamelImage(
+					resource = { asyncPainterResource(url) },
+					contentDescription = "Promotion image",
+					modifier = Modifier
+						.size(76.dp)
+						.clip(RoundedCornerShape(8.dp))
+				)
+			}
+			else {
+				Box(
+					modifier = Modifier
+						.size(76.dp)
+						.clip(RoundedCornerShape(8.dp))
+						.background(Color(0xFFACACAC)),
+					contentAlignment = Alignment.Center
+				) {}
+			}
 
 			// Item details
 			Column(Modifier.weight(1f), Arrangement.spacedBy(4.dp)) {
