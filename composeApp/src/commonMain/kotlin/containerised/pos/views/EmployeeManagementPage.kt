@@ -25,7 +25,7 @@ import containerised.pos.models.UserRole
 import containerised.pos.routes.StaffRoutes
 import kotlinx.coroutines.launch
 
-private const val CURRENT_BRANCH = "BRA26011700"
+private const val CURRENT_BRANCH = "BRA26032801"
 
 @Composable
 fun EmployeeManagementPage(navController: NavController) {
