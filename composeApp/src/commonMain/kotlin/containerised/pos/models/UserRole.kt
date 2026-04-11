@@ -54,7 +54,7 @@ data class UserRole(
 			return SupabaseClient.db
 				.from("user_roles")
 				.select(
-					Columns.raw("*, user:users(*), role:roles(*)")
+					Columns.raw("*, user:users!inner(*), role:roles!inner(*)")
 				) {
 					filter {
 						eq("user.branch_id", branchId)
