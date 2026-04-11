@@ -31,6 +31,7 @@ import kotlinx.serialization.json.Json
 private val jsonFormatter = Json { prettyPrint = true }
 
 private data class EditPromotionFormState(
+    var promotionName: String = "",
 	var startDate: String? = null,
 	var endDate: String? = null,
 	var isActive: Boolean = false,
@@ -56,13 +57,14 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 				imageUrl = promotion?.urlImg
 			}
 			promotion?.let {
-				formState = EditPromotionFormState(
-					startDate = it.startDate,
-					endDate = it.endDate,
-					isActive = it.isActive,
-					rules = it.rules ?: emptyList(),
-					daysOfWeek = it.daysOfWeek ?: emptyList()
-				)
+                formState = EditPromotionFormState(
+                    promotionName = it.promotionName ?: "",
+                    startDate = it.startDate,
+                    endDate = it.endDate,
+                    isActive = it.isActive,
+                    rules = it.rules ?: emptyList(),
+                    daysOfWeek = it.daysOfWeek ?: emptyList()
+                )
 			}
 			categories = Category.fetchAll()
 			items = BranchItem.fetchByBranch("BRA26011700")
@@ -136,8 +138,9 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 												daysOfWeek = formState.daysOfWeek,
 												rules = formState.rules,
 												isActive = formState.isActive,
-												urlImg = imgUrl
-											)
+												urlImg = imgUrl,
+                                                promotionName = formState.promotionName
+                                            )
 										)
 										println("Created")
 										navController.popBackStack()
@@ -191,7 +194,8 @@ fun EditPromotionPage(navController: NavController, promotionId: String?) {
 												daysOfWeek = formState.daysOfWeek,
 												rules = formState.rules,
 												isActive = formState.isActive,
-												urlImg = imgUrl
+												urlImg = imgUrl,
+                                                promotionName = formState.promotionName
 											)
 										)
 										println("Updated")
@@ -224,6 +228,14 @@ private fun FormSection(
 			Modifier.fillMaxWidth().padding(12.dp),
 			Arrangement.spacedBy(10.dp)
 		) {
+            OutlinedTextField(
+                value = formState.promotionName,
+                onValueChange = {
+                    onFormChange(formState.copy(promotionName = it))
+                },
+                label = { Text("Promotion Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
 			Row(
 				Modifier.fillMaxWidth(),
 				Arrangement.spacedBy(12.dp)

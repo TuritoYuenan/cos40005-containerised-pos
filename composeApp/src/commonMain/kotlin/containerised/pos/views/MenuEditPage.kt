@@ -390,6 +390,8 @@ fun ItemCard(
 	item: BranchItem,
 	onEdit: () -> Unit
 ) {
+    val imageUrl = item.urlImg
+
 	Card(
 		modifier = Modifier,
 		shape = RoundedCornerShape(8.dp),
@@ -401,15 +403,39 @@ fun ItemCard(
 			modifier = Modifier.fillMaxWidth().padding(12.dp),
 			verticalAlignment = Alignment.CenterVertically,
 		) {
-			Box(
-				modifier = Modifier
-					.size(56.dp)
-					.clip(RoundedCornerShape(8.dp))
-					.background(MaterialTheme.colorScheme.surface),
-				contentAlignment = Alignment.Center
-			) {
-				Text("🖼")
-			}
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!imageUrl.isNullOrBlank()) {
+                    KamelImage(
+                        resource = asyncPainterResource(imageUrl),
+                        contentDescription = "Item Image",
+                        modifier = Modifier.fillMaxSize(),
+                        onLoading = {
+                            Box(
+                                Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(strokeWidth = 2.dp)
+                            }
+                        },
+                        onFailure = {
+                            Box(
+                                Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("❌")
+                            }
+                        }
+                    )
+                } else {
+                    Text("🖼")
+                }
+            }
 
 			Spacer(modifier = Modifier.width(12.dp))
 
